@@ -1,0 +1,141 @@
+{
+  "katanas": [
+    {
+      "id": "ikielas-katana",
+      "name": "Ikiela's Katana",
+      "cost": 0,
+      "range": 96,
+      "perk": null,
+      "blurb": "Starter steel. Honest reach."
+    },
+    {
+      "id": "night-needle",
+      "name": "Night Needle",
+      "cost": 250,
+      "range": 118,
+      "perk": null,
+      "blurb": "Longer point. Street-night favorite."
+    },
+    {
+      "id": "whisper-blade",
+      "name": "Whisper Blade",
+      "cost": 500,
+      "range": 128,
+      "perk": "shadow-strike",
+      "blurb": "Manual perk: Shadow Strike — vanish-dash slash."
+    },
+    {
+      "id": "hayate",
+      "name": "Hayate",
+      "cost": 900,
+      "range": 136,
+      "perk": "hayate",
+      "blurb": "Passive: slash recharge ×0.5."
+    },
+    {
+      "id": "stormedge",
+      "name": "Stormedge",
+      "cost": 1400,
+      "range": 148,
+      "perk": "call-lightning",
+      "blurb": "Manual perk: Call Lightning — sky-fire nearby foes."
+    },
+    {
+      "id": "soulbrand",
+      "name": "Soulbrand",
+      "cost": 2000,
+      "range": 160,
+      "perk": "blade-of-souls",
+      "blurb": "Manual perk: Blade of Souls — wave that cuts the lane."
+    },
+    {
+      "id": "imperial-fang",
+      "name": "Imperial Fang",
+      "cost": 3000,
+      "range": 188,
+      "perk": null,
+      "blurb": "Palace reach. No gimmick, just bite."
+    }
+  ],
+  "armors": [
+    {
+      "id": "ikielas-robes",
+      "name": "Ikiela's Robes",
+      "cost": 0,
+      "hp": 80,
+      "blurb": "Open midriff silver-trim robes. Starter kit."
+    },
+    {
+      "id": "traveler-wraps",
+      "name": "Traveler Wraps",
+      "cost": 200,
+      "hp": 110,
+      "blurb": "Light cloth. A little more give."
+    },
+    {
+      "id": "city-guard",
+      "name": "City Guard Lamellar",
+      "cost": 400,
+      "hp": 140,
+      "blurb": "Stolen night-watch scales."
+    },
+    {
+      "id": "lacquered-cuirass",
+      "name": "Lacquered Cuirass",
+      "cost": 800,
+      "hp": 180,
+      "blurb": "Gloss crimson lacquer over steel."
+    },
+    {
+      "id": "moonsteel",
+      "name": "Moonsteel Crop",
+      "cost": 1400,
+      "hp": 230,
+      "blurb": "Silver crop armor — still shows the midriff."
+    },
+    {
+      "id": "oni-ward",
+      "name": "Oni-Ward Harness",
+      "cost": 2200,
+      "hp": 290,
+      "blurb": "Warded plates. Holds under a brutal tickle."
+    },
+    {
+      "id": "imperial-plate",
+      "name": "Imperial Plate",
+      "cost": 3500,
+      "hp": 360,
+      "blurb": "Last armor of the old city."
+    }
+  ],
+  "perks": [
+    {
+      "id": "shadow-strike",
+      "name": "Shadow Strike",
+      "manual": true,
+      "cooldown": 8,
+      "blurb": "Dash through the nearest grabber with a wide cut."
+    },
+    {
+      "id": "call-lightning",
+      "name": "Call Lightning",
+      "manual": true,
+      "cooldown": 10,
+      "blurb": "Drop lightning on every foe in front of you."
+    },
+    {
+      "id": "blade-of-souls",
+      "name": "Blade of Souls",
+      "manual": true,
+      "cooldown": 12,
+      "blurb": "A soul wave clears the lane."
+    },
+    {
+      "id": "hayate",
+      "name": "Hayate Flow",
+      "manual": false,
+      "cooldown": 0,
+      "blurb": "Halves final slash recharge."
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+
+  <rect width="96" height="96" fill="#140c16"/>
+  <circle cx="48" cy="48" r="28" fill="#c9d36a"/>
+  <text x="8" y="88" fill="#f4e7d8" font-size="10" font-family="sans-serif">bolter</text>
+
+</svg>

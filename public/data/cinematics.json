@@ -1,0 +1,171 @@
+{
+  "struggleArt": "Ikiela in player-ref silver crop armor, bare midriff, katana still sheathed or dropped as they work her ribs and soles.",
+  "gameOverArt": "Same woman, red bikini, wrecked laugh, imperial street behind her.",
+  "beats": [
+    "They pin her wrists.",
+    "Fingers find the midriff gap in the silver.",
+    "Bare feet kick — then get caught."
+  ],
+  "bySource": {
+    "drone": {
+      "struggle": [
+        "The drone-zombie crowds in, green fingers skating her ribs.",
+        "She bites a laugh. The crop armor leaves too much skin.",
+        "They go for the soles — she tries to twist the katana free."
+      ],
+      "gameover": [
+        "Ikiela drops, red bikini, still giggling as the drone nestles in."
+      ]
+    },
+    "viner": {
+      "struggle": [
+        "Vines cinch her ankles to the street.",
+        "Creepers slip under the silver plates.",
+        "The trap tickles up her calves like it has a grudge."
+      ],
+      "gameover": [
+        "The vines keep her posed in a red bikini until the laugh wins."
+      ]
+    },
+    "quad-arm": {
+      "struggle": [
+        "Four hands: two on her waist, two hunting armpits.",
+        "She slashes air. They just swap grips.",
+        "A spare pair works her toes."
+      ],
+      "gameover": [
+        "Quad-Arm sits her down in the red bikini and does not stop."
+      ]
+    },
+    "bolter": {
+      "struggle": [
+        "The bolter slams her into a lantern post.",
+        "Fast fingers, no technique — just speed.",
+        "She can't get a full breath between laughs."
+      ],
+      "gameover": [
+        "Too fast. Red bikini. The city keeps moving without her."
+      ]
+    },
+    "hundred-hands": {
+      "struggle": [
+        "Hands everywhere. There is no safe plate.",
+        "They find every gap in the silver crop.",
+        "Soles, ribs, neck — a chorus of tickles."
+      ],
+      "gameover": [
+        "A hundred hands peel her down to the red bikini and finish the job."
+      ]
+    },
+    "licker": {
+      "struggle": [
+        "The tongue tags her navel first.",
+        "Then the arch of her foot.",
+        "She hates how precise it is."
+      ],
+      "gameover": [
+        "Licker leaves her in the red bikini, still twitching."
+      ]
+    },
+    "spider": {
+      "struggle": [
+        "Egg-web snaps across her chest and hips. The spider never touches her.",
+        "Tiny black spiders pour out of the silk.",
+        "They map every inch of bare midriff."
+      ],
+      "gameover": [
+        "Webbed in a red bikini, covered in a moving black glitter of spiders."
+      ]
+    },
+    "egg-web": {
+      "struggle": [
+        "The web hits and traps. Not a body-grab — silk and swarm.",
+        "Hundreds of tiny black spiders fan out.",
+        "They tickle like a live cloak."
+      ],
+      "gameover": [
+        "She loses the laugh-war inside a red-bikini cocoon of silk."
+      ]
+    },
+    "slimer": {
+      "struggle": [
+        "Slime slaps across the silver and stays warm.",
+        "It creeps under the plates.",
+        "Every wriggle makes it tickle more."
+      ],
+      "gameover": [
+        "Slimed, red bikini, still trying not to smile."
+      ]
+    },
+    "slime-shot": {
+      "struggle": [
+        "The shot paints her midriff.",
+        "It pulses. It tickles.",
+        "She can't wipe it off mid-run."
+      ],
+      "gameover": [
+        "The slime decides the match. Red bikini. Street lanterns smear."
+      ]
+    },
+    "archer": {
+      "struggle": [
+        "Bolo wraps her ankles mid-stride.",
+        "She hops once — then they have her feet.",
+        "Toe-by-toe work. Unfair."
+      ],
+      "gameover": [
+        "Ankles still bound. Red bikini. The archer does not rush."
+      ]
+    },
+    "bolo-wrap": {
+      "struggle": [
+        "Leather kisses both ankles.",
+        "Then the tickle starts at the soles.",
+        "She can't jump. She can only mash free."
+      ],
+      "gameover": [
+        "Wrapped, laughing, red bikini against wet imperial stone."
+      ]
+    },
+    "volatile": {
+      "struggle": [
+        "The volatile hugs like a collapse.",
+        "Tickle pressure is a whole-body buzz.",
+        "She has seconds, not minutes."
+      ],
+      "gameover": [
+        "Overwhelmed. Red bikini. The laugh is the last thing standing."
+      ]
+    },
+    "brute": {
+      "struggle": [
+        "The brute just lifts her.",
+        "One huge palm spans her ribs.",
+        "The other works both feet at once."
+      ],
+      "gameover": [
+        "Pinned in a red bikini against a shrine gate."
+      ]
+    },
+    "hand-thrower": {
+      "struggle": [
+        "A thrown hand catches her waist.",
+        "It crawls with awful enthusiasm.",
+        "She slaps at it and laughs anyway."
+      ],
+      "gameover": [
+        "Too many hands. Red bikini. The thrower jogs past, already winding up another."
+      ]
+    },
+    "throwing-hand": {
+      "struggle": [
+        "The hand latches and kneads.",
+        "It knows the midriff gap.",
+        "It will not let go until she mashes it off."
+      ],
+      "gameover": [
+        "One hand was enough. Red bikini on the cobbles."
+      ]
+    }
+  }
+}
