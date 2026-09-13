@@ -500,16 +500,14 @@ function drawShop(g: Game): void {
     g.shop.katanas.forEach((k) => {
       const owned = g.save.unlockedKatanas.includes(k.id);
       const eq = g.save.equippedKatana === k.id;
-      const perk = k.perk ? `  ·  ${k.perk}` : "";
-      const label = `${eq ? "★ " : ""}${k.name}  ·  ${k.range}${perk}${owned ? "" : "  ·  " + k.cost + "c"}`;
+      const label = `${eq ? "★ " : ""}${k.name}  ·  ${k.range}${owned ? "" : "  ·  " + k.cost + "c"}`;
       button(ctx, g, "buy-katana-" + k.id, label);
     });
   } else {
     g.shop.armors.forEach((a) => {
       const owned = g.save.unlockedArmors.includes(a.id);
       const eq = g.save.equippedArmor === a.id;
-      const perk = a.perk ? `  ·  ${a.perk}` : "";
-      const label = `${eq ? "★ " : ""}${a.name}  ·  ${a.hp} HP${perk}${owned ? "" : "  ·  " + a.cost + "c"}`;
+      const label = `${eq ? "★ " : ""}${a.name}  ·  ${a.hp} HP${owned ? "" : "  ·  " + a.cost + "c"}`;
       button(ctx, g, "buy-armor-" + a.id, label);
     });
   }
