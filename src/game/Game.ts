@@ -1,17 +1,22 @@
-import { catalogPaths, enemySpritePath, ImageBank, projectilePath, vfxPath } from "../lib/assets";
+import { catalogPaths, enemySpritePath, ImageBank, measureFootFrac, playerPosePath, projectilePath, vfxPath } from "../lib/assets";
 import {
   allLedges,
   climbLedge,
+  dropLedge,
+  followCameraY,
+  groundCameraY,
   landingLedge,
   layoutProps,
   ledgeUnder,
   mapPropImageEntries,
   roofLedgeY,
+  standTop,
   type PlacedProp,
   type WorldLedge,
 } from "../lib/map-props";
 import { Sfx } from "../lib/audio";
 import { Input, type InputFrame } from "../lib/input";
+import { layoutGameOver, layoutHowto, layoutMenu, layoutPlayControls, layoutShop } from "../lib/touch-layout";
 import {
   coinsFromPoints,
   enemyWeight,
@@ -20,6 +25,7 @@ import {
   pickWeighted,
   pointsFromDistance,
   slashRecharge,
+  ownerHasLiveShot,
   spawnCap,
   speedLevelFor,
   struggleAfterTap,
@@ -99,6 +105,7 @@ export class Game {
   images = new ImageBank();
   time = 0;
   menuPulse = 0;
+  perchWanted: string | null = null;
 
   constructor(
     public canvas: HTMLCanvasElement,
@@ -122,7 +129,9 @@ export class Game {
     this.cinematics = cinematics;
     this.mapProps = mapProps;
     this.save = loadSave(game.economy.starterCoins);
-    if (new URLSearchParams(location.search).has("dojo")) this.unlockDojo();
+    const q = new URLSearchParams(location.search);
+    if (q.has("dojo")) this.unlockDojo();
+    this.perchWanted = q.get("perch");
     this.applyLoadout();
     const enemyIds = enemies.enemies.map((e) => e.id);
     const projectileIds = enemies.projectiles.map((p) => p.id);
@@ -198,7 +207,7 @@ export class Game {
   }
 
   mapH(): number {
-    return this.h * 1.72;
+    return this.h * 1.85;
   }
 
   groundY(): number {
@@ -232,37 +241,43 @@ export class Game {
   }
 
   updateCamera(): void {
-    const airborne = this.screen === "playing" && !this.onGround && !this.onRoof;
-    const focus = this.playerY + this.playerH * (airborne ? 0.18 : 0.42);
-    const keep = airborne ? 0.86 : 0.62;
-    const desired = focus - this.h * keep;
-    const maxCam = Math.max(0, this.mapH() - this.h);
-    const target = Math.max(0, Math.min(maxCam, desired));
-    const k = this.screen === "playing" ? 0.22 : 1;
+    const mapH = this.mapH();
+    const target =
+      this.screen === "playing" ? followCameraY(mapH, this.h, this.playerY) : groundCameraY(mapH, this.h);
+    const k = this.screen === "playing" ? 0.28 : 1;
     this.camY += (target - this.camY) * k;
   }
 
   resize(): void {
+    this.canvas.style.width = "100%";
+    this.canvas.style.height = "100%";
+    const rect = this.canvas.getBoundingClientRect();
+    const cssW = rect.width || window.innerWidth || 640;
+    const cssH = rect.height || window.innerHeight || 360;
+    const w = Math.max(320, Math.round(cssW));
+    const h = Math.max(200, Math.round(cssH));
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const w = Math.max(640, window.innerWidth);
-    const h = Math.max(360, window.innerHeight);
     this.w = w;
     this.h = h;
+    this.input.setView(w, h);
     // Quarter of the visible playfield; the world map is taller than the view.
     this.playerH = Math.round(this.h * 0.25);
     const box = this.spriteBox("./assets/player/run.png", this.playerH);
     this.playerW = box.w;
     this.playerX = Math.round(w * 0.15);
-    this.canvas.width = Math.floor(w * dpr);
-    this.canvas.height = Math.floor(h * dpr);
-    this.canvas.style.width = `${w}px`;
-    this.canvas.style.height = `${h}px`;
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    if (this.onGround) this.playerY = this.groundY() - this.playerH;
-    if (this.onRoof) {
-      const ledge = ledgeUnder(this.worldLedges(), this.feetX(), this.playerY + this.playerH, 24);
-      this.playerY = (ledge?.y ?? this.roofY()) - this.playerH;
+    const bw = Math.floor(w * dpr);
+    const bh = Math.floor(h * dpr);
+    if (this.canvas.width !== bw || this.canvas.height !== bh) {
+      this.canvas.width = bw;
+      this.canvas.height = bh;
     }
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (this.onGround) this.playerY = standTop(this.groundY(), this.playerH, this.playerFootFrac());
+    if (this.onRoof) {
+      const ledge = ledgeUnder(this.worldLedges(), this.feetX(), this.playerFeetY(), 24);
+      this.playerY = standTop(ledge?.y ?? this.roofY(), this.playerH, this.playerFootFrac());
+    }
+    this.resizeButtons();
     this.updateCamera();
   }
 
@@ -293,8 +308,8 @@ export class Game {
     this.pinkFlash = 0;
     this.applyLoadout();
     this.hp = this.maxHp;
-    this.playerY = this.groundY() - this.playerH;
-    this.camY = Math.max(0, this.mapH() - this.h);
+    this.playerY = standTop(this.groundY(), this.playerH, this.playerFootFrac());
+    this.camY = groundCameraY(this.mapH(), this.h);
     this.sfx.slash();
   }
 
@@ -305,6 +320,7 @@ export class Game {
   tick(dt: number): void {
     this.time += dt;
     this.menuPulse += dt;
+    this.input.mashAll = this.screen === "playing" && !!this.struggle;
     this.resizeButtons();
     const input = this.input.consume();
     if (this.screen === "playing") this.updatePlay(dt, input);
@@ -431,8 +447,20 @@ export class Game {
     this.vfx = this.vfx.filter((fx) => fx.t < fx.duration);
   }
 
+  private playerFootFrac(): number {
+    return measureFootFrac(this.images.get(playerPosePath("run")));
+  }
+
+  private actorFootFrac(defId: string): number {
+    return measureFootFrac(this.images.get(enemySpritePath(defId, "idle")));
+  }
+
+  private playerFeetY(): number {
+    return this.playerY + this.playerH * this.playerFootFrac();
+  }
+
   private standOn(y: number, roof: boolean): void {
-    this.playerY = y - this.playerH;
+    this.playerY = standTop(y, this.playerH, this.playerFootFrac());
     this.vy = 0;
     this.onGround = !roof;
     this.onRoof = roof;
@@ -440,6 +468,10 @@ export class Game {
     this.holdingFirst = false;
     if (this.slam) this.slamBurst();
     this.slam = false;
+  }
+
+  private standActorOn(a: Actor, y: number): void {
+    a.y = standTop(y, a.h, this.actorFootFrac(a.defId));
   }
 
   private updatePlayer(dt: number, input: InputFrame, _run: number): void {
@@ -452,13 +484,12 @@ export class Game {
     const v1 = (4 * H1) / T1;
 
     if (input.swipe === "up") {
-      const up = climbLedge(ledges, this.playerX, this.playerY + this.playerH, this.playerW);
+      const up = climbLedge(ledges, this.playerX, this.playerFeetY(), this.playerW, gY);
       if (up) this.standOn(up.y, true);
     } else if (input.swipe === "down" && this.onRoof) {
-      this.onRoof = false;
-      this.onGround = false;
-      this.vy = 220;
-      this.jumps = 1;
+      const down = dropLedge(ledges, this.playerX, this.playerFeetY(), this.playerW, gY);
+      if (down) this.standOn(down.y, true);
+      else this.standOn(gY, false);
     } else if (input.swipe === "down" && !this.onGround && !this.onRoof) {
       this.slam = true;
       this.vy = 1650;
@@ -491,8 +522,8 @@ export class Game {
     }
 
     if (this.onRoof) {
-      const stay = ledgeUnder(ledges, this.playerX, this.playerY + this.playerH, 18, this.playerW);
-      if (stay) this.playerY = stay.y - this.playerH;
+      const stay = ledgeUnder(ledges, this.playerX, this.playerFeetY(), 18, this.playerW);
+      if (stay) this.playerY = standTop(stay.y, this.playerH, this.playerFootFrac());
       else {
         this.onRoof = false;
         this.onGround = false;
@@ -501,11 +532,11 @@ export class Game {
     }
 
     if (!this.onGround && !this.onRoof) {
-      const feetFrom = this.playerY + this.playerH;
+      const feetFrom = this.playerFeetY();
       const g = this.holdingFirst && this.jumps === 1 ? gHold : gFall;
       this.vy += g * dt;
       this.playerY += this.vy * dt;
-      const feetTo = this.playerY + this.playerH;
+      const feetTo = this.playerFeetY();
       if (this.vy >= 0 && !this.slam) {
         const hit = landingLedge(ledges, this.playerX, feetFrom, feetTo, this.playerW);
         if (hit) {
@@ -513,7 +544,7 @@ export class Game {
           return;
         }
       }
-      if (this.playerY >= gY - this.playerH) {
+      if (this.playerFeetY() >= gY) {
         this.standOn(gY, false);
       }
       const ceiling = 8;
@@ -567,20 +598,22 @@ export class Game {
     const eh = box.h;
     const ew = box.w;
     const flying = def.flying;
-    const roof = !flying && !trap && Math.random() < 0.22;
+    const forcePerch = !!this.perchWanted;
+    const roof = !flying && !trap && (forcePerch || Math.random() < 0.3);
     const highAir = flying && Math.random() < 0.42;
     const lane: Actor["lane"] = flying ? "air" : roof ? "roof" : "ground";
     const underGap = this.playerH * 0.3;
     const perch = lane === "roof" ? this.pickRoofPerch(ew) : null;
     const usedLane: Actor["lane"] = lane === "roof" && !perch ? "ground" : lane;
+    const foot = this.actorFootFrac(id);
     const y =
       perch
-        ? perch.y - eh
+        ? standTop(perch.y, eh, foot)
         : usedLane === "air" && highAir
           ? Math.max(12, this.roofY() - eh - this.playerH * 0.12)
           : usedLane === "air"
             ? this.groundY() - this.playerH - underGap - eh
-            : this.groundY() - eh;
+            : standTop(this.groundY(), eh, foot);
     this.actors.push({
       kind: "enemy",
       id: `e${nextActor++}`,
@@ -600,9 +633,16 @@ export class Game {
   }
 
   private pickRoofPerch(enemyW: number): { x: number; y: number } | null {
-    const ledges = this.worldLedges().filter(
-      (l) => l.standable && l.x1 > this.w * 0.55 && /roof|balcony|eave|lintel/.test(l.ledgeId),
-    );
+    const want = this.perchWanted;
+    const kind =
+      want === "engawa" || want === "porch"
+        ? /engawa/
+        : want === "roof"
+          ? /roof/
+          : want === "balcony"
+            ? /balcony/
+            : /roof|balcony|eave|lintel|engawa/;
+    const ledges = this.worldLedges().filter((l) => l.standable && l.x1 > this.w * 0.55 && kind.test(l.ledgeId));
     if (!ledges.length) return null;
     const ledge = ledges[Math.floor(Math.random() * ledges.length)];
     const span = Math.max(8, ledge.x1 - ledge.x0 - enemyW);
@@ -617,14 +657,15 @@ export class Game {
         const def = this.def(a.defId);
         if (a.lane !== "roof") a.x -= def.approach * run * dt;
         if (a.lane === "roof") {
-          const stay = ledgeUnder(ledges, a.x, a.y + a.h, 22, a.w);
-          if (stay) a.y = stay.y - a.h;
+          const stay = ledgeUnder(ledges, a.x, a.y + a.h * this.actorFootFrac(a.defId), 22, a.w);
+          if (stay) this.standActorOn(a, stay.y);
           else {
             a.lane = "ground";
-            a.y = this.groundY() - a.h;
+            this.standActorOn(a, this.groundY());
           }
         }
         if (def.projectile && a.x < this.w * 0.92 && a.x > this.playerX + 80) {
+          if (ownerHasLiveShot(this.actors, a.id)) continue;
           a.fireCd -= dt;
           if (a.fireCd <= 0) {
             this.fireProjectile(def.projectile, a);
@@ -640,12 +681,14 @@ export class Game {
   }
 
   private fireProjectile(id: string, from: Actor): void {
+    if (ownerHasLiveShot(this.actors, from.id)) return;
     const def = this.projDef(id);
     const box = this.spriteBox(projectilePath(id), from.h * 0.5);
     this.actors.push({
       kind: "projectile",
       id: `p${nextActor++}`,
       defId: id,
+      ownerId: from.id,
       x: from.x - box.w * 0.35,
       y: from.y + from.h * 0.5 - box.h * 0.5,
       w: box.w,
@@ -821,6 +864,7 @@ export class Game {
     this.sfx.grab();
     this.pinkFlash = 0.25;
     this.sfx.laugh();
+    this.input.mashAll = true;
   }
 
   private updateStruggle(dt: number, input: InputFrame): void {
@@ -879,65 +923,25 @@ export class Game {
     this.persist();
     this.screen = "gameover";
     this.struggle = null;
+    this.input.mashAll = false;
     this.sfx.die();
   }
 
   resizeButtons(): void {
     const w = this.w;
     const h = this.h;
-    this.input.slashRect = { x: w - 150, y: h - 150, w: 124, h: 124 };
-    this.input.perkRects = this.manualPerks().map((id, i) => ({
-      id,
-      x: w - 150,
-      y: h - 230 - i * 70,
-      w: 124,
-      h: 64,
-    }));
+    const play = layoutPlayControls(w, h, this.screen === "playing" ? this.manualPerks() : []);
+    this.input.slashRect = this.screen === "playing" && !this.struggle ? play.slash : { x: 0, y: 0, w: 0, h: 0 };
+    this.input.perkRects = this.screen === "playing" && !this.struggle ? play.perks : [];
     this.input.uiRects = [];
-    if (this.screen === "menu") {
-      const top = Math.max(h * 0.44, 150);
-      this.input.uiRects = [
-        { id: "play", x: w * 0.5 - 130, y: top, w: 260, h: 46 },
-        { id: "shop", x: w * 0.5 - 130, y: top + 54, w: 260, h: 40 },
-        { id: "howto", x: w * 0.5 - 130, y: top + 100, w: 260, h: 40 },
-      ];
-    } else if (this.screen === "howto") {
-      this.input.uiRects = [{ id: "back", x: 16, y: 12, w: 100, h: 36 }];
-    } else if (this.screen === "shop") {
-      const rows = this.shopTab === "blades" ? this.shop.katanas : this.shopTab === "armor" ? this.shop.armors : [];
-      const rects = [
-        { id: "back", x: 16, y: 10, w: 100, h: 34 },
-        { id: "tab-blades", x: 16, y: 50, w: 100, h: 32 },
-        { id: "tab-armor", x: 122, y: 50, w: 100, h: 32 },
-        { id: "tab-slash", x: 228, y: 50, w: 120, h: 32 },
-      ];
-      if (this.shopTab === "slash") {
-        rects.push({ id: "buy-slash", x: 16, y: 228, w: 300, h: 44 });
-      } else {
-        const colW = Math.min(300, (w - 40) / 2);
-        rows.forEach((row, i) => {
-          const prefix = this.shopTab === "blades" ? "buy-katana-" : "buy-armor-";
-          const col = i % 2;
-          const rowI = Math.floor(i / 2);
-          rects.push({
-            id: prefix + row.id,
-            x: 16 + col * (colW + 12),
-            y: 90 + rowI * 46,
-            w: colW,
-            h: 42,
-          });
-        });
-      }
-      this.input.uiRects = rects;
+    if (this.screen === "menu") this.input.uiRects = layoutMenu(w, h);
+    else if (this.screen === "howto") this.input.uiRects = layoutHowto(w, h);
+    else if (this.screen === "shop") {
+      const blades = this.shopTab === "blades";
+      const rows = blades ? this.shop.katanas : this.shopTab === "armor" ? this.shop.armors : [];
+      this.input.uiRects = layoutShop(w, h, this.shopTab, rows.map((r) => r.id), blades ? "buy-katana-" : "buy-armor-");
     } else if (this.screen === "gameover") {
-      const top = Math.min(h * 0.62, h - 190);
-      const rects = [
-        { id: "retry", x: w * 0.5 - 140, y: top, w: 280, h: 40 },
-        { id: "shop", x: w * 0.5 - 140, y: top + 46, w: 280, h: 36 },
-        { id: "menu", x: w * 0.5 - 140, y: top + 88, w: 280, h: 36 },
-      ];
-      if (!this.usedRevive) rects.unshift({ id: "revive", x: w * 0.5 - 140, y: top - 46, w: 280, h: 40 });
-      this.input.uiRects = rects;
+      this.input.uiRects = layoutGameOver(w, h, !this.usedRevive);
     }
   }
 }

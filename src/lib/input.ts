@@ -12,6 +12,13 @@ export interface InputFrame {
   ui: string | null;
 }
 
+export interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 interface Pointer {
   id: number;
   x: number;
@@ -24,6 +31,29 @@ interface Pointer {
 
 const SWIPE_MIN = 42;
 
+/** Map a client (CSS) point into the same view space used to draw UI. Never use canvas.width (DPR buffer). */
+export function pointerToView(
+  clientX: number,
+  clientY: number,
+  rect: { left: number; top: number; width: number; height: number },
+  viewW: number,
+  viewH: number,
+): { x: number; y: number } {
+  const rw = rect.width || 1;
+  const rh = rect.height || 1;
+  const vw = viewW > 0 ? viewW : rw;
+  const vh = viewH > 0 ? viewH : rh;
+  return {
+    x: ((clientX - rect.left) / rw) * vw,
+    y: ((clientY - rect.top) / rh) * vh,
+  };
+}
+
+export function hitRect(x: number, y: number, box: Rect): boolean {
+  if (box.w <= 0 || box.h <= 0) return false;
+  return x >= box.x && y >= box.y && x <= box.x + box.w && y <= box.y + box.h;
+}
+
 export class Input {
   private pointers = new Map<number, Pointer>();
   private jumpHeld = false;
@@ -34,16 +64,40 @@ export class Input {
   private perkQueued: string | null = null;
   private tapQueued = false;
   keys = new Set<string>();
-  slashRect = { x: 0, y: 0, w: 0, h: 0 };
-  perkRects: { id: string; x: number; y: number; w: number; h: number }[] = [];
-  uiRects: { id: string; x: number; y: number; w: number; h: number }[] = [];
+  /** Logical/CSS view size — must match Game.w/h and the ctx transform space. */
+  viewW = 1;
+  viewH = 1;
+  mashAll = false;
+  slashRect: Rect = { x: 0, y: 0, w: 0, h: 0 };
+  perkRects: (Rect & { id: string })[] = [];
+  uiRects: (Rect & { id: string })[] = [];
   lastUi: string | null = null;
 
+  setView(w: number, h: number): void {
+    this.viewW = Math.max(1, w);
+    this.viewH = Math.max(1, h);
+  }
+
   attach(canvas: HTMLCanvasElement): void {
-    canvas.addEventListener("pointerdown", (e) => this.onDown(e, canvas));
-    canvas.addEventListener("pointermove", (e) => this.onMove(e, canvas));
-    canvas.addEventListener("pointerup", (e) => this.onUp(e, canvas));
-    canvas.addEventListener("pointercancel", (e) => this.onUp(e, canvas));
+    const opts: AddEventListenerOptions = { passive: false };
+    canvas.addEventListener("pointerdown", (e) => this.onDown(e, canvas), opts);
+    canvas.addEventListener("pointermove", (e) => this.onMove(e, canvas), opts);
+    canvas.addEventListener("pointerup", (e) => this.onUp(e, canvas), opts);
+    canvas.addEventListener("pointercancel", (e) => this.onUp(e, canvas), opts);
+    canvas.addEventListener(
+      "touchstart",
+      (e) => {
+        e.preventDefault();
+      },
+      opts,
+    );
+    canvas.addEventListener(
+      "contextmenu",
+      (e) => {
+        e.preventDefault();
+      },
+      opts,
+    );
     window.addEventListener("keydown", (e) => {
       this.keys.add(e.code);
       if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") {
@@ -54,6 +108,8 @@ export class Input {
         }
         e.preventDefault();
       }
+      if ((e.code === "KeyC" || e.code === "KeyE") && !e.repeat) this.swipe = "up";
+      if ((e.code === "KeyS" || e.code === "ArrowDown") && !e.repeat) this.swipe = "down";
       if (e.code === "KeyJ" || e.code === "KeyK") this.slashQueued = true;
       if (e.code === "Digit1") this.perkQueued = "shadow-strike";
       if (e.code === "Digit2") this.perkQueued = "call-lightning";
@@ -70,35 +126,50 @@ export class Input {
     });
   }
 
-  private local(e: PointerEvent, canvas: HTMLCanvasElement): { x: number; y: number } {
-    const r = canvas.getBoundingClientRect();
-    return {
-      x: ((e.clientX - r.left) / r.width) * canvas.width,
-      y: ((e.clientY - r.top) / r.height) * canvas.height,
-    };
+  local(e: { clientX: number; clientY: number }, canvas: HTMLCanvasElement): { x: number; y: number } {
+    return pointerToView(e.clientX, e.clientY, canvas.getBoundingClientRect(), this.viewW, this.viewH);
   }
 
-  private hit(x: number, y: number, box: { x: number; y: number; w: number; h: number }): boolean {
-    return x >= box.x && y >= box.y && x <= box.x + box.w && y <= box.y + box.h;
+  hitAt(x: number, y: number): { ui: string | null; perk: string | null; slash: boolean } {
+    const perk = this.perkRects.find((p) => hitRect(x, y, p));
+    if (perk) return { ui: null, perk: perk.id, slash: false };
+    const ui = this.uiRects.find((p) => hitRect(x, y, p));
+    if (ui) return { ui: ui.id, perk: null, slash: false };
+    if (hitRect(x, y, this.slashRect)) return { ui: null, perk: null, slash: true };
+    return { ui: null, perk: null, slash: false };
   }
 
   private onDown(e: PointerEvent, canvas: HTMLCanvasElement): void {
+    e.preventDefault();
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch {
+      /* some WebViews reject capture */
+    }
     const { x, y } = this.local(e, canvas);
-    const perk = this.perkRects.find((p) => this.hit(x, y, p));
-    if (perk) {
-      this.perkQueued = perk.id;
-      this.pointers.set(e.pointerId, { id: e.pointerId, x, y, startX: x, startY: y, startT: performance.now(), zone: "ui" });
+    if (this.mashAll) {
+      this.tapQueued = true;
+      this.jumpPressed = true;
+      this.jumpHeld = true;
+      this.pointers.set(e.pointerId, { id: e.pointerId, x, y, startX: x, startY: y, startT: performance.now(), zone: "play" });
       return;
     }
-    const ui = this.uiRects.find((p) => this.hit(x, y, p));
-    if (ui) {
-      this.lastUi = ui.id;
+    const hit = this.hitAt(x, y);
+    if (hit.perk) {
+      this.perkQueued = hit.perk;
       this.tapQueued = true;
       this.pointers.set(e.pointerId, { id: e.pointerId, x, y, startX: x, startY: y, startT: performance.now(), zone: "ui" });
       return;
     }
-    if (this.hit(x, y, this.slashRect)) {
+    if (hit.ui) {
+      this.lastUi = hit.ui;
+      this.tapQueued = true;
+      this.pointers.set(e.pointerId, { id: e.pointerId, x, y, startX: x, startY: y, startT: performance.now(), zone: "ui" });
+      return;
+    }
+    if (hit.slash) {
       this.slashQueued = true;
+      this.tapQueued = true;
       this.pointers.set(e.pointerId, { id: e.pointerId, x, y, startX: x, startY: y, startT: performance.now(), zone: "slash" });
       return;
     }
@@ -109,6 +180,7 @@ export class Input {
   }
 
   private onMove(e: PointerEvent, canvas: HTMLCanvasElement): void {
+    e.preventDefault();
     const p = this.pointers.get(e.pointerId);
     if (!p) return;
     const { x, y } = this.local(e, canvas);
@@ -117,6 +189,7 @@ export class Input {
   }
 
   private onUp(e: PointerEvent, canvas: HTMLCanvasElement): void {
+    e.preventDefault();
     const p = this.pointers.get(e.pointerId);
     const { x, y } = this.local(e, canvas);
     this.pointers.delete(e.pointerId);
@@ -133,14 +206,12 @@ export class Input {
   }
 
   consume(): InputFrame {
-    const swipeDownKey = this.keys.has("ArrowDown") || this.keys.has("KeyS");
-    const swipeUpKey = this.keys.has("KeyC") || this.keys.has("KeyE");
     const ui = this.lastUi;
     const frame: InputFrame = {
       jumpPressed: this.jumpPressed,
       jumpHeld: this.jumpHeld || this.keys.has("Space") || this.keys.has("KeyW"),
       jumpReleased: this.jumpReleased,
-      swipe: this.swipe ?? (swipeDownKey ? "down" : swipeUpKey ? "up" : null),
+      swipe: this.swipe,
       slash: this.slashQueued,
       perk: this.perkQueued,
       struggleTap: this.tapQueued,

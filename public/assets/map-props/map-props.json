@@ -3,43 +3,52 @@
     {
       "id": "house_2story",
       "file": "house-2story.png",
-      "width": 1280,
-      "height": 720,
+      "width": 787,
+      "height": 772,
+      "storyHeights": {
+        "first": 1.0,
+        "second": 1.5
+      },
       "ledges": [
         {
           "id": "roof_top",
-          "y": 0.1,
+          "y": 0.08,
           "x0": 0.08,
           "x1": 0.92,
-          "label": "top roof"
+          "label": "top roof",
+          "story": 2
         },
         {
           "id": "balcony",
-          "y": 0.42,
+          "y": 0.33,
           "x0": 0.1,
           "x1": 0.9,
-          "label": "2F balcony floor"
+          "label": "2F balcony",
+          "story": 2
         },
         {
           "id": "eave_1f",
-          "y": 0.52,
+          "y": 0.6,
           "x0": 0.06,
           "x1": 0.94,
-          "label": "1F roof eave"
+          "label": "1F roof eave / story split",
+          "story": 1
         },
         {
           "id": "engawa",
-          "y": 0.78,
+          "y": 0.82,
           "x0": 0.08,
           "x1": 0.92,
-          "label": "engawa porch"
+          "label": "engawa porch",
+          "story": 1
         },
         {
           "id": "ground",
-          "y": 0.96,
+          "y": 0.97,
           "x0": 0.05,
           "x1": 0.95,
-          "label": "foundation/ground"
+          "label": "foundation/ground",
+          "story": 0
         }
       ]
     },
@@ -54,21 +63,24 @@
           "y": 0.18,
           "x0": 0.06,
           "x1": 0.94,
-          "label": "main roof"
+          "label": "main roof",
+          "story": 1
         },
         {
           "id": "engawa",
           "y": 0.72,
           "x0": 0.08,
           "x1": 0.92,
-          "label": "engawa porch"
+          "label": "engawa porch",
+          "story": 1
         },
         {
           "id": "ground",
           "y": 0.95,
           "x0": 0.05,
           "x1": 0.95,
-          "label": "foundation/ground"
+          "label": "foundation/ground",
+          "story": 0
         }
       ]
     },
@@ -83,24 +95,27 @@
           "y": 0.22,
           "x0": 0.18,
           "x1": 0.82,
-          "label": "gate roof"
+          "label": "gate roof",
+          "story": 1
         },
         {
           "id": "lintel",
           "y": 0.4,
           "x0": 0.28,
           "x1": 0.72,
-          "label": "crossbeam"
+          "label": "crossbeam",
+          "story": 1
         },
         {
           "id": "ground",
           "y": 0.92,
           "x0": 0.05,
           "x1": 0.95,
-          "label": "foundation/ground"
+          "label": "foundation/ground",
+          "story": 0
         }
       ]
     }
   ],
-  "notes": "Side-view map platforms. Collision ledges are normalized 0-1 relative to sprite width/height (y from top). Player stands on ledge y."
+  "notes": "house_2story rebuilt: story2 = 1.5 * story1, split at eave_1f y\u22480.60. Layout scales 2-story so ground\u2192eave_1f equals ground\u2192one-story roof. Climb/drop moves one story rank. Ledge y from assets-v1."
 }

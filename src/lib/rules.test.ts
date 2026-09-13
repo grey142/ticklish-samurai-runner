@@ -7,6 +7,7 @@ import {
   pickWeighted,
   pointsFromDistance,
   slashRecharge,
+  ownerHasLiveShot,
   spawnCap,
   speedLevelFor,
   struggleAfterTap,
@@ -77,5 +78,14 @@ describe("struggle mash", () => {
   it("adds +6 toward 100", () => {
     expect(struggleAfterTap(0, 6, 100)).toBe(6);
     expect(struggleAfterTap(96, 6, 100)).toBe(100);
+  });
+});
+
+describe("projectiles", () => {
+  it("allows only one live shot per shooter", () => {
+    const actors = [{ kind: "projectile", ownerId: "e1" }];
+    expect(ownerHasLiveShot(actors, "e1")).toBe(true);
+    expect(ownerHasLiveShot(actors, "e2")).toBe(false);
+    expect(ownerHasLiveShot([], "e1")).toBe(false);
   });
 });

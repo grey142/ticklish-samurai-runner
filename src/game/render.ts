@@ -140,13 +140,12 @@ function drawSilhouette(
 function drawPlayer(g: Game): void {
   const { ctx } = g;
   const t = g.time;
-  const bob = g.onGround || g.onRoof ? Math.sin(t * 12) * 3 : 0;
   const pose = g.slashFlash > 0 ? "slash" : !g.onGround && !g.onRoof ? "jump" : "run";
   const img = g.images.get(playerPosePath(pose)) ?? g.images.get(playerPosePath("run"));
   const boxW = g.playerW;
   const boxH = g.playerH;
   const dx = g.playerX;
-  const dy = g.playerY + bob;
+  const dy = g.playerY;
   ctx.save();
   if (g.invuln > 0 && !g.shadeActive() && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.45;
   if (img && g.shadeActive()) {
@@ -168,7 +167,7 @@ function drawPlayer(g: Game): void {
   } else if (img) {
     drawSprite(ctx, img, dx, dy, boxW, boxH);
   } else {
-    ctx.translate(g.playerX, g.playerY + bob);
+    ctx.translate(g.playerX, g.playerY);
     ctx.scale(g.playerH / 110, g.playerH / 110);
     drawIkielaBody(ctx, 0, 0, false, g.slashFlash > 0);
   }
@@ -345,21 +344,23 @@ function drawHud(g: Game): void {
   ctx.fillText(`HP ${Math.max(0, Math.ceil(g.hp))}/${g.maxHp}`, 28, 114);
 
   const slash = g.input.slashRect;
-  const ready = g.slashCd <= 0;
-  ctx.fillStyle = ready ? "rgba(255, 77, 141, 0.9)" : "rgba(40,20,28,0.8)";
-  round(ctx, slash.x, slash.y, slash.w, slash.h, 28);
-  ctx.fill();
-  ctx.strokeStyle = "#f4e7d8";
-  ctx.lineWidth = 2;
-  round(ctx, slash.x, slash.y, slash.w, slash.h, 28);
-  ctx.stroke();
-  ctx.fillStyle = "#f4e7d8";
-  ctx.font = "700 22px Trebuchet MS, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("SLASH", slash.x + slash.w / 2, slash.y + 58);
-  ctx.font = "14px Trebuchet MS, sans-serif";
-  ctx.fillText(ready ? "ready" : g.slashCd.toFixed(1) + "s", slash.x + slash.w / 2, slash.y + 82);
-  ctx.textAlign = "left";
+  if (slash.w > 0 && slash.h > 0) {
+    const ready = g.slashCd <= 0;
+    ctx.fillStyle = ready ? "rgba(255, 77, 141, 0.9)" : "rgba(40,20,28,0.8)";
+    round(ctx, slash.x, slash.y, slash.w, slash.h, 28);
+    ctx.fill();
+    ctx.strokeStyle = "#f4e7d8";
+    ctx.lineWidth = 2;
+    round(ctx, slash.x, slash.y, slash.w, slash.h, 28);
+    ctx.stroke();
+    ctx.fillStyle = "#f4e7d8";
+    ctx.font = `700 ${Math.max(16, Math.round(slash.h * 0.22))}px Trebuchet MS, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.fillText("SLASH", slash.x + slash.w / 2, slash.y + slash.h * 0.48);
+    ctx.font = `${Math.max(12, Math.round(slash.h * 0.14))}px Trebuchet MS, sans-serif`;
+    ctx.fillText(ready ? "ready" : g.slashCd.toFixed(1) + "s", slash.x + slash.w / 2, slash.y + slash.h * 0.68);
+    ctx.textAlign = "left";
+  }
 
   for (const p of g.input.perkRects) {
     const cd = g.perkCd[p.id] ?? 0;
@@ -369,14 +370,14 @@ function drawHud(g: Game): void {
     ctx.fillStyle = "#f4e7d8";
     ctx.font = "11px Trebuchet MS, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(p.id.replace(/-/g, " "), p.x + p.w / 2, p.y + 28);
-    if (cd > 0) ctx.fillText(cd.toFixed(1), p.x + p.w / 2, p.y + 46);
+    ctx.fillText(p.id.replace(/-/g, " "), p.x + p.w / 2, p.y + p.h * 0.45);
+    if (cd > 0) ctx.fillText(cd.toFixed(1), p.x + p.w / 2, p.y + p.h * 0.72);
     ctx.textAlign = "left";
   }
 
   ctx.fillStyle = "rgba(244,231,216,0.7)";
   ctx.font = "14px Trebuchet MS, sans-serif";
-  ctx.fillText("tap jump · hold first jump · swipe up climb ledge · swipe down slam/drop · J slash · 1–4 abilities", 16, g.h - 16);
+  ctx.fillText("LEFT thumb: jump / swipe climb·drop     RIGHT: slash + abilities", 16, g.h - 14);
   void w;
 }
 
@@ -412,6 +413,18 @@ function drawStruggle(g: Game): void {
   ctx.fillRect(w * 0.2, 92, w * 0.6, 22);
   ctx.fillStyle = "#ff4d8d";
   ctx.fillRect(w * 0.2, 92, w * 0.6 * (s.meter / 100), 22);
+
+  const mashH = Math.max(72, h * 0.22);
+  ctx.fillStyle = "rgba(255, 77, 141, 0.82)";
+  round(ctx, w * 0.08, h - mashH - 12, w * 0.84, mashH, 18);
+  ctx.fill();
+  ctx.fillStyle = "#f4e7d8";
+  ctx.font = "700 28px Trebuchet MS, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("TAP ANYWHERE — MASH", w / 2, h - mashH * 0.45);
+  ctx.font = "16px Trebuchet MS, sans-serif";
+  ctx.fillText("or hold — every tap counts", w / 2, h - mashH * 0.22);
+  ctx.textAlign = "left";
 }
 
 function drawGameOver(g: Game): void {
@@ -479,7 +492,7 @@ function drawHowto(g: Game): void {
   const lines = [
     "Always runs right. No pause — only a grab or a game-over stops her.",
     "Tap = jump (~half screen, ~3s if held). Release early to drop. Second tap = double jump.",
-    "Swipe down in air = slam. Swipe up / C = climb the nearest porch or roof. Swipe down on a ledge = drop.",
+    "Swipe down in air = slam. Swipe up / C = climb one story (street → 1F/roof, 1F → 2F). Swipe down on a ledge = drop one story.",
     "SLASH is the right-hand button. Base 1.5s. Shop cuts 0.2s ×5. Hayate halves the final recharge.",
     "Grab / egg-web / bolo / slime / thrown hand = struggle. Mash +6 to 100 before 16s or HP 0.",
     "Pink flash + laugh every second. Cinematic every 4s. Roof-jump kills pay double.",
@@ -494,12 +507,13 @@ function drawShop(g: Game): void {
   const { ctx, w, h } = g;
   ctx.fillStyle = "rgba(10,6,14,0.78)";
   ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = "#f4e7d8";
-  ctx.font = "700 28px Trebuchet MS, sans-serif";
-  ctx.fillText("Night Market", 140, 36);
-  ctx.font = "18px Trebuchet MS, sans-serif";
+  const back = g.input.uiRects.find((r) => r.id === "back");
+  const headerY = back ? back.y + back.h / 2 + 6 : 36;
   ctx.fillStyle = "#d9b88c";
-  ctx.fillText(`${g.save.coins} coins`, 400, 36);
+  ctx.font = "18px Trebuchet MS, sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText(`${g.save.coins} coins`, w - 16, headerY);
+  ctx.textAlign = "left";
   button(ctx, g, "back", "Back");
   button(ctx, g, "tab-blades", g.shopTab === "blades" ? "• Blades" : "Blades");
   button(ctx, g, "tab-armor", g.shopTab === "armor" ? "• Armor" : "Armor");
@@ -543,9 +557,9 @@ function button(ctx: CanvasRenderingContext2D, g: Game, id: string, label: strin
   round(ctx, box.x, box.y, box.w, box.h, 10);
   ctx.stroke();
   ctx.fillStyle = "#f4e7d8";
-  ctx.font = "15px Trebuchet MS, sans-serif";
+  ctx.font = `${Math.max(15, Math.min(22, Math.round(box.h * 0.38)))}px Trebuchet MS, sans-serif`;
   ctx.textAlign = "center";
-  ctx.fillText(label, box.x + box.w / 2, box.y + box.h / 2 + 5);
+  ctx.fillText(label, box.x + box.w / 2, box.y + box.h / 2 + box.h * 0.08);
   ctx.textAlign = "left";
 }
 
