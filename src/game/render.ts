@@ -42,8 +42,8 @@ function drawCity(g: Game): void {
   ctx.fill();
 
   const scroll = g.worldX;
-  drawSilhouette(ctx, w, h, scroll * 0.18, h * 0.42, "#1b0e22", 1);
-  drawSilhouette(ctx, w, h, scroll * 0.35, h * 0.5, "#241328", 0.7);
+  drawSilhouette(ctx, w, h, scroll * 0.18, h * 0.4, "#3a2238", 1);
+  drawSilhouette(ctx, w, h, scroll * 0.35, h * 0.48, "#2a1628", 0.75);
   lanterns(ctx, w, h, scroll);
 
   ctx.fillStyle = "#2a1a16";
@@ -110,56 +110,13 @@ function lanterns(ctx: CanvasRenderingContext2D, w: number, h: number, scroll: n
 
 function drawPlayer(g: Game): void {
   const { ctx } = g;
-  const x = g.playerX;
-  const y = g.playerY;
   const t = g.time;
-  const bob = g.onGround || g.onRoof ? Math.sin(t * 10) * 2 : 0;
+  const bob = g.onGround || g.onRoof ? Math.sin(t * 10) * 3 : 0;
   ctx.save();
-  ctx.translate(x, y + bob);
+  ctx.translate(g.playerX, g.playerY + bob);
+  ctx.scale(g.playerH / 110, g.playerH / 110);
   if (g.invuln > 0 && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.45;
-
-  // silver crop armor, bare midriff, long hair, barefoot
-  ctx.fillStyle = "#1a1210";
-  ctx.fillRect(10, 8, 28, 36);
-  ctx.beginPath();
-  ctx.fillStyle = "#f0c8a8";
-  ctx.arc(24, 16, 12, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#111";
-  ctx.fillRect(12, 6, 24, 10);
-  ctx.fillRect(8, 12, 10, 22);
-
-  ctx.fillStyle = "#cfd6de";
-  ctx.fillRect(8, 30, 32, 16);
-  ctx.fillStyle = "#8b1e2e";
-  ctx.fillRect(8, 44, 32, 3);
-  ctx.fillStyle = "#e8b496";
-  ctx.fillRect(12, 47, 24, 14);
-  ctx.fillStyle = "#cfd6de";
-  ctx.fillRect(10, 60, 28, 18);
-  ctx.fillStyle = "#2a1c18";
-  ctx.fillRect(14, 76, 8, 16);
-  ctx.fillRect(26, 76, 8, 16);
-  ctx.fillStyle = "#e8b496";
-  ctx.fillRect(14, 90, 8, 5);
-  ctx.fillRect(26, 90, 8, 5);
-
-  ctx.fillStyle = "#cfd6de";
-  ctx.fillRect(-2, 32, 12, 10);
-  ctx.fillRect(36, 32, 12, 10);
-
-  if (g.slashFlash > 0) {
-    ctx.strokeStyle = "#f4e7d8";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(56, 40, 34, -0.8, 0.9);
-    ctx.stroke();
-  } else {
-    ctx.fillStyle = "#d0d5dc";
-    ctx.fillRect(40, 18, 4, 52);
-    ctx.fillStyle = "#9aa3ae";
-    ctx.fillRect(38, 14, 8, 10);
-  }
+  drawIkielaBody(ctx, 0, 0, false, g.slashFlash > 0);
   ctx.restore();
 }
 
@@ -285,26 +242,26 @@ function drawParticles(g: Game): void {
 function drawHud(g: Game): void {
   const { ctx, w } = g;
   const { level } = speedLevelFor(g.distance, g.cfg);
-  panel(ctx, 16, 12, 300, 58, "rgba(10,6,12,0.62)");
+  panel(ctx, 16, 12, 360, 78, "rgba(10,6,12,0.72)");
   ctx.fillStyle = "#f4e7d8";
-  ctx.font = "700 16px Trebuchet MS, sans-serif";
-  ctx.fillText(`${Math.floor(g.distance)} m  ·  L${level}`, 28, 34);
-  ctx.font = "13px Trebuchet MS, sans-serif";
+  ctx.font = "700 22px Trebuchet MS, sans-serif";
+  ctx.fillText(`${Math.floor(g.distance)} m   ·   L${level}`, 30, 40);
+  ctx.font = "16px Trebuchet MS, sans-serif";
   ctx.fillStyle = g.hudCoinsFlash > 0 ? "#ffe08a" : "#d9b88c";
-  ctx.fillText(`${g.save.coins + g.runCoins} coins  ·  +${g.runCoins} this run`, 28, 54);
+  ctx.fillText(`${g.save.coins + g.runCoins} coins   ·   +${g.runCoins} this run`, 30, 64);
 
-  panel(ctx, 16, 76, 220, 18, "rgba(10,6,12,0.55)");
+  panel(ctx, 16, 96, 280, 26, "rgba(10,6,12,0.65)");
   ctx.fillStyle = "#6d2038";
-  ctx.fillRect(18, 78, 216, 14);
+  ctx.fillRect(20, 100, 272, 18);
   ctx.fillStyle = "#ff4d8d";
-  ctx.fillRect(18, 78, 216 * (g.hp / g.maxHp), 14);
+  ctx.fillRect(20, 100, 272 * (g.hp / g.maxHp), 18);
   ctx.fillStyle = "#f4e7d8";
-  ctx.font = "11px Trebuchet MS, sans-serif";
-  ctx.fillText(`HP ${Math.max(0, Math.ceil(g.hp))}/${g.maxHp}`, 24, 90);
+  ctx.font = "700 14px Trebuchet MS, sans-serif";
+  ctx.fillText(`HP ${Math.max(0, Math.ceil(g.hp))}/${g.maxHp}`, 28, 114);
 
   const slash = g.input.slashRect;
   const ready = g.slashCd <= 0;
-  ctx.fillStyle = ready ? "rgba(255, 77, 141, 0.85)" : "rgba(40,20,28,0.8)";
+  ctx.fillStyle = ready ? "rgba(255, 77, 141, 0.9)" : "rgba(40,20,28,0.8)";
   round(ctx, slash.x, slash.y, slash.w, slash.h, 28);
   ctx.fill();
   ctx.strokeStyle = "#f4e7d8";
@@ -312,11 +269,11 @@ function drawHud(g: Game): void {
   round(ctx, slash.x, slash.y, slash.w, slash.h, 28);
   ctx.stroke();
   ctx.fillStyle = "#f4e7d8";
-  ctx.font = "700 18px Trebuchet MS, sans-serif";
+  ctx.font = "700 22px Trebuchet MS, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText("SLASH", slash.x + slash.w / 2, slash.y + 58);
-  ctx.font = "12px Trebuchet MS, sans-serif";
-  ctx.fillText(ready ? "ready" : g.slashCd.toFixed(1) + "s", slash.x + slash.w / 2, slash.y + 80);
+  ctx.font = "14px Trebuchet MS, sans-serif";
+  ctx.fillText(ready ? "ready" : g.slashCd.toFixed(1) + "s", slash.x + slash.w / 2, slash.y + 82);
   ctx.textAlign = "left";
 
   for (const p of g.input.perkRects) {
@@ -332,9 +289,9 @@ function drawHud(g: Game): void {
     ctx.textAlign = "left";
   }
 
-  ctx.fillStyle = "rgba(244,231,216,0.45)";
-  ctx.font = "11px Trebuchet MS, sans-serif";
-  ctx.fillText("tap jump · hold first jump · swipe up roof · swipe down slam", 16, g.h - 16);
+  ctx.fillStyle = "rgba(244,231,216,0.7)";
+  ctx.font = "14px Trebuchet MS, sans-serif";
+  ctx.fillText("tap jump · hold first jump · swipe up roof · swipe down slam · J slash", 16, g.h - 16);
   void w;
 }
 
@@ -345,31 +302,31 @@ function drawStruggle(g: Game): void {
   ctx.fillStyle = "rgba(40, 8, 24, 0.45)";
   ctx.fillRect(0, 0, w, h);
 
-  panel(ctx, w * 0.18, 24, w * 0.64, 92, "rgba(20,6,14,0.82)");
+  panel(ctx, w * 0.14, 16, w * 0.72, 110, "rgba(20,6,14,0.88)");
   ctx.fillStyle = "#ffb0d0";
-  ctx.font = "700 20px Trebuchet MS, sans-serif";
+  ctx.font = "700 26px Trebuchet MS, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText(`STRUGGLE  ·  ${s.sourceName}`, w / 2, 54);
-  ctx.font = "13px Trebuchet MS, sans-serif";
+  ctx.fillText(`STRUGGLE  ·  ${s.sourceName}`, w / 2, 50);
+  ctx.font = "16px Trebuchet MS, sans-serif";
   ctx.fillStyle = "#f4e7d8";
-  ctx.fillText("MASH  +6 / 100   ·   she keeps getting tickled", w / 2, 78);
+  ctx.fillText(`MASH  +6 / 100    ·    ${Math.floor(s.meter)} / 100    ·    she keeps getting tickled`, w / 2, 78);
   ctx.textAlign = "left";
   ctx.fillStyle = "#3a1020";
-  ctx.fillRect(w * 0.22, 90, w * 0.56, 16);
+  ctx.fillRect(w * 0.2, 92, w * 0.6, 22);
   ctx.fillStyle = "#ff4d8d";
-  ctx.fillRect(w * 0.22, 90, w * 0.56 * (s.meter / 100), 16);
+  ctx.fillRect(w * 0.2, 92, w * 0.6 * (s.meter / 100), 22);
 
-  drawIkielaPose(ctx, w * 0.5 - 70, h * 0.34, false);
+  drawIkielaPose(ctx, w * 0.5 - 90, h * 0.32, false, 1.35);
 
   if (s.showCinematic > 0) {
-    panel(ctx, w * 0.14, h * 0.22, w * 0.72, h * 0.42, "rgba(12,6,14,0.9)");
-    drawIkielaPose(ctx, w * 0.22, h * 0.3, false);
+    panel(ctx, w * 0.1, h * 0.2, w * 0.8, h * 0.48, "rgba(12,6,14,0.92)");
+    drawIkielaPose(ctx, w * 0.16, h * 0.26, false, 1.2);
     ctx.fillStyle = "#ffb0d0";
-    ctx.font = "700 16px Trebuchet MS, sans-serif";
-    ctx.fillText(`Beat ${s.beat + 1} / 3`, w * 0.42, h * 0.32);
+    ctx.font = "700 20px Trebuchet MS, sans-serif";
+    ctx.fillText(`Beat ${s.beat + 1} / 3`, w * 0.42, h * 0.3);
     ctx.fillStyle = "#f4e7d8";
-    ctx.font = "16px Trebuchet MS, sans-serif";
-    wrapText(ctx, s.lines[s.beat] ?? g.cinematics.beats[s.beat], w * 0.42, h * 0.38, w * 0.4, 22);
+    ctx.font = "18px Trebuchet MS, sans-serif";
+    wrapText(ctx, s.lines[s.beat] ?? g.cinematics.beats[s.beat], w * 0.42, h * 0.38, w * 0.42, 26);
   }
 }
 
@@ -379,18 +336,18 @@ function drawGameOver(g: Game): void {
   ctx.fillRect(0, 0, w, h);
   panel(ctx, w * 0.16, 20, w * 0.68, h * 0.58, "rgba(18,6,12,0.9)");
   ctx.fillStyle = "#ff4d8d";
-  ctx.font = "700 28px Trebuchet MS, sans-serif";
+  ctx.font = "700 34px Trebuchet MS, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("LAUGHED OUT", w / 2, 56);
-  drawIkielaPose(ctx, w * 0.22, 80, true);
+  ctx.fillText("LAUGHED OUT", w / 2, 58);
+  drawIkielaPose(ctx, w * 0.18, 72, true, 1.15);
   ctx.textAlign = "left";
   ctx.fillStyle = "#f4e7d8";
+  ctx.font = "18px Trebuchet MS, sans-serif";
+  wrapText(ctx, g.overLine, w * 0.4, 110, w * 0.4, 24);
   ctx.font = "16px Trebuchet MS, sans-serif";
-  wrapText(ctx, g.overLine, w * 0.42, 110, w * 0.36, 22);
-  ctx.font = "14px Trebuchet MS, sans-serif";
   ctx.fillStyle = "#d9b88c";
-  ctx.fillText(`${Math.floor(g.distance)} m   +${g.runCoins} coins`, w * 0.42, 210);
-  ctx.fillText(`Bank: ${g.save.coins}   Best: ${g.save.bestDistance} m`, w * 0.42, 232);
+  ctx.fillText(`${Math.floor(g.distance)} m    +${g.runCoins} coins`, w * 0.4, 220);
+  ctx.fillText(`Bank: ${g.save.coins}    Best: ${g.save.bestDistance} m`, w * 0.4, 246);
 
   button(ctx, g, "revive", !g.usedRevive && g.save.coins >= g.cfg.economy.reviveCost ? "Revive  300 coins" : "Revive locked");
   button(ctx, g, "retry", "Run again");
@@ -404,16 +361,16 @@ function drawMenu(g: Game): void {
   ctx.fillRect(0, 0, w, h);
   ctx.textAlign = "center";
   ctx.fillStyle = "#ff4d8d";
-  ctx.font = "700 42px Trebuchet MS, sans-serif";
-  ctx.fillText("TICKLISH SAMURAI RUNNER", w / 2, h * 0.22);
+  ctx.font = "700 40px Trebuchet MS, sans-serif";
+  ctx.fillText("TICKLISH SAMURAI RUNNER", w / 2, h * 0.2);
   ctx.fillStyle = "#f4e7d8";
-  ctx.font = "18px Trebuchet MS, sans-serif";
-  ctx.fillText("Ikiela vs. the tickle-zombies of the old imperial city", w / 2, h * 0.3);
-  ctx.font = "13px Trebuchet MS, sans-serif";
+  ctx.font = "20px Trebuchet MS, sans-serif";
+  ctx.fillText("Ikiela vs. the tickle-zombies of the old imperial city", w / 2, h * 0.28);
+  ctx.font = "16px Trebuchet MS, sans-serif";
   ctx.fillStyle = "#d9b88c";
-  ctx.fillText(`${g.save.coins} coins in the sash  ·  best ${g.save.bestDistance} m`, w / 2, h * 0.36);
+  ctx.fillText(`${g.save.coins} coins in the sash  ·  best ${g.save.bestDistance} m`, w / 2, h * 0.34);
   ctx.textAlign = "left";
-  drawIkielaPose(ctx, w * 0.08, h * 0.42, false);
+  drawIkielaPose(ctx, w * 0.06, h * 0.4, false, 1.15);
   button(ctx, g, "play", "Run");
   button(ctx, g, "shop", "Shop");
   button(ctx, g, "howto", "How to play");
@@ -447,11 +404,11 @@ function drawShop(g: Game): void {
   ctx.fillStyle = "rgba(10,6,14,0.78)";
   ctx.fillRect(0, 0, w, h);
   ctx.fillStyle = "#f4e7d8";
-  ctx.font = "700 26px Trebuchet MS, sans-serif";
-  ctx.fillText("Night Market", 160, 46);
-  ctx.font = "14px Trebuchet MS, sans-serif";
+  ctx.font = "700 28px Trebuchet MS, sans-serif";
+  ctx.fillText("Night Market", 140, 36);
+  ctx.font = "18px Trebuchet MS, sans-serif";
   ctx.fillStyle = "#d9b88c";
-  ctx.fillText(`${g.save.coins} coins`, 400, 46);
+  ctx.fillText(`${g.save.coins} coins`, 400, 36);
   button(ctx, g, "back", "Back");
   button(ctx, g, "tab-blades", g.shopTab === "blades" ? "• Blades" : "Blades");
   button(ctx, g, "tab-armor", g.shopTab === "armor" ? "• Armor" : "Armor");
@@ -462,10 +419,10 @@ function drawShop(g: Game): void {
     const hayate = g.hayate();
     panel(ctx, 16, 96, 420, 120, "rgba(20,10,16,0.88)");
     ctx.fillStyle = "#f4e7d8";
-    ctx.font = "15px Trebuchet MS, sans-serif";
-    ctx.fillText(`Upgrades ${g.save.slashUpgrades}/5`, 28, 122);
-    ctx.fillText(`Recharge now: ${g.recharge().toFixed(2)}s${hayate ? " (Hayate ×0.5)" : ""}`, 28, 146);
-    ctx.fillText(cost == null ? "Maxed." : `Next: ${cost} coins (−0.2s)`, 28, 168);
+    ctx.font = "18px Trebuchet MS, sans-serif";
+    ctx.fillText(`Upgrades ${g.save.slashUpgrades}/5`, 28, 128);
+    ctx.fillText(`Recharge now: ${g.recharge().toFixed(2)}s${hayate ? " (Hayate ×0.5)" : ""}`, 28, 156);
+    ctx.fillText(cost == null ? "Maxed." : `Next: ${cost} coins (−0.2s)`, 28, 184);
     button(ctx, g, "buy-slash", cost == null ? "Maxed" : `Buy upgrade  ${cost}`);
   } else if (g.shopTab === "blades") {
     g.shop.katanas.forEach((k) => {
@@ -495,7 +452,7 @@ function button(ctx: CanvasRenderingContext2D, g: Game, id: string, label: strin
   round(ctx, box.x, box.y, box.w, box.h, 10);
   ctx.stroke();
   ctx.fillStyle = "#f4e7d8";
-  ctx.font = "16px Trebuchet MS, sans-serif";
+  ctx.font = "15px Trebuchet MS, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText(label, box.x + box.w / 2, box.y + box.h / 2 + 5);
   ctx.textAlign = "left";
@@ -532,33 +489,68 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   if (line) ctx.fillText(line, x, yy);
 }
 
-function drawIkielaPose(ctx: CanvasRenderingContext2D, x: number, y: number, bikini: boolean): void {
+function drawIkielaPose(ctx: CanvasRenderingContext2D, x: number, y: number, bikini: boolean, scale = 1): void {
   ctx.save();
   ctx.translate(x, y);
-  ctx.fillStyle = "#111";
-  ctx.fillRect(28, 8, 50, 70);
+  ctx.scale(scale, scale);
+  drawIkielaBody(ctx, 0, 0, bikini, false);
+  ctx.restore();
+}
+
+function drawIkielaBody(ctx: CanvasRenderingContext2D, x: number, y: number, bikini: boolean, slashing: boolean): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = "#141010";
+  ctx.beginPath();
+  ctx.moveTo(8, 20);
+  ctx.lineTo(22, 4);
+  ctx.lineTo(48, 8);
+  ctx.lineTo(40, 78);
+  ctx.lineTo(6, 70);
+  ctx.fill();
   ctx.fillStyle = "#f0c8a8";
   ctx.beginPath();
-  ctx.arc(52, 28, 18, 0, Math.PI * 2);
+  ctx.arc(32, 22, 14, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#111";
-  ctx.fillRect(34, 8, 40, 16);
+  ctx.fillStyle = "#1a1210";
+  ctx.fillRect(18, 8, 30, 12);
+  ctx.fillRect(10, 16, 12, 28);
   if (bikini) {
     ctx.fillStyle = "#c81e3a";
-    ctx.fillRect(34, 52, 38, 12);
-    ctx.fillRect(38, 86, 30, 10);
+    ctx.fillRect(18, 48, 30, 10);
+    ctx.fillRect(20, 78, 26, 9);
     ctx.fillStyle = "#e8b496";
-    ctx.fillRect(36, 64, 34, 22);
+    ctx.fillRect(20, 58, 26, 20);
   } else {
-    ctx.fillStyle = "#cfd6de";
-    ctx.fillRect(30, 50, 46, 22);
+    ctx.fillStyle = "#d8dee6";
+    ctx.fillRect(16, 42, 34, 16);
+    ctx.fillStyle = "#8b1e2e";
+    ctx.fillRect(16, 56, 34, 3);
     ctx.fillStyle = "#e8b496";
-    ctx.fillRect(36, 72, 34, 16);
-    ctx.fillStyle = "#cfd6de";
-    ctx.fillRect(32, 88, 42, 20);
+    ctx.fillRect(20, 59, 26, 14);
+    ctx.fillStyle = "#c5ccd6";
+    ctx.fillRect(17, 73, 32, 18);
   }
+  ctx.fillStyle = "#2a1c18";
+  ctx.fillRect(20, 92, 9, 16);
+  ctx.fillRect(35, 92, 9, 16);
   ctx.fillStyle = "#e8b496";
-  ctx.fillRect(38, 128, 10, 16);
-  ctx.fillRect(58, 128, 10, 16);
+  ctx.fillRect(20, 106, 9, 5);
+  ctx.fillRect(35, 106, 9, 5);
+  ctx.fillStyle = "#d8dee6";
+  ctx.fillRect(4, 46, 14, 9);
+  ctx.fillRect(46, 46, 14, 9);
+  if (slashing) {
+    ctx.strokeStyle = "#f4e7d8";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(72, 50, 40, -0.9, 0.95);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = "#d0d5dc";
+    ctx.fillRect(54, 18, 5, 62);
+    ctx.fillStyle = "#9aa3ae";
+    ctx.fillRect(51, 14, 11, 10);
+  }
   ctx.restore();
 }

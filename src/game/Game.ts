@@ -138,6 +138,9 @@ export class Game {
     const h = Math.max(360, window.innerHeight);
     this.w = w;
     this.h = h;
+    this.playerH = Math.round(h * 0.26);
+    this.playerW = Math.round(this.playerH * 0.5);
+    this.playerX = Math.round(w * 0.15);
     this.canvas.width = Math.floor(w * dpr);
     this.canvas.height = Math.floor(h * dpr);
     this.canvas.style.width = `${w}px`;
@@ -156,7 +159,7 @@ export class Game {
     this.actors = [];
     this.particles = [];
     this.spawnLog = [];
-    this.lastSpawnAt = -8;
+    this.lastSpawnAt = 0;
     this.struggle = null;
     this.usedRevive = false;
     this.jumps = 0;
@@ -165,7 +168,7 @@ export class Game {
     this.onRoof = false;
     this.holdingFirst = false;
     this.slam = false;
-    this.invuln = 0.6;
+    this.invuln = 1.5;
     this.slashCd = 0;
     this.slashFlash = 0;
     this.perkCd = {};
@@ -294,14 +297,14 @@ export class Game {
     this.updatePlayer(dt, input, run);
     this.maybeSpawn(level);
     this.updateActors(dt, run, level);
+    if (input.slash) this.trySlash();
+    if (input.perk) this.tryPerk(input.perk);
     this.resolveCombat();
     this.slashCd = Math.max(0, this.slashCd - dt);
     this.slashFlash = Math.max(0, this.slashFlash - dt);
     this.invuln = Math.max(0, this.invuln - dt);
     for (const k of Object.keys(this.perkCd)) this.perkCd[k] = Math.max(0, this.perkCd[k] - dt);
     this.updateParticles(dt);
-    if (input.slash) this.trySlash();
-    if (input.perk) this.tryPerk(input.perk);
   }
 
   private updatePlayer(dt: number, input: InputFrame, _run: number): void {
@@ -390,6 +393,7 @@ export class Game {
   }
 
   private maybeSpawn(level: number): void {
+    if (this.distance < 20) return;
     if (this.distance - this.lastSpawnAt < this.cfg.spawn.minStaggerMeters) return;
     const windowStart = this.distance - 100;
     this.spawnLog = this.spawnLog.filter((d) => d >= windowStart);
@@ -414,23 +418,26 @@ export class Game {
 
   private spawnEnemy(id: string): void {
     const def = this.def(id);
+    const s = this.h / 720;
+    const ew = def.w * s * 1.25;
+    const eh = def.h * s * 1.25;
     const flying = def.flying;
     const roof = !flying && Math.random() < 0.18 && def.role !== "trap";
     const lane: Actor["lane"] = flying ? "air" : roof ? "roof" : "ground";
     const y =
       lane === "roof"
-        ? this.roofY() - def.h
+        ? this.roofY() - eh
         : lane === "air"
-          ? this.groundY() - def.h - this.h * 0.22
-          : this.groundY() - def.h;
+          ? this.groundY() - eh - this.playerH * 0.28
+          : this.groundY() - eh;
     this.actors.push({
       kind: "enemy",
       id: `e${nextActor++}`,
       defId: id,
       x: this.w + 40 + Math.random() * 80,
       y,
-      w: def.w,
-      h: def.h,
+      w: ew,
+      h: eh,
       hp: def.hp,
       maxHp: def.hp,
       vx: def.approach,
@@ -462,14 +469,15 @@ export class Game {
 
   private fireProjectile(id: string, from: Actor): void {
     const p = this.projDef(id);
+    const s = this.h / 720;
     this.actors.push({
       kind: "projectile",
       id: `p${nextActor++}`,
       defId: id,
       x: from.x - 10,
       y: from.y + from.h * 0.35,
-      w: p.w,
-      h: p.h,
+      w: p.w * s * 1.2,
+      h: p.h * s * 1.2,
       hp: 1,
       maxHp: 1,
       vx: p.speed,
@@ -604,6 +612,7 @@ export class Game {
       beat: 0,
       showCinematic: 0,
       lines: pack.struggle,
+      mashClock: 0,
     };
     this.sfx.grab();
     this.pinkFlash = 0.25;
@@ -618,6 +627,13 @@ export class Game {
     this.hp -= s.ticklePerSec * dt;
     if (input.struggleTap || input.jumpPressed || input.slash) {
       s.meter = struggleAfterTap(s.meter, this.cfg.struggle.tapGain, this.cfg.struggle.escapeAt);
+      s.mashClock = 0;
+    } else if (input.jumpHeld) {
+      s.mashClock += dt;
+      if (s.mashClock >= 0.16) {
+        s.mashClock = 0;
+        s.meter = struggleAfterTap(s.meter, this.cfg.struggle.tapGain, this.cfg.struggle.escapeAt);
+      }
     }
     s.nextFlash -= dt;
     if (s.nextFlash <= 0) {

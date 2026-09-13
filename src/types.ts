@@ -165,6 +165,7 @@ export interface StruggleState {
   beat: number;
   showCinematic: number;
   lines: string[];
+  mashClock: number;
 }
 
 export interface Particle {
