@@ -86,10 +86,10 @@ function drawHouse(ctx: CanvasRenderingContext2D, w: number, h: number, floors: 
   const eaveOver = w * 0.07;
   const wallX = eaveOver;
   const wallW = w - eaveOver * 2;
-  // A tall, chunky tiled roof fills most of the slice that is visible while the
-  // player stands on the roof lane, so the crest reads as a solid roof surface
-  // directly under her feet rather than a thin bar over empty space.
-  const roofH = h * (floors === 2 ? 0.13 : 0.15);
+  // A chunky tiled roof reads as a solid surface under the runner's feet, but is
+  // kept short enough that the lit upper-floor screens stay visible just below it
+  // in the roof-lane view, visually tying the roof to the house beneath it.
+  const roofH = h * (floors === 2 ? 0.1 : 0.115);
   const wallTop = roofH;
 
   // Full plaster wall behind everything.
@@ -103,19 +103,13 @@ function drawHouse(ctx: CanvasRenderingContext2D, w: number, h: number, floors: 
   const post = Math.max(4, w * 0.05);
   const beam = Math.max(3, h * 0.012);
 
-  // Top-floor eave fascia + shoji band (the part seen from the roof lane).
+  // Lit upper screens directly under the eave — the part seen from the roof lane,
+  // so a row of glowing shoji sits right beneath the roof and ties the two together.
   const topWinY = wallTop + beam;
-  const topWinH = h * 0.075;
+  const topWinH = h * 0.09;
   ctx.fillStyle = PALETTE.timberLit;
   ctx.fillRect(wallX, wallTop, wallW, beam);
-  if (floors === 2) {
-    windowRow(ctx, wallX + post, topWinY, wallW - post * 2, topWinH, 4);
-  } else {
-    // One storey: a plastered gable face with a small vent lattice, no upper room.
-    ctx.fillStyle = PALETTE.plasterShadow;
-    ctx.fillRect(wallX + wallW * 0.4, topWinY, wallW * 0.2, topWinH * 0.7);
-    latticeGrid(ctx, wallX + wallW * 0.4, topWinY, wallW * 0.2, topWinH * 0.7, 3, 2);
-  }
+  windowRow(ctx, wallX + post, topWinY, wallW - post * 2, topWinH, floors === 2 ? 4 : 3);
 
   // Mid-floor eave belt (koshi-yane) — the storey divider, visible from the ground's upper edge.
   const midY = h * (floors === 2 ? 0.44 : 0.5);
@@ -285,7 +279,7 @@ function drawRoof(ctx: CanvasRenderingContext2D, w: number, roofH: number, over:
 // Samurai residence gate (mon): tiled roof over two heavy posts and plank doors.
 function drawGate(ctx: CanvasRenderingContext2D, w: number, h: number): void {
   const over = w * 0.12;
-  const roofH = h * 0.14;
+  const roofH = h * 0.11;
   const post = Math.max(6, w * 0.16);
   const top = roofH;
 
