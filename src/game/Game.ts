@@ -1,4 +1,4 @@
-import { catalogPaths, ImageBank, vfxPath } from "../lib/assets";
+import { catalogPaths, enemySpritePath, ImageBank, projectilePath, vfxPath } from "../lib/assets";
 import { Sfx } from "../lib/audio";
 import { Input, type InputFrame } from "../lib/input";
 import {
@@ -48,6 +48,7 @@ export class Game {
 
   w = 1280;
   h = 720;
+  camY = 0;
   worldX = 0;
   distance = 0;
   runPoints = 0;
@@ -181,12 +182,31 @@ export class Game {
     return slashRecharge(this.cfg, this.save.slashUpgrades, this.hayate());
   }
 
+  mapH(): number {
+    return this.h * 2.15;
+  }
+
   groundY(): number {
-    return this.h * 0.8;
+    return this.mapH() * 0.9;
   }
 
   roofY(): number {
-    return this.h * 0.4;
+    return this.mapH() * 0.36;
+  }
+
+  spriteBox(path: string, height: number): { w: number; h: number } {
+    const img = this.images.get(path);
+    const ar = img && img.height > 0 ? img.width / img.height : 0.48;
+    return { w: Math.max(12, Math.round(height * ar)), h: Math.round(height) };
+  }
+
+  updateCamera(): void {
+    const focus = this.playerY + this.playerH * 0.42;
+    const desired = focus - this.h * 0.62;
+    const maxCam = Math.max(0, this.mapH() - this.h);
+    const target = Math.max(0, Math.min(maxCam, desired));
+    const k = this.screen === "playing" ? 0.18 : 1;
+    this.camY += (target - this.camY) * k;
   }
 
   resize(): void {
@@ -195,8 +215,10 @@ export class Game {
     const h = Math.max(360, window.innerHeight);
     this.w = w;
     this.h = h;
-    this.playerH = Math.round(h * 0.26);
-    this.playerW = Math.round(this.playerH * 0.5);
+    // Quarter of the visible playfield; the world map is taller than the view.
+    this.playerH = Math.round(this.h * 0.25);
+    const box = this.spriteBox("./assets/player/run.png", this.playerH);
+    this.playerW = box.w;
     this.playerX = Math.round(w * 0.15);
     this.canvas.width = Math.floor(w * dpr);
     this.canvas.height = Math.floor(h * dpr);
@@ -205,6 +227,7 @@ export class Game {
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (this.onGround) this.playerY = this.groundY() - this.playerH;
     if (this.onRoof) this.playerY = this.roofY() - this.playerH;
+    this.updateCamera();
   }
 
   startRun(): void {
@@ -235,6 +258,7 @@ export class Game {
     this.applyLoadout();
     this.hp = this.maxHp;
     this.playerY = this.groundY() - this.playerH;
+    this.camY = Math.max(0, this.mapH() - this.h);
     this.sfx.slash();
   }
 
@@ -251,6 +275,7 @@ export class Game {
     else this.updateMeta(input);
     this.pinkFlash = Math.max(0, this.pinkFlash - dt);
     this.hudCoinsFlash = Math.max(0, this.hudCoinsFlash - dt);
+    this.updateCamera();
     drawScene(this);
   }
 
@@ -437,7 +462,7 @@ export class Game {
         if (this.slam) this.slamBurst();
         this.slam = false;
       }
-      const ceiling = this.h * 0.04;
+      const ceiling = 8;
       if (this.playerY < ceiling) {
         this.playerY = ceiling;
         if (this.vy < 0) this.vy = 0;
@@ -482,17 +507,23 @@ export class Game {
   private spawnEnemy(id: string): void {
     const def = this.def(id);
     const trap = def.role === "trap";
-    const eh = this.playerH * (trap ? 0.42 : def.flying ? 0.92 : 1.02);
-    const ew = eh * Math.max(0.42, def.w / Math.max(40, def.h));
+    const spriteH = this.playerH * (trap ? 0.38 : def.flying ? 0.9 : 1);
+    const box = this.spriteBox(enemySpritePath(id, "idle"), spriteH);
+    const eh = box.h;
+    const ew = box.w;
     const flying = def.flying;
-    const roof = !flying && Math.random() < 0.18 && def.role !== "trap";
+    const roof = !flying && !trap && Math.random() < 0.16;
+    const highAir = flying && Math.random() < 0.42;
     const lane: Actor["lane"] = flying ? "air" : roof ? "roof" : "ground";
+    const underGap = this.playerH * 0.3;
     const y =
       lane === "roof"
         ? this.roofY() - eh
-        : lane === "air"
-          ? this.groundY() - eh - this.playerH * 1.05
-          : this.groundY() - eh;
+        : lane === "air" && highAir
+          ? Math.max(12, this.roofY() - eh - this.playerH * 0.12)
+          : lane === "air"
+            ? this.groundY() - this.playerH - underGap - eh
+            : this.groundY() - eh;
     this.actors.push({
       kind: "enemy",
       id: `e${nextActor++}`,
@@ -534,16 +565,15 @@ export class Game {
 
   private fireProjectile(id: string, from: Actor): void {
     const def = this.projDef(id);
-    const pw = Math.max(52, this.playerH * 0.32);
-    const ph = Math.max(40, this.playerH * 0.24);
+    const box = this.spriteBox(projectilePath(id), from.h * 0.5);
     this.actors.push({
       kind: "projectile",
       id: `p${nextActor++}`,
       defId: id,
-      x: from.x - 10,
-      y: from.y + from.h * 0.28,
-      w: pw,
-      h: ph,
+      x: from.x - box.w * 0.35,
+      y: from.y + from.h * 0.5 - box.h * 0.5,
+      w: box.w,
+      h: box.h,
       hp: 1,
       maxHp: 1,
       vx: def.speed,
@@ -553,7 +583,7 @@ export class Game {
   }
 
   private playerBox(): { x: number; y: number; w: number; h: number } {
-    return { x: this.playerX + 8, y: this.playerY + 10, w: this.playerW - 12, h: this.playerH - 14 };
+    return { x: this.playerX, y: this.playerY, w: this.playerW, h: this.playerH };
   }
 
   private overlaps(
@@ -567,9 +597,7 @@ export class Game {
     if (this.invuln > 0 || this.shadeActive() || this.struggle) return;
     const pb = this.playerBox();
     for (const a of this.actors) {
-      const pad = a.kind === "enemy" ? this.def(a.defId).grabRange ?? 0 : 0;
-      const box = { x: a.x - pad * 0.25, y: a.y, w: a.w + pad * 0.25, h: a.h };
-      if (!this.overlaps(pb, box)) continue;
+      if (!this.overlaps(pb, a)) continue;
       if (this.slashFlash > 0 && a.x < this.playerX + this.katana().range + 20) {
         this.hurtActor(a, 10, this.onRoof || this.slam);
         continue;
@@ -601,10 +629,9 @@ export class Game {
       });
     }
     const range = this.katana().range;
+    const slashBox = { x: this.playerX, y: this.playerY, w: this.playerW + range, h: this.playerH };
     for (const a of this.actors) {
-      if (a.x < this.playerX - 20 || a.x > this.playerX + range + a.w) continue;
-      const verticalOk = Math.abs(a.y + a.h / 2 - (this.playerY + this.playerH / 2)) < this.h * 0.28;
-      if (!verticalOk) continue;
+      if (!this.overlaps(slashBox, a)) continue;
       this.hurtActor(a, 10, this.onRoof);
     }
   }
@@ -625,7 +652,7 @@ export class Game {
         if (a.x > this.playerX - 30 && a.x < this.playerX + 260) this.hurtActor(a, 16, this.onRoof);
       }
     } else if (id === "call-lightning") {
-      this.playVfx("call-lightning.png", this.playerX + 40, this.h * 0.08, fxW, this.h * 0.72);
+      this.playVfx("call-lightning.png", this.playerX + 40, this.playerY - this.playerH * 1.6, fxW, this.playerH * 2.8);
       for (const a of this.actors) {
         if (a.kind === "enemy" && a.x < this.w) {
           if (this.armor().perk === "storm-petal") a.electrocuted = true;

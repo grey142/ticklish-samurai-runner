@@ -13,6 +13,8 @@ import type { Game } from "./Game";
 export function drawScene(g: Game): void {
   const { ctx, w, h } = g;
   ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  ctx.translate(0, -g.camY);
   drawCity(g);
   if (g.screen === "playing" || g.screen === "gameover") {
     drawActors(g);
@@ -20,6 +22,7 @@ export function drawScene(g: Game): void {
     drawVfx(g);
     drawParticles(g);
   }
+  ctx.restore();
   if (g.pinkFlash > 0) {
     ctx.fillStyle = `rgba(255, 70, 150, ${0.28 * (g.pinkFlash / 0.22)})`;
     ctx.fillRect(0, 0, w, h);
@@ -33,31 +36,55 @@ export function drawScene(g: Game): void {
   } else if (g.screen === "gameover") drawGameOver(g);
 }
 
+function drawSprite(
+  ctx: CanvasRenderingContext2D,
+  img: CanvasImageSource,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): void {
+  ctx.drawImage(img, x, y, w, h);
+}
+
 function drawCity(g: Game): void {
-  const { ctx, w, h } = g;
-  const sky = ctx.createLinearGradient(0, 0, 0, h);
-  sky.addColorStop(0, "#14081c");
-  sky.addColorStop(0.45, "#2a1230");
+  const { ctx, w } = g;
+  const mh = g.mapH();
+  const sky = ctx.createLinearGradient(0, 0, 0, mh);
+  sky.addColorStop(0, "#1a0c28");
+  sky.addColorStop(0.22, "#14081c");
+  sky.addColorStop(0.55, "#2a1230");
   sky.addColorStop(1, "#1a1014");
   ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, w, h);
+  ctx.fillRect(0, 0, w, mh);
+
+  ctx.fillStyle = "#4a2a48";
+  ctx.fillRect(0, 0, w, 14);
+  ctx.fillStyle = "#2a1528";
+  for (let x = -20; x < w + 40; x += 70) {
+    ctx.beginPath();
+    ctx.moveTo(x, 14);
+    ctx.lineTo(x + 18, 0);
+    ctx.lineTo(x + 36, 14);
+    ctx.fill();
+  }
 
   ctx.fillStyle = "#f3e0b8";
   ctx.beginPath();
-  ctx.arc(w * 0.82, h * 0.16, 36, 0, Math.PI * 2);
+  ctx.arc(w * 0.82, mh * 0.08, 36, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "rgba(243,224,184,0.12)";
   ctx.beginPath();
-  ctx.arc(w * 0.82, h * 0.16, 70, 0, Math.PI * 2);
+  ctx.arc(w * 0.82, mh * 0.08, 70, 0, Math.PI * 2);
   ctx.fill();
 
   const scroll = g.worldX;
-  drawSilhouette(ctx, w, h, scroll * 0.18, h * 0.4, "#3a2238", 1);
-  drawSilhouette(ctx, w, h, scroll * 0.35, h * 0.48, "#2a1628", 0.75);
-  lanterns(ctx, w, h, scroll);
+  drawSilhouette(ctx, w, mh, scroll * 0.18, g.groundY() - mh * 0.28, "#3a2238", 1);
+  drawSilhouette(ctx, w, mh, scroll * 0.35, g.groundY() - mh * 0.18, "#2a1628", 0.75);
+  lanterns(ctx, w, mh, scroll);
 
   ctx.fillStyle = "#2a1a16";
-  ctx.fillRect(0, g.groundY(), w, h - g.groundY());
+  ctx.fillRect(0, g.groundY(), w, mh - g.groundY());
   ctx.fillStyle = "#3a241c";
   ctx.fillRect(0, g.groundY(), w, 8);
   ctx.fillStyle = "rgba(80,40,30,0.55)";
@@ -67,24 +94,32 @@ function drawCity(g: Game): void {
     ctx.fillRect(x - off, g.groundY() + 10, tile - 8, 6);
   }
 
-  ctx.strokeStyle = "rgba(180,90,60,0.35)";
+  ctx.strokeStyle = "rgba(180,90,60,0.45)";
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(0, g.roofY());
   ctx.lineTo(w, g.roofY());
   ctx.stroke();
-  ctx.fillStyle = "rgba(90,40,50,0.25)";
-  ctx.fillRect(0, g.roofY() - 10, w, 10);
+  ctx.fillStyle = "rgba(90,40,50,0.35)";
+  ctx.fillRect(0, g.roofY() - 12, w, 12);
 }
 
-function drawSilhouette(ctx: CanvasRenderingContext2D, w: number, h: number, scroll: number, base: number, color: string, scale: number): void {
+function drawSilhouette(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  bottom: number,
+  scroll: number,
+  base: number,
+  color: string,
+  scale: number,
+): void {
   ctx.fillStyle = color;
   const span = 220 * scale;
   const off = scroll % (span * 3);
   for (let i = -1; i < w / span + 3; i++) {
     const x = i * span - off;
     ctx.beginPath();
-    ctx.moveTo(x, h);
+    ctx.moveTo(x, bottom);
     ctx.lineTo(x, base + 40);
     ctx.lineTo(x + 20, base + 10);
     ctx.lineTo(x + 40, base + 40);
@@ -94,26 +129,27 @@ function drawSilhouette(ctx: CanvasRenderingContext2D, w: number, h: number, scr
     ctx.lineTo(x + 140, base + 20);
     ctx.lineTo(x + 160, base - 20);
     ctx.lineTo(x + 190, base + 30);
-    ctx.lineTo(x + span, h);
+    ctx.lineTo(x + span, bottom);
     ctx.fill();
     ctx.fillRect(x + 70, base - 80 * scale, 8, 30 * scale);
   }
 }
 
-function lanterns(ctx: CanvasRenderingContext2D, w: number, h: number, scroll: number): void {
+function lanterns(ctx: CanvasRenderingContext2D, w: number, mh: number, scroll: number): void {
   const gap = 180;
   const off = (scroll * 0.55) % gap;
   for (let x = -40; x < w + 80; x += gap) {
     const px = x - off;
+    const top = mh * 0.1;
     ctx.fillStyle = "rgba(20,10,12,0.8)";
-    ctx.fillRect(px + 18, h * 0.22, 3, h * 0.4);
+    ctx.fillRect(px + 18, top, 3, mh * 0.22);
     ctx.fillStyle = "#ff6a3a";
     ctx.beginPath();
-    ctx.ellipse(px + 20, h * 0.34, 10, 14, 0, 0, Math.PI * 2);
+    ctx.ellipse(px + 20, top + mh * 0.08, 10, 14, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "rgba(255,140,60,0.15)";
     ctx.beginPath();
-    ctx.arc(px + 20, h * 0.36, 28, 0, Math.PI * 2);
+    ctx.arc(px + 20, top + mh * 0.09, 28, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -124,10 +160,10 @@ function drawPlayer(g: Game): void {
   const bob = g.onGround || g.onRoof ? Math.sin(t * 12) * 3 : 0;
   const pose = g.slashFlash > 0 ? "slash" : g.onRoof ? "climb" : !g.onGround ? "jump" : "run";
   const img = g.images.get(playerPosePath(pose)) ?? g.images.get(playerPosePath("run"));
-  const boxW = g.playerH * 1.15;
-  const boxH = g.playerH * 1.28;
-  const dx = g.playerX - boxW * 0.18;
-  const dy = g.playerY + bob - boxH * 0.18;
+  const boxW = g.playerW;
+  const boxH = g.playerH;
+  const dx = g.playerX;
+  const dy = g.playerY + bob;
   ctx.save();
   if (g.invuln > 0 && !g.shadeActive() && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.45;
   if (img && g.shadeActive()) {
@@ -138,7 +174,7 @@ function drawPlayer(g: Game): void {
     const sctx = scratch.getContext("2d");
     if (sctx) {
       sctx.clearRect(0, 0, scratch.width, scratch.height);
-      drawContained(sctx, img, 0, 0, scratch.width, scratch.height, "bottom");
+      drawSprite(sctx, img, 0, 0, scratch.width, scratch.height);
       sctx.globalCompositeOperation = "source-atop";
       sctx.fillStyle = "rgba(155, 77, 255, 0.72)";
       sctx.fillRect(0, 0, scratch.width, scratch.height);
@@ -147,7 +183,7 @@ function drawPlayer(g: Game): void {
     ctx.globalAlpha = 0.85;
     ctx.drawImage(scratch, dx, dy, boxW, boxH);
   } else if (img) {
-    drawContained(ctx, img, dx, dy, boxW, boxH, "bottom");
+    drawSprite(ctx, img, dx, dy, boxW, boxH);
   } else {
     ctx.translate(g.playerX, g.playerY + bob);
     ctx.scale(g.playerH / 110, g.playerH / 110);
@@ -183,11 +219,11 @@ function drawEnemy(g: Game, id: string, x: number, y: number, w: number, h: numb
   const img = g.images.get(enemySpritePath(id, "idle"));
   if (img) {
     ctx.save();
-    drawContained(ctx, img, x - w * 0.15, y - h * 0.08, w * 1.3, h * 1.12, "bottom");
+    drawSprite(ctx, img, x, y, w, h);
     ctx.fillStyle = "rgba(0,0,0,0.45)";
-    ctx.fillRect(x + 4, y + h - 6, w - 8, 4);
+    ctx.fillRect(x, y - 8, w, 4);
     ctx.fillStyle = "#3d1";
-    ctx.fillRect(x + 6, y + 2, (w - 12) * hp, 4);
+    ctx.fillRect(x, y - 8, w * hp, 4);
     ctx.restore();
     return;
   }
@@ -260,7 +296,7 @@ function drawProjectile(g: Game, id: string, x: number, y: number, w: number, h:
   const { ctx } = g;
   const img = g.images.get(projectilePath(id));
   if (img) {
-    drawContained(ctx, img, x - w * 0.4, y - h * 0.4, w * 1.8, h * 1.8, "center");
+    drawSprite(ctx, img, x, y, w, h);
     return;
   }
   ctx.save();
