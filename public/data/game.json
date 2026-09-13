@@ -12,7 +12,7 @@
     { "level": 6, "distance": 1000, "speedMul": 1.1 }
   ],
   "spawn": {
-    "minStaggerMeters": 6,
+    "minStaggerMeters": 24,
     "windowMeters": 300,
     "maxZombiesPerWindow": [0, 10, 13, 15, 18, 20, 23]
   },

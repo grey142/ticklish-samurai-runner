@@ -492,7 +492,9 @@ export class Game {
     if (!id) return;
     if (Math.random() > 0.55 + level * 0.04) return;
     this.spawnEnemy(id);
-    this.lastSpawnAt = this.distance;
+    const cap = spawnCap(this.cfg, level);
+    const even = this.cfg.spawn.windowMeters / Math.max(1, cap);
+    this.lastSpawnAt = this.distance + Math.random() * Math.max(0, even - this.cfg.spawn.minStaggerMeters);
     this.spawnLog.push(this.distance);
   }
 
