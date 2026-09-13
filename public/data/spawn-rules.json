@@ -1,12 +1,14 @@
 {
   "id": "spawn_density",
-  "description": "Per 300m window with pack spawns. Level and distance ramps.",
+  "description": "Per 300m window with pack spawns. Level and distance ramps. Cap is a ceiling, not a fill quota.",
   "windowMeters": 300,
+  "firstSpawnMeters": 48,
   "stagger": {
     "baseSlotMeters": 6,
     "packSizeMin": 1,
     "packSizeMax": 5,
-    "note": "Each spawn slot may place a random pack of 1\u20135 zombies clustered closer than before, within the liked spacing rhythm. Not always exactly one zombie per slot."
+    "packGapPx": 110,
+    "note": "Most slots are a single zombie. Occasional packs of 2–5 sit ~110px apart so slash/jump still work. First encounter after 48m."
   },
   "maxZombiesPer300MetersByLevel": {
     "1": 30,

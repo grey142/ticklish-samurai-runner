@@ -7,7 +7,8 @@ import {
   projectilePath,
 } from "../lib/assets";
 import { mapPropPath } from "../lib/map-props";
-import { GAMEOVER_LINE, nextSlashUpgradeCost, speedLevelFor } from "../lib/rules";
+import { GAMEOVER_LINE, speedLevelFor } from "../lib/rules";
+import { layoutCheatRows } from "../lib/touch-layout";
 import type { Game } from "./Game";
 
 export function drawScene(g: Game): void {
@@ -26,10 +27,15 @@ export function drawScene(g: Game): void {
   if (g.screen === "menu") drawMenu(g);
   else if (g.screen === "howto") drawHowto(g);
   else if (g.screen === "shop") drawShop(g);
+  else if (g.screen === "cheats") drawCheats(g);
+  else if (g.screen === "compendium" || g.screen === "gallery") drawBrowse(g);
   else if (g.screen === "playing" && g.struggle) drawStruggle(g);
-  else if (g.screen === "playing") drawHud(g);
-  else if (g.screen === "gameover") drawGameOver(g);
-  if (g.pinkFlash > 0) {
+  else if (g.screen === "playing") {
+    drawHud(g);
+    if (g.paused) drawPause(g);
+  } else if (g.screen === "gameover") drawGameOver(g);
+  if (g.viewer) drawViewer(g);
+  if (g.pinkFlash > 0 && !g.viewer) {
     ctx.fillStyle = `rgba(255, 70, 150, ${0.28 * (g.pinkFlash / 0.22)})`;
     ctx.fillRect(0, 0, w, h);
   }
@@ -352,6 +358,8 @@ function drawHud(g: Game): void {
     ctx.textAlign = "left";
   }
 
+  button(ctx, g, "pause", "Pause");
+
   for (const p of g.input.perkRects) {
     const cd = g.perkCd[p.id] ?? 0;
     ctx.fillStyle = cd > 0 ? "rgba(20,16,28,0.75)" : "rgba(90,70,160,0.85)";
@@ -444,6 +452,9 @@ function drawMenu(g: Game): void {
   else drawIkielaPose(ctx, w * 0.06, h * 0.4, false, 1.15);
   button(ctx, g, "play", "Run");
   button(ctx, g, "shop", "Shop");
+  button(ctx, g, "compendium", "Compendium");
+  button(ctx, g, "gallery", "Gallery");
+  button(ctx, g, "cheats", "Cheats");
   button(ctx, g, "howto", "How to play");
 }
 
@@ -457,7 +468,7 @@ function drawHowto(g: Game): void {
   ctx.fillText("Thumb rules", 64, 110);
   ctx.font = "16px Trebuchet MS, sans-serif";
   const lines = [
-    "Always runs right. No pause — only a grab or a game-over stops her.",
+    "Always runs right. Pause (top-right or Esc/P) opens Resume and Cheats.",
     "Tap = jump (~half screen, ~3s if held). Release early to drop. Second tap = double jump.",
     "Swipe down in air = slam. Swipe up / C = climb one story (street → 1F/roof, 1F → 2F). Swipe down on a ledge = drop one story.",
     "SLASH one-shots any zombie or projectile it hits. Base 1.5s. Shop cuts 0.2s ×5. Hayate halves recharge.",
@@ -487,30 +498,133 @@ function drawShop(g: Game): void {
   button(ctx, g, "tab-slash", g.shopTab === "slash" ? "• Slash CD" : "Slash CD");
 
   if (g.shopTab === "slash") {
-    const cost = nextSlashUpgradeCost(g.cfg, g.save.slashUpgrades);
+    const cost = g.slashUpgradeCost();
     const hayate = g.hayate();
     panel(ctx, 16, 96, 420, 120, "rgba(20,10,16,0.88)");
     ctx.fillStyle = "#f4e7d8";
     ctx.font = "18px Trebuchet MS, sans-serif";
     ctx.fillText(`Upgrades ${g.save.slashUpgrades}/5`, 28, 128);
     ctx.fillText(`Recharge now: ${g.recharge().toFixed(2)}s${hayate ? " (haste ×0.5)" : ""}`, 28, 156);
-    ctx.fillText(cost == null ? "Maxed." : `Next: ${cost} coins (−0.2s)`, 28, 184);
-    button(ctx, g, "buy-slash", cost == null ? "Maxed" : `Buy upgrade  ${cost}`);
+    ctx.fillText(cost == null ? "Maxed." : `Next: ${cost === 0 ? "FREE" : cost + " coins"} (−0.2s)`, 28, 184);
+    button(ctx, g, "buy-slash", cost == null ? "Maxed" : `Buy upgrade  ${cost === 0 ? "FREE" : cost}`);
   } else if (g.shopTab === "blades") {
     g.shop.katanas.forEach((k) => {
       const owned = g.save.unlockedKatanas.includes(k.id);
       const eq = g.save.equippedKatana === k.id;
-      const label = `${eq ? "★ " : ""}${k.name}  ·  ${k.range}${owned ? "" : "  ·  " + k.cost + "c"}`;
+      const price = g.shopPrice(k.cost);
+      const label = `${eq ? "★ " : ""}${k.name}  ·  ${k.range}${owned ? "" : "  ·  " + (price === 0 ? "FREE" : price + "c")}`;
       button(ctx, g, "buy-katana-" + k.id, label);
     });
   } else {
     g.shop.armors.forEach((a) => {
       const owned = g.save.unlockedArmors.includes(a.id);
       const eq = g.save.equippedArmor === a.id;
-      const label = `${eq ? "★ " : ""}${a.name}  ·  ${a.hp} HP${owned ? "" : "  ·  " + a.cost + "c"}`;
+      const price = g.shopPrice(a.cost);
+      const label = `${eq ? "★ " : ""}${a.name}  ·  ${a.hp} HP${owned ? "" : "  ·  " + (price === 0 ? "FREE" : price + "c")}`;
       button(ctx, g, "buy-armor-" + a.id, label);
     });
   }
+}
+
+function drawCheats(g: Game): void {
+  const { ctx, w, h } = g;
+  ctx.fillStyle = "rgba(10,6,14,0.82)";
+  ctx.fillRect(0, 0, w, h);
+  button(ctx, g, "back", "Back");
+  button(ctx, g, "page-up", "▲");
+  button(ctx, g, "page-down", "▼");
+  const back = g.input.uiRects.find((r) => r.id === "back");
+  ctx.fillStyle = "#ff4d8d";
+  ctx.font = "700 22px Trebuchet MS, sans-serif";
+  ctx.fillText("Cheats", back ? back.x + back.w + 14 : 16, back ? back.y + back.h * 0.68 : 36);
+  ctx.font = "13px Trebuchet MS, sans-serif";
+  ctx.fillStyle = "#d9b88c";
+  ctx.fillText("Toggles persist. Stack. Free shop unlocks every blade and armor.", back ? back.x + back.w + 14 : 16, (back ? back.y + back.h : 40) + 18);
+
+  const { bodyY, bodyH } = layoutCheatRows(w, h, g.cheats.book.cheats.map((c) => c.id), g.cheatScroll);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, bodyY, w, bodyH);
+  ctx.clip();
+  for (const item of g.cheats.book.cheats) {
+    const on = g.cheats.active(item.id);
+    const box = g.input.uiRects.find((r) => r.id === `cheat-${item.id}`);
+    if (!box) continue;
+    ctx.fillStyle = on ? "rgba(255,77,141,0.34)" : "rgba(255,77,141,0.14)";
+    round(ctx, box.x, box.y, box.w, box.h, 10);
+    ctx.fill();
+    ctx.strokeStyle = on ? "#ffe08a" : "#ff4d8d";
+    ctx.lineWidth = 1.5;
+    round(ctx, box.x, box.y, box.w, box.h, 10);
+    ctx.stroke();
+    ctx.fillStyle = "#f4e7d8";
+    ctx.font = `${Math.max(14, Math.min(18, Math.round(box.h * 0.38)))}px Trebuchet MS, sans-serif`;
+    ctx.textAlign = "left";
+    ctx.fillText(`${on ? "ON" : "off"}  ·  ${item.name}`, box.x + 14, box.y + box.h * 0.62);
+  }
+  ctx.restore();
+}
+
+function drawBrowse(g: Game): void {
+  const { ctx, w, h } = g;
+  ctx.fillStyle = "rgba(10,6,14,0.88)";
+  ctx.fillRect(0, 0, w, h);
+  button(ctx, g, "back", "Back");
+  button(ctx, g, "page-up", "▲");
+  button(ctx, g, "page-down", "▼");
+  const back = g.input.uiRects.find((r) => r.id === "back");
+  ctx.fillStyle = "#ff4d8d";
+  ctx.font = "700 22px Trebuchet MS, sans-serif";
+  ctx.fillText(g.screen === "gallery" ? "Gallery" : "Compendium", back ? back.x + back.w + 14 : 16, back ? back.y + back.h * 0.68 : 36);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, g.browseBodyY, w, g.browseBodyH);
+  ctx.clip();
+  ctx.fillStyle = "#d9b88c";
+  ctx.font = "700 15px Trebuchet MS, sans-serif";
+  for (const header of g.browseHeaders) {
+    if (header.y < g.browseBodyY - 8 || header.y > g.browseBodyY + g.browseBodyH + 20) continue;
+    ctx.fillText(header.text, header.x, header.y);
+  }
+  for (const thumb of g.thumbs) {
+    ctx.fillStyle = "rgba(20,10,16,0.9)";
+    ctx.fillRect(thumb.x, thumb.y, thumb.w, thumb.h);
+    const img = g.images.scene(thumb.src) ?? g.images.get(thumb.src);
+    if (img) drawContained(ctx, img, thumb.x + 2, thumb.y + 2, thumb.w - 4, thumb.h - 4, "center");
+    ctx.strokeStyle = "#ff4d8d";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(thumb.x, thumb.y, thumb.w, thumb.h);
+  }
+  ctx.restore();
+}
+
+function drawPause(g: Game): void {
+  const { ctx, w, h } = g;
+  ctx.fillStyle = "rgba(8,4,10,0.62)";
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = "#ff4d8d";
+  ctx.font = "700 28px Trebuchet MS, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("Paused", w / 2, h * 0.34);
+  ctx.textAlign = "left";
+  button(ctx, g, "resume", "Resume");
+  button(ctx, g, "cheats", "Cheats");
+}
+
+function drawViewer(g: Game): void {
+  const { ctx, w, h } = g;
+  if (!g.viewer) return;
+  ctx.fillStyle = "#0a060c";
+  ctx.fillRect(0, 0, w, h);
+  const shot = g.images.scene(g.viewer.src) ?? g.images.get(g.viewer.src);
+  if (shot) drawContained(ctx, shot, 0, 0, w, h, "center");
+  ctx.fillStyle = "rgba(10,6,12,0.55)";
+  ctx.fillRect(0, 0, w, 52);
+  ctx.fillStyle = "#f4e7d8";
+  ctx.font = "16px Trebuchet MS, sans-serif";
+  ctx.fillText(g.viewer.label, 150, 34);
+  button(ctx, g, "back", "Back");
 }
 
 function button(ctx: CanvasRenderingContext2D, g: Game, id: string, label: string): void {

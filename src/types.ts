@@ -1,4 +1,4 @@
-export type Screen = "menu" | "playing" | "shop" | "howto" | "gameover";
+export type Screen = "menu" | "playing" | "shop" | "howto" | "gameover" | "cheats" | "compendium" | "gallery";
 
 export type EnemyRole = "grab" | "trap" | "ranged" | "grab-ranged";
 

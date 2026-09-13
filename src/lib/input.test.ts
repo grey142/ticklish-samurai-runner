@@ -30,6 +30,11 @@ describe("pointerToView uses draw/view space, not the DPR buffer", () => {
     const start = menu.find((r) => r.id === "play")!;
     const tap = pointerToView(start.x + start.w / 2, start.y + start.h / 2, css, viewW, viewH);
     expect(hitRect(tap.x, tap.y, start)).toBe(true);
+    expect(menu.map((r) => r.id)).toEqual(["play", "shop", "compendium", "gallery", "cheats", "howto"]);
+    for (const r of menu) {
+      expect(r.h).toBeGreaterThanOrEqual(48);
+      expect(r.w).toBeGreaterThanOrEqual(132);
+    }
   });
 
   it("keeps thumb targets at least 56 CSS pixels", () => {

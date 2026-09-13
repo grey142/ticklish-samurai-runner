@@ -10,6 +10,10 @@ export interface InputFrame {
   struggleTap: boolean;
   anyTap: boolean;
   ui: string | null;
+  scroll: number;
+  tapX: number;
+  tapY: number;
+  pauseToggle: boolean;
 }
 
 export interface Rect {
@@ -72,6 +76,10 @@ export class Input {
   perkRects: (Rect & { id: string })[] = [];
   uiRects: (Rect & { id: string })[] = [];
   lastUi: string | null = null;
+  private scrollAcc = 0;
+  private lastTapX = 0;
+  private lastTapY = 0;
+  private pauseQueued = false;
 
   setView(w: number, h: number): void {
     this.viewW = Math.max(1, w);
@@ -115,7 +123,9 @@ export class Input {
       if (e.code === "Digit2") this.perkQueued = "call-lightning";
       if (e.code === "Digit3") this.perkQueued = "blade-of-souls";
       if (e.code === "Digit4") this.perkQueued = "kitsune-shade";
-      if (e.code === "Enter" || e.code === "KeyP") this.tapQueued = true;
+      if (e.code === "Enter") this.tapQueued = true;
+      if (e.code === "Escape" && !e.repeat) this.pauseQueued = true;
+      if (e.code === "KeyP" && !e.repeat) this.pauseQueued = true;
     });
     window.addEventListener("keyup", (e) => {
       this.keys.delete(e.code);
@@ -147,6 +157,8 @@ export class Input {
       /* some WebViews reject capture */
     }
     const { x, y } = this.local(e, canvas);
+    this.lastTapX = x;
+    this.lastTapY = y;
     if (this.mashAll) {
       this.tapQueued = true;
       this.jumpPressed = true;
@@ -184,6 +196,7 @@ export class Input {
     const p = this.pointers.get(e.pointerId);
     if (!p) return;
     const { x, y } = this.local(e, canvas);
+    this.scrollAcc += p.y - y;
     p.x = x;
     p.y = y;
   }
@@ -217,6 +230,10 @@ export class Input {
       struggleTap: this.tapQueued,
       anyTap: this.tapQueued || this.slashQueued,
       ui,
+      scroll: this.scrollAcc,
+      tapX: this.lastTapX,
+      tapY: this.lastTapY,
+      pauseToggle: this.pauseQueued,
     };
     this.jumpPressed = false;
     this.jumpReleased = false;
@@ -225,6 +242,8 @@ export class Input {
     this.perkQueued = null;
     this.tapQueued = false;
     this.lastUi = null;
+    this.scrollAcc = 0;
+    this.pauseQueued = false;
     return frame;
   }
 }
