@@ -9,7 +9,7 @@ const PALETTE = {
   tileShadow: "#2a2740",
   ridge: "#8f8ac0",
   ornament: "#211f34",
-  eaveShadow: "#171526",
+  eaveShadow: "#2f2c48",
   timber: "#2c1e24",
   timberLit: "#43303a",
   plaster: "#c2a473",
@@ -86,9 +86,10 @@ function drawHouse(ctx: CanvasRenderingContext2D, w: number, h: number, floors: 
   const eaveOver = w * 0.07;
   const wallX = eaveOver;
   const wallW = w - eaveOver * 2;
-  // Top roof cap is small so the eave + top-floor window fall within the slice
-  // that is visible when the player is standing on the roof lane.
-  const roofH = h * (floors === 2 ? 0.075 : 0.095);
+  // A tall, chunky tiled roof fills most of the slice that is visible while the
+  // player stands on the roof lane, so the crest reads as a solid roof surface
+  // directly under her feet rather than a thin bar over empty space.
+  const roofH = h * (floors === 2 ? 0.13 : 0.15);
   const wallTop = roofH;
 
   // Full plaster wall behind everything.
@@ -284,12 +285,12 @@ function drawRoof(ctx: CanvasRenderingContext2D, w: number, roofH: number, over:
 // Samurai residence gate (mon): tiled roof over two heavy posts and plank doors.
 function drawGate(ctx: CanvasRenderingContext2D, w: number, h: number): void {
   const over = w * 0.12;
-  const roofH = h * 0.09;
+  const roofH = h * 0.14;
   const post = Math.max(6, w * 0.16);
   const top = roofH;
 
   // Recessed wall behind the gateway (mostly off-screen; keeps the mid solid).
-  ctx.fillStyle = PALETTE.plasterShadow;
+  ctx.fillStyle = PALETTE.plaster;
   ctx.fillRect(post, top, w - post * 2, h - top);
 
   // Heavy posts down the full height.
