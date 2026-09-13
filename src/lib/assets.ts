@@ -212,6 +212,19 @@ function knockoutCrop(img: HTMLImageElement): HTMLCanvasElement {
   return cut;
 }
 
+/** Letterbox dest rect so the full image fits inside the box. */
+export function containDest(
+  iw: number,
+  ih: number,
+  boxW: number,
+  boxH: number,
+): { dx: number; dy: number; dw: number; dh: number } {
+  const s = Math.min(boxW / Math.max(1, iw), boxH / Math.max(1, ih));
+  const dw = iw * s;
+  const dh = ih * s;
+  return { dx: (boxW - dw) / 2, dy: (boxH - dh) / 2, dw, dh };
+}
+
 export function drawContained(
   ctx: CanvasRenderingContext2D,
   img: Drawn,
@@ -224,12 +237,10 @@ export function drawContained(
   const iw = img.width;
   const ih = img.height;
   if (!iw || !ih) return;
-  const s = Math.min(boxW / iw, boxH / ih);
-  const dw = iw * s;
-  const dh = ih * s;
-  const dx = x + (boxW - dw) / 2;
-  const dy = anchor === "bottom" ? y + boxH - dh : y + (boxH - dh) / 2;
-  ctx.drawImage(img, dx, dy, dw, dh);
+  const fit = containDest(iw, ih, boxW, boxH);
+  const dx = x + fit.dx;
+  const dy = anchor === "bottom" ? y + boxH - fit.dh : y + fit.dy;
+  ctx.drawImage(img, dx, dy, fit.dw, fit.dh);
 }
 
 export function drawSheetFrame(

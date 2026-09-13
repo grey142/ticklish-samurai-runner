@@ -4,6 +4,7 @@ import {
   climbLedge,
   dropLedge,
   followCameraY,
+  floorUnderFeet,
   groundCameraY,
   landingLedge,
   layoutProps,
@@ -11,6 +12,7 @@ import {
   mapPropImageEntries,
   roofLedgeY,
   standTop,
+  supportLedge,
   type PlacedProp,
   type WorldLedge,
 } from "../lib/map-props";
@@ -21,6 +23,8 @@ import {
   coinsFromPoints,
   enemyWeight,
   GAMEOVER_HOLD_SEC,
+  jumpHoldGravity,
+  jumpTakeoffSpeed,
   killPoints,
   nextSlashUpgradeCost,
   pickWeighted,
@@ -481,9 +485,9 @@ export class Game {
     const ledges = this.worldLedges();
     const H1 = this.h * this.cfg.jump.firstMaxHeightScreen;
     const T1 = this.cfg.jump.firstMaxAirSeconds;
-    const gHold = (8 * H1) / (T1 * T1);
+    const gHold = jumpHoldGravity(H1, T1);
     const gFall = gHold * 2.35;
-    const v1 = (4 * H1) / T1;
+    const v1 = jumpTakeoffSpeed(H1, T1);
 
     if (input.swipe === "up") {
       const up = climbLedge(ledges, this.playerX, this.playerFeetY(), this.playerW, gY);
@@ -513,7 +517,7 @@ export class Game {
       this.holdingFirst = false;
       const H2 = this.h * this.cfg.jump.doubleMaxHeightScreen;
       const T2 = this.cfg.jump.doubleAirSeconds;
-      this.vy = -(4 * H2) / (T2 * 1.65);
+      this.vy = -jumpTakeoffSpeed(H2, T2 * 1.65);
       this.slam = false;
       this.sfx.doubleJump();
     }
@@ -601,26 +605,17 @@ export class Game {
     const ew = box.w;
     const flying = def.flying;
     const forcePerch = !!this.perchWanted;
-    const roof = !flying && !trap && (forcePerch || Math.random() < 0.3);
-    const highAir = flying && Math.random() < 0.42;
-    const lane: Actor["lane"] = flying ? "air" : roof ? "roof" : "ground";
-    const underGap = this.playerH * 0.3;
-    const perch = lane === "roof" ? this.pickRoofPerch(ew) : null;
-    const usedLane: Actor["lane"] = lane === "roof" && !perch ? "ground" : lane;
+    const wantRoof = !trap && (forcePerch || flying || Math.random() < 0.3);
+    const x = this.w + 40 + Math.random() * 80;
+    const perch = wantRoof ? this.elevatedSupportAt(x, ew) : null;
+    const usedLane: Actor["lane"] = perch ? "roof" : "ground";
     const foot = this.actorFootFrac(id);
-    const y =
-      perch
-        ? standTop(perch.y, eh, foot)
-        : usedLane === "air" && highAir
-          ? Math.max(12, this.roofY() - eh - this.playerH * 0.12)
-          : usedLane === "air"
-            ? this.groundY() - this.playerH - underGap - eh
-            : standTop(this.groundY(), eh, foot);
+    const y = standTop(perch ? perch.y : this.groundY(), eh, foot);
     this.actors.push({
       kind: "enemy",
       id: `e${nextActor++}`,
       defId: id,
-      x: perch ? perch.x : this.w + 40 + Math.random() * 80,
+      x,
       y,
       w: ew,
       h: eh,
@@ -634,21 +629,21 @@ export class Game {
     });
   }
 
-  private pickRoofPerch(enemyW: number): { x: number; y: number } | null {
+  private perchKind(): RegExp | undefined {
     const want = this.perchWanted;
-    const kind =
-      want === "engawa" || want === "porch"
-        ? /engawa/
-        : want === "roof"
-          ? /roof/
-          : want === "balcony"
-            ? /balcony/
-            : /roof|balcony|eave|lintel|engawa/;
-    const ledges = this.worldLedges().filter((l) => l.standable && l.x1 > this.w * 0.55 && kind.test(l.ledgeId));
-    if (!ledges.length) return null;
-    const ledge = ledges[Math.floor(Math.random() * ledges.length)];
-    const span = Math.max(8, ledge.x1 - ledge.x0 - enemyW);
-    return { x: ledge.x0 + Math.random() * span, y: ledge.y };
+    if (want === "engawa" || want === "porch") return /engawa/;
+    if (want === "roof") return /roof/;
+    if (want === "balcony") return /balcony/;
+    return undefined;
+  }
+
+  /** Decks above the ground-locked view look like empty sky. */
+  private visibleDeckMinY(): number {
+    return groundCameraY(this.mapH(), this.h) + 24;
+  }
+
+  private elevatedSupportAt(x: number, w: number): WorldLedge | null {
+    return supportLedge(this.worldLedges(), x, w, this.perchKind(), this.visibleDeckMinY());
   }
 
   private updateActors(dt: number, run: number, _level: number): void {
@@ -658,16 +653,18 @@ export class Game {
       if (a.kind === "enemy") {
         const def = this.def(a.defId);
         if (a.lane !== "roof") a.x -= def.approach * run * dt;
-        if (a.lane === "roof") {
-          const stay = ledgeUnder(ledges, a.x, a.y + a.h * this.actorFootFrac(a.defId), 28, a.w);
-          if (stay) this.standActorOn(a, stay.y);
-          else {
-            a.lane = "ground";
-            this.standActorOn(a, this.groundY());
-          }
-        } else if (a.lane === "ground" && !def.flying) {
-          this.standActorOn(a, this.groundY());
-        }
+        const feetY = a.y + a.h * this.actorFootFrac(a.defId);
+        const floorY = floorUnderFeet(
+          ledges,
+          a.x,
+          a.w,
+          feetY,
+          this.groundY(),
+          36,
+          this.visibleDeckMinY(),
+        );
+        this.standActorOn(a, floorY);
+        a.lane = floorY < this.groundY() - 8 ? "roof" : "ground";
         if (def.projectile && a.x < this.w * 0.92 && a.x > this.playerX + 80) {
           if (ownerHasLiveShot(this.actors, a.id)) continue;
           a.fireCd -= dt;

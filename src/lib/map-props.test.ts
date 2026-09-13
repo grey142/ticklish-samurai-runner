@@ -6,6 +6,7 @@ import {
   dropLedge,
   followCameraY,
   groundCameraY,
+  floorUnderFeet,
   landingLedge,
   layoutProps,
   ledgeUnder,
@@ -14,6 +15,7 @@ import {
   PROP_SPACING_MUL,
   propDrawHeight,
   standTop,
+  supportLedge,
 } from "./map-props";
 
 const catalog: MapPropCatalog = {
@@ -110,6 +112,41 @@ describe("map props", () => {
   it("standTop puts visible soles on the ledge plane", () => {
     const y = standTop(200, 80, 0.95);
     expect(y + 80 * 0.95).toBeCloseTo(200);
+  });
+
+  it("keeps walkers on a real deck at their X and drops them in a building gap", () => {
+    const groundY = 400;
+    const placed = layoutProps(catalog, 0, 12000, groundY, 200);
+    const house = placed.find((p) => p.def.id === "house_2story")!;
+    const ledges = allLedges(placed);
+    const mid = house.x + house.w * 0.5;
+    const roof = supportLedge(ledges, mid, 24);
+    expect(roof).toBeTruthy();
+    expect(roof!.ledgeId).toMatch(/roof|balcony|eave|engawa/);
+    expect(floorUnderFeet(ledges, mid, 24, roof!.y, groundY)).toBeCloseTo(roof!.y);
+    expect(floorUnderFeet(ledges, mid, 24, groundY, groundY)).toBe(groundY);
+    const gapX = house.x + house.w + 80;
+    expect(supportLedge(ledges, gapX, 24)).toBeNull();
+    expect(floorUnderFeet(ledges, gapX, 24, roof!.y, groundY)).toBe(groundY);
+  });
+
+  it("skips 2F roofs that sit above the ground-locked camera", () => {
+    const viewH = 720;
+    const mapH = viewH * 1.85;
+    const groundY = mapH * 0.9;
+    const camTop = groundCameraY(mapH, viewH);
+    const placed = layoutProps(catalog, 0, 2000, groundY, Math.round(viewH * 0.74));
+    const house = placed.find((p) => p.def.id === "house_2story")!;
+    const ledges = allLedges([house]);
+    const mid = house.x + house.w * 0.5;
+    const minY = camTop + 24;
+    const roof = supportLedge(ledges, mid, 24);
+    expect(roof?.ledgeId).toBe("roof_top");
+    expect(roof!.y).toBeLessThan(minY);
+    const visible = supportLedge(ledges, mid, 24, undefined, minY);
+    expect(visible).toBeTruthy();
+    expect(visible!.y).toBeGreaterThanOrEqual(minY);
+    expect(visible!.ledgeId).not.toBe("roof_top");
   });
 
   it("locks the camera to the ground unless the player would leave the top", () => {

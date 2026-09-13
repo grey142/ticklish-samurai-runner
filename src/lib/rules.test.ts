@@ -10,6 +10,9 @@ import {
   applyOneShot,
   GAMEOVER_HOLD_SEC,
   GAMEOVER_LINE,
+  JUMP_ASCENT_MUL,
+  jumpHoldGravity,
+  jumpTakeoffSpeed,
   ownerHasLiveShot,
   projectileAdvance,
   spawnCap,
@@ -102,6 +105,19 @@ describe("one-shot slash", () => {
   it("kills any live actor in one hit", () => {
     expect(applyOneShot(18)).toBe(0);
     expect(applyOneShot(1)).toBe(0);
+  });
+});
+
+describe("jump ascent", () => {
+  it("raises takeoff speed 5% and keeps the same apex", () => {
+    expect(JUMP_ASCENT_MUL).toBeCloseTo(1.05);
+    const H = 100;
+    const T = 2;
+    const v = jumpTakeoffSpeed(H, T);
+    const g = jumpHoldGravity(H, T);
+    expect(v).toBeCloseTo(((4 * H) / T) * 1.05);
+    const apex = v * (v / g) - 0.5 * g * (v / g) ** 2;
+    expect(apex).toBeCloseTo(H);
   });
 });
 

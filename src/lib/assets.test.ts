@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cinematicPath, enemySpritePath, playerPosePath, projectilePath, vfxPath } from "./assets";
+import { cinematicPath, containDest, enemySpritePath, playerPosePath, projectilePath, vfxPath } from "./assets";
 import { mapPropPath } from "./map-props";
 
 describe("asset paths", () => {
@@ -15,5 +15,17 @@ describe("asset paths", () => {
     expect(cinematicPath("egg-web", "gameover", 3)).toBe("./assets/cinematics/egg-web/gameover-3.png");
     expect(vfxPath("shadow-strike.png")).toBe("./assets/ability-vfx/shadow-strike.png");
     expect(mapPropPath("gate-1story.png")).toBe("./assets/map-props/gate-1story.png");
+  });
+});
+
+describe("cinematic contain fit", () => {
+  it("letterboxes a tall still so the whole image fits a landscape screen", () => {
+    const fit = containDest(1080, 1920, 1280, 720);
+    expect(fit.dw).toBeLessThanOrEqual(1280);
+    expect(fit.dh).toBeLessThanOrEqual(720);
+    expect(fit.dh).toBeCloseTo(720);
+    expect(fit.dw).toBeCloseTo(720 * (1080 / 1920));
+    expect(fit.dx).toBeGreaterThan(0);
+    expect(fit.dy).toBeCloseTo(0);
   });
 });
