@@ -211,66 +211,59 @@ function latticeGrid(
   }
 }
 
-// Tiled hip roof: flat ridge at the very top (the surface actors stand on),
-// sloping out to overhanging eaves with upturned tips and end ornaments.
+// Full-width tiled roof deck viewed slightly from above (the roof camera looks
+// down onto the lane). The very top is a solid, full-width tiled crest so the
+// player's feet always rest on solid roof, with the eave + upturned tips below.
 function drawRoof(ctx: CanvasRenderingContext2D, w: number, roofH: number, over: number): void {
-  const ridgeInset = w * 0.24;
   const eaveY = roofH;
-  const left = -over * 0.6;
-  const right = w + over * 0.6;
+  const left = -over * 0.7;
+  const right = w + over * 0.7;
+  const span = right - left;
 
-  ctx.beginPath();
-  ctx.moveTo(ridgeInset, 0);
-  ctx.lineTo(w - ridgeInset, 0);
-  ctx.lineTo(right, eaveY);
-  ctx.lineTo(left, eaveY);
-  ctx.closePath();
+  // Solid tiled deck spanning the full width.
   const rg = ctx.createLinearGradient(0, 0, 0, eaveY);
   rg.addColorStop(0, PALETTE.tileTop);
   rg.addColorStop(1, PALETTE.tile);
   ctx.fillStyle = rg;
-  ctx.fill();
+  ctx.fillRect(left, 0, span, eaveY);
 
   // Horizontal tile courses.
   ctx.strokeStyle = PALETTE.tileShadow;
   ctx.lineWidth = 1;
   const courses = 3;
   for (let i = 1; i <= courses; i++) {
-    const t = i / (courses + 1);
-    const y = eaveY * t;
-    const x0 = ridgeInset * (1 - t) + left * t;
-    const x1 = w - ridgeInset * (1 - t) + (right - w) * t;
+    const y = (eaveY * i) / (courses + 1);
     ctx.beginPath();
-    ctx.moveTo(x0, y);
-    ctx.lineTo(x1, y);
+    ctx.moveTo(left, y);
+    ctx.lineTo(right, y);
     ctx.stroke();
   }
   // Vertical tile ribs.
-  ctx.strokeStyle = PALETTE.tileShadow;
   const ribs = Math.max(6, Math.round(w / (roofH * 0.9)));
   for (let i = 0; i <= ribs; i++) {
-    const t = i / ribs;
-    const topX = ridgeInset + (w - ridgeInset * 2) * t;
-    const botX = left + (right - left) * t;
+    const x = left + (span * i) / ribs;
     ctx.beginPath();
-    ctx.moveTo(topX, 0);
-    ctx.lineTo(botX, eaveY);
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, eaveY);
     ctx.stroke();
   }
 
-  // Ridge crest highlight (the walkable line) + end ornaments (onigawara).
+  // Ridge crest highlight (the full-width walkable line) + tiny top hairline.
   ctx.fillStyle = PALETTE.ridge;
-  ctx.fillRect(ridgeInset, 0, w - ridgeInset * 2, Math.max(2, roofH * 0.22));
+  ctx.fillRect(left, 0, span, Math.max(2, roofH * 0.18));
+  ctx.fillStyle = "rgba(150,140,196,0.55)";
+  ctx.fillRect(left, 0, span, 1);
+  // Ridge end ornaments (onigawara).
   ctx.fillStyle = PALETTE.ornament;
-  const orn = Math.max(3, roofH * 0.5);
-  ctx.fillRect(ridgeInset - orn * 0.4, -orn * 0.2, orn, orn * 0.7);
-  ctx.fillRect(w - ridgeInset - orn * 0.6, -orn * 0.2, orn, orn * 0.7);
+  const orn = Math.max(3, roofH * 0.42);
+  ctx.fillRect(left, -orn * 0.25, orn, orn * 0.7);
+  ctx.fillRect(right - orn, -orn * 0.25, orn, orn * 0.7);
 
   // Eave fascia board + deep shadow beneath, with upturned corner tips.
   ctx.fillStyle = PALETTE.tileTop;
-  ctx.fillRect(left, eaveY - Math.max(2, roofH * 0.16), right - left, Math.max(2, roofH * 0.16));
+  ctx.fillRect(left, eaveY - Math.max(2, roofH * 0.16), span, Math.max(2, roofH * 0.16));
   ctx.fillStyle = PALETTE.eaveShadow;
-  ctx.fillRect(left, eaveY, right - left, Math.max(2, roofH * 0.1));
+  ctx.fillRect(left, eaveY, span, Math.max(2, roofH * 0.12));
   const lift = roofH * 0.34;
   ctx.fillStyle = PALETTE.tileTop;
   ctx.beginPath();
