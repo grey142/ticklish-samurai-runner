@@ -4,10 +4,10 @@ export type BuildingKind = "house-two-story" | "house-one-story" | "gate";
 
 // Night-street palette, tuned to blend with the maroon/indigo city backdrop.
 const PALETTE = {
-  tileTop: "#5b5b86",
-  tile: "#3d3b58",
-  tileShadow: "#26243c",
-  ridge: "#6f6a9c",
+  tileTop: "#7a79a8",
+  tile: "#44425f",
+  tileShadow: "#2a2740",
+  ridge: "#8f8ac0",
   ornament: "#211f34",
   eaveShadow: "#171526",
   timber: "#2c1e24",
@@ -248,11 +248,12 @@ function drawRoof(ctx: CanvasRenderingContext2D, w: number, roofH: number, over:
     ctx.stroke();
   }
 
-  // Ridge crest highlight (the full-width walkable line) + tiny top hairline.
+  // Ridge crest highlight (the full-width walkable line) + bright top hairline
+  // so the standing surface reads clearly against the night sky.
   ctx.fillStyle = PALETTE.ridge;
-  ctx.fillRect(left, 0, span, Math.max(2, roofH * 0.18));
-  ctx.fillStyle = "rgba(150,140,196,0.55)";
-  ctx.fillRect(left, 0, span, 1);
+  ctx.fillRect(left, 0, span, Math.max(3, roofH * 0.24));
+  ctx.fillStyle = "rgba(196,190,236,0.85)";
+  ctx.fillRect(left, 0, span, Math.max(2, roofH * 0.06));
   // Ridge end ornaments (onigawara).
   ctx.fillStyle = PALETTE.ornament;
   const orn = Math.max(3, roofH * 0.42);
@@ -356,6 +357,13 @@ export function drawStreet(g: Game): void {
   const prefix: number[] = [0];
   for (let i = 0; i < advForSeq.length; i++) prefix.push(prefix[i] + advForSeq[i]);
 
+  // Lift the whole terrace slightly above the roof lane so the solid tiled roof
+  // crest rises to just beneath the runner's feet (which rest exactly on roofY),
+  // leaving no dark gap between the character and the roof surface.
+  const lift = Math.round(band * 0.04);
+  const drawH = Math.round(band + lift);
+  const topY = Math.round(roofY - lift);
+
   const scroll = g.worldX;
   const startCycle = Math.floor((scroll - w) / patternW) - 1;
   let k = startCycle * SEQUENCE.length;
@@ -369,11 +377,6 @@ export function drawStreet(g: Game): void {
     const adv = advance[kind];
     if (x > w + adv) break;
     if (x + adv < -adv) continue;
-    ctx.drawImage(sprites[kind], Math.round(x), Math.round(roofY), adv, Math.round(band));
+    ctx.drawImage(sprites[kind], Math.round(x), topY, adv, drawH);
   }
-
-  // Thin eave-shadow line just under the ridge lane so the standing crest reads
-  // as a continuous tiled roofline rather than a hard-edged floating bar.
-  ctx.fillStyle = PALETTE.eaveShadow;
-  ctx.fillRect(0, roofY, w, Math.max(1, band * 0.004));
 }
