@@ -1,0 +1,302 @@
+{
+  "source": "ticklish-samurai-data user design",
+  "baseHealth": 100,
+  "katanas": [
+    {
+      "id": "ikielas-katana",
+      "name": "Ikielas Katana",
+      "order": 1,
+      "cost": 0,
+      "range": 1.5,
+      "perk": null,
+      "starter": true,
+      "ownedByDefault": true,
+      "flavor": "Her first blade \u2014 the one she carried when the city still felt safe."
+    },
+    {
+      "id": "kurogane",
+      "name": "Kurogane",
+      "order": 2,
+      "cost": 250,
+      "range": 2.0,
+      "perk": null,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "Finely folded steel blade with no embellishments."
+    },
+    {
+      "id": "mikazuki",
+      "name": "Mikazuki",
+      "order": 3,
+      "cost": 380,
+      "range": 2.5,
+      "perk": null,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "Quenched under moonlight to harden the edge"
+    },
+    {
+      "id": "hayate",
+      "name": "Hayate",
+      "order": 4,
+      "cost": 580,
+      "range": 3.0,
+      "perk": {
+        "id": "slash_recharge_half",
+        "description": "Recharge time to slash again is cut in half",
+        "slashRechargeMultiplier": 0.5,
+        "activation": "passive",
+        "autoCastOnRecharge": false
+      },
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "forged with wind-grooves along the spine, noticeably speeding up attack"
+    },
+    {
+      "id": "kagekiri",
+      "name": "Kagekiri",
+      "order": 5,
+      "cost": 850,
+      "range": 3.0,
+      "perk": {
+        "id": "shadow_strike",
+        "description": "On slash, turn into a shadow, teleport to the enemy in front, and cut their head off. Recharges in 15 seconds.",
+        "rechargeSeconds": 15,
+        "activation": "manual_button",
+        "autoCastOnRecharge": false,
+        "ui": {
+          "type": "ability_button",
+          "showsCooldown": true,
+          "pressToActivate": true,
+          "note": "Player chooses when to press. Does not fire automatically when recharged."
+        }
+      },
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "absorbs darkness, allowing strikes to at times become shadow."
+    },
+    {
+      "id": "raikiri",
+      "name": "Raikiri",
+      "order": 6,
+      "cost": 1250,
+      "range": 3.0,
+      "perk": {
+        "id": "call_lightning",
+        "description": "Calls lightning from the sky to strike your enemies, killing them instantly. Recharges in 25 seconds.",
+        "rechargeSeconds": 25,
+        "activation": "manual_button",
+        "autoCastOnRecharge": false,
+        "ui": {
+          "type": "ability_button",
+          "showsCooldown": true,
+          "pressToActivate": true,
+          "note": "Player chooses when to press. Does not fire automatically when recharged."
+        },
+        "synergy": {
+          "with": "storm_petal_electrocute",
+          "effect": "When Storm Petal Cuirass is equipped, Call Lightning kills count as electrocuted and award double points."
+        }
+      },
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "crackles with kinetic charge... you best stand behind it.."
+    },
+    {
+      "id": "shin-en",
+      "name": "Shin-En",
+      "order": 7,
+      "cost": 2500,
+      "range": 3.5,
+      "perk": {
+        "id": "blade_of_souls",
+        "description": "Red shadows kill all enemies on screen within 10 meters. Gain 15 health for each enemy killed this way. Recharges every 45 seconds.",
+        "killRadiusMeters": 10,
+        "healthPerKill": 15,
+        "rechargeSeconds": 45,
+        "activation": "manual_button",
+        "autoCastOnRecharge": false,
+        "ui": {
+          "type": "ability_button",
+          "showsCooldown": true,
+          "pressToActivate": true,
+          "note": "Player chooses when to press. Does not fire automatically when recharged."
+        }
+      },
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "their life is now yours. Your life is now its.."
+    }
+  ],
+  "armors": [
+    {
+      "id": "ikielas-robes",
+      "name": "Ikielas robes",
+      "order": 1,
+      "cost": 0,
+      "healthBonus": 2,
+      "perk": null,
+      "starter": true,
+      "ownedByDefault": true,
+      "flavor": "The robes she wore when the city was still peaceful."
+    },
+    {
+      "id": "hayate-gusoku",
+      "name": "Hayate Gusoku",
+      "order": 2,
+      "cost": 250,
+      "healthBonus": 17,
+      "perk": null,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "a warriors helper"
+    },
+    {
+      "id": "mamushi-wrap",
+      "name": "Mamushi Wrap",
+      "order": 3,
+      "cost": 400,
+      "healthBonus": 25,
+      "perk": null,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "a warrior of blade and spirit"
+    },
+    {
+      "id": "gale-dancers-kusazuri",
+      "name": "Gale-Dancer\u2019s Kusazuri",
+      "order": 4,
+      "cost": 600,
+      "healthBonus": 48,
+      "perk": {
+        "id": "wind_blade",
+        "description": "Cuts slash recharge time in half",
+        "activation": "passive",
+        "slashRechargeMultiplier": 0.5
+      },
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "a swan is fast and free"
+    },
+    {
+      "id": "storm-petal-cuirass",
+      "name": "Storm Petal Cuirass",
+      "order": 5,
+      "cost": 800,
+      "healthBonus": 65,
+      "perk": {
+        "id": "storm_petal_electrocute",
+        "description": "Jumping over a target electrocutes them, giving a 25% chance to kill them. Double points for electrocuted enemies. Stacks with Raikiri: Call Lightning kills also count as electrocuted and get double points.",
+        "activation": "passive",
+        "trigger": "jump_over_enemy",
+        "killChance": 0.25,
+        "pointsMultiplierOnElectrocute": 2.0,
+        "stacksWith": [
+          "call_lightning"
+        ],
+        "doublePointsAppliesTo": [
+          "jump_over_electrocute",
+          "call_lightning_kills"
+        ]
+      },
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "trust in the currents of the wind and rains."
+    },
+    {
+      "id": "kitsunes-mirage",
+      "name": "Kitsune\u2019s Mirage",
+      "order": 6,
+      "cost": 1000,
+      "healthBonus": 85,
+      "perk": {
+        "id": "kitsune_shade",
+        "description": "Turns you into shade for 30 meters. You cannot be hit by anything. Recharges after 20 seconds.",
+        "activation": "manual_button",
+        "autoCastOnRecharge": false,
+        "durationMeters": 30,
+        "invulnerable": true,
+        "rechargeSeconds": 20,
+        "ui": {
+          "type": "ability_button",
+          "showsCooldown": true,
+          "pressToActivate": true
+        }
+      },
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "an assasin lies in deception and trickery"
+    },
+    {
+      "id": "shadow-tread-o-yoroi",
+      "name": "Shadow-Tread O-Yoroi",
+      "order": 7,
+      "cost": 2500,
+      "healthBonus": 125,
+      "perk": {
+        "id": "shadow_tread",
+        "description": "+5 health per kill, cuts tickle damage by 25%, cuts slash attack recharge by half.",
+        "activation": "passive",
+        "healthPerKill": 5,
+        "tickleDamageMultiplier": 0.75,
+        "slashRechargeMultiplier": 0.5
+      },
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "heroism and death are not synonymous."
+    }
+  ],
+  "slashRecharge": {
+    "id": "slash_recharge",
+    "name": "Slash Speed",
+    "description": "Base slash recharge. Shop upgrades reduce recharge time. Hayate perk multiplies final recharge by 0.5.",
+    "baseRechargeSeconds": 1.5,
+    "secondsReducedPerUpgrade": 0.2,
+    "maxUpgradeLevel": 5,
+    "upgradeCostStartCoins": 100,
+    "upgradeCostMultiplierPerLevel": 2,
+    "upgradeCostsCoins": [
+      100,
+      200,
+      400,
+      800,
+      1600
+    ],
+    "levels": [
+      {
+        "level": 0,
+        "rechargeSeconds": 1.5,
+        "costToReachThisLevel": 0
+      },
+      {
+        "level": 1,
+        "rechargeSeconds": 1.3,
+        "costToReachThisLevel": 100
+      },
+      {
+        "level": 2,
+        "rechargeSeconds": 1.1,
+        "costToReachThisLevel": 200
+      },
+      {
+        "level": 3,
+        "rechargeSeconds": 0.9,
+        "costToReachThisLevel": 400
+      },
+      {
+        "level": 4,
+        "rechargeSeconds": 0.7,
+        "costToReachThisLevel": 800
+      },
+      {
+        "level": 5,
+        "rechargeSeconds": 0.5,
+        "costToReachThisLevel": 1600
+      }
+    ],
+    "interactionNotes": [
+      "Final slash recharge = levels[level].rechargeSeconds * (0.5 if Hayate equipped else 1.0)",
+      "Player can slash once; then must wait rechargeSeconds before next slash."
+    ]
+  }
+}

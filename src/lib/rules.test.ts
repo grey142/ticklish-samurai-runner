@@ -18,6 +18,10 @@ import {
   spawnCap,
   speedLevelFor,
   struggleAfterTap,
+  DEFAULT_SPAWN_RULES,
+  distanceWeightMul,
+  packSize,
+  windowSpawnCap,
 } from "./rules";
 
 const cfg = {
@@ -58,6 +62,21 @@ describe("spawn rules", () => {
   it("caps zombies per 300m window by level", () => {
     expect(spawnCap(cfg, 1)).toBe(10);
     expect(spawnCap(cfg, 6)).toBe(23);
+  });
+
+  it("adds 1% more zombies per 300m at each level and packs 1–5", () => {
+    expect(windowSpawnCap(DEFAULT_SPAWN_RULES, 1)).toBe(30);
+    expect(windowSpawnCap(DEFAULT_SPAWN_RULES, 2)).toBe(Math.floor(39 * 1.01));
+    expect(windowSpawnCap(DEFAULT_SPAWN_RULES, 3)).toBe(Math.floor(45 * 1.02));
+    expect(packSize(1, 5, () => 0)).toBe(1);
+    expect(packSize(1, 5, () => 0.99)).toBe(5);
+  });
+
+  it("ramps non-drone weights 1.2% every 150m", () => {
+    expect(distanceWeightMul(DEFAULT_SPAWN_RULES, 149, "viner")).toBeCloseTo(1);
+    expect(distanceWeightMul(DEFAULT_SPAWN_RULES, 150, "viner")).toBeCloseTo(1.012);
+    expect(distanceWeightMul(DEFAULT_SPAWN_RULES, 300, "archer")).toBeCloseTo(1.012 ** 2);
+    expect(distanceWeightMul(DEFAULT_SPAWN_RULES, 900, "drone")).toBe(1);
   });
 
   it("weights enemies inside their level band", () => {

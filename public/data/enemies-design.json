@@ -1,0 +1,250 @@
+{
+  "enemies": [
+    {
+      "id": "drone",
+      "name": "Drone",
+      "attackType": "grab",
+      "tickleDamagePerSecond": 3,
+      "struggleDamagePerHalfSecond": 6,
+      "extraPointsPerKill": 6,
+      "spawnOnLevels": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "spawnRatePer100Meters": {
+        "min": 10,
+        "max": 25
+      }
+    },
+    {
+      "id": "viner",
+      "name": "viner",
+      "attackType": "trap",
+      "tickleDamagePerSecond": 6,
+      "struggleDamagePerHalfSecond": 9,
+      "extraPointsPerKill": 8,
+      "spawnOnLevels": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "spawnRatePer100Meters": {
+        "min": 0,
+        "max": 6
+      }
+    },
+    {
+      "id": "quad-arm",
+      "name": "Quad-Arm",
+      "attackType": "grab",
+      "tickleDamagePerSecond": 7,
+      "struggleDamagePerHalfSecond": 13,
+      "extraPointsPerKill": 9,
+      "spawnOnLevels": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "spawnRatePer100Meters": {
+        "min": 0,
+        "max": 20
+      }
+    },
+    {
+      "id": "bolter",
+      "name": "Bolter",
+      "attackType": "grab",
+      "tickleDamagePerSecond": 4,
+      "struggleDamagePerHalfSecond": 10,
+      "extraPointsPerKill": 6,
+      "spawnOnLevels": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "spawnRatePer100Meters": {
+        "min": 0,
+        "max": 5
+      }
+    },
+    {
+      "id": "hundred-hands",
+      "name": "hundred hands",
+      "attackType": "grab",
+      "tickleDamagePerSecond": 15,
+      "struggleDamagePerHalfSecond": 18,
+      "extraPointsPerKill": 15,
+      "spawnOnLevels": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "spawnRatePer100Meters": {
+        "min": 0,
+        "max": 7
+      }
+    },
+    {
+      "id": "licker",
+      "name": "licker",
+      "attackType": "grab",
+      "tickleDamagePerSecond": 7,
+      "struggleDamagePerHalfSecond": 18,
+      "extraPointsPerKill": 12,
+      "spawnOnLevels": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "spawnRatePer100Meters": {
+        "min": 0,
+        "max": 6
+      }
+    },
+    {
+      "id": "spider",
+      "name": "Spider",
+      "attackType": "grab+ranged",
+      "tickleDamagePerSecond": 18,
+      "projectileTickleDamagePerSecond": 12,
+      "struggleDamagePerHalfSecond": 20,
+      "extraPointsPerKill": 18,
+      "spawnOnLevels": [
+        5,
+        6
+      ],
+      "spawnRatePer100Meters": {
+        "min": 0,
+        "max": 3
+      },
+      "projectileName": "egg web",
+      "projectileBehavior": "Hits and traps the player, then hundreds of tiny black spiders crawl all over them to tickle them."
+    },
+    {
+      "id": "slimer",
+      "name": "slimer",
+      "attackType": "grab+ranged",
+      "tickleDamagePerSecond": 18,
+      "projectileTickleDamagePerSecond": 8,
+      "projectileName": "slime shot",
+      "struggleDamagePerHalfSecond": 18,
+      "extraPointsPerKill": 14,
+      "spawnOnLevels": [
+        4,
+        5,
+        6
+      ],
+      "spawnRatePer100Meters": {
+        "min": 0,
+        "max": 3
+      }
+    },
+    {
+      "id": "archer",
+      "name": "archer",
+      "attackType": "ranged",
+      "tickleDamagePerSecond": null,
+      "projectileTickleDamagePerSecond": 3,
+      "projectileName": "bolo wrap",
+      "struggleDamagePerHalfSecond": 8,
+      "extraPointsPerKill": 6,
+      "spawnOnLevels": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "spawnRatePer100Meters": {
+        "min": 0,
+        "max": 3
+      },
+      "projectileBehavior": "Wraps around the ankles, then comes and tickles the opponent's feet."
+    },
+    {
+      "id": "volatile",
+      "name": "Volatile",
+      "attackType": "grab",
+      "tickleDamagePerSecond": 32,
+      "struggleDamagePerHalfSecond": 30,
+      "extraPointsPerKill": 30,
+      "spawnOnLevels": [
+        6
+      ],
+      "spawnRatePer100Meters": {
+        "min": 0,
+        "max": 4
+      }
+    },
+    {
+      "id": "brute",
+      "name": "brute",
+      "attackType": "grab",
+      "tickleDamagePerSecond": 28,
+      "struggleDamagePerHalfSecond": 25,
+      "extraPointsPerKill": 27,
+      "spawnOnLevels": [
+        5,
+        6
+      ],
+      "spawnRatePer100Meters": {
+        "min": 0,
+        "max": 2
+      }
+    },
+    {
+      "id": "hand-thrower",
+      "name": "Hand thrower",
+      "attackType": "ranged",
+      "tickleDamagePerSecond": null,
+      "projectileTickleDamagePerSecond": 6,
+      "projectileName": "throwing hand",
+      "struggleDamagePerHalfSecond": 4,
+      "extraPointsPerKill": 6,
+      "spawnOnLevels": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "spawnRatePer100Meters": {
+        "min": 0,
+        "max": 5
+      }
+    }
+  ],
+  "attackTypes": [
+    "trap",
+    "grab",
+    "ranged",
+    "grab+ranged"
+  ],
+  "schema": {
+    "name": "string (not shown on screen)",
+    "attackType": "trap | grab | ranged | grab+ranged",
+    "tickleDamagePerSecond": "number",
+    "struggleDamagePerHalfSecond": "number",
+    "extraPointsPerKill": "number",
+    "spawnOnLevels": "number[]",
+    "spawnRatePer100Meters": "number",
+    "projectileTickleDamagePerSecond": "number (for ranged / grab+ranged)",
+    "projectileName": "string (for ranged / grab+ranged)"
+  },
+  "notes": "User authors all enemies. Spawn rates are weights within spawn-rules.json maxZombiesPer100MetersByLevel; never exceed that cap. Enemies must be staggered (minSpacingMeters).",
+  "spawnRulesRef": "spawn-rules.json"
+}

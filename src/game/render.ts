@@ -493,14 +493,14 @@ function drawShop(g: Game): void {
     ctx.fillStyle = "#f4e7d8";
     ctx.font = "18px Trebuchet MS, sans-serif";
     ctx.fillText(`Upgrades ${g.save.slashUpgrades}/5`, 28, 128);
-    ctx.fillText(`Recharge now: ${g.recharge().toFixed(2)}s${hayate ? " (Hayate ×0.5)" : ""}`, 28, 156);
+    ctx.fillText(`Recharge now: ${g.recharge().toFixed(2)}s${hayate ? " (haste ×0.5)" : ""}`, 28, 156);
     ctx.fillText(cost == null ? "Maxed." : `Next: ${cost} coins (−0.2s)`, 28, 184);
     button(ctx, g, "buy-slash", cost == null ? "Maxed" : `Buy upgrade  ${cost}`);
   } else if (g.shopTab === "blades") {
     g.shop.katanas.forEach((k) => {
       const owned = g.save.unlockedKatanas.includes(k.id);
       const eq = g.save.equippedKatana === k.id;
-      const label = `${eq ? "★ " : ""}${k.name}  ·  reach ${k.range}${owned ? "" : "  ·  " + k.cost + "c"}`;
+      const label = `${eq ? "★ " : ""}${k.name}  ·  ${k.range}${owned ? "" : "  ·  " + k.cost + "c"}`;
       button(ctx, g, "buy-katana-" + k.id, label);
     });
   } else {

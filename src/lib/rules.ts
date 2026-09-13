@@ -55,6 +55,40 @@ export function spawnCap(cfg: GameConfig, level: number): number {
   return cfg.spawn.maxZombiesPerWindow[level] ?? cfg.spawn.maxZombiesPerWindow.at(-1) ?? 10;
 }
 
+export interface SpawnRules {
+  windowMeters: number;
+  stagger: { baseSlotMeters: number; packSizeMin: number; packSizeMax: number };
+  maxZombiesPer300MetersByLevel: Record<string, number>;
+  levelRamp: { extraPercentPerLevelPer300m: number };
+  distanceRamp: { everyMeters: number; multiplierPerStepNonDrone: number; excludeEnemyIds: string[] };
+}
+
+export const DEFAULT_SPAWN_RULES: SpawnRules = {
+  windowMeters: 300,
+  stagger: { baseSlotMeters: 6, packSizeMin: 1, packSizeMax: 5 },
+  maxZombiesPer300MetersByLevel: { "1": 30, "2": 39, "3": 45, "4": 54, "5": 60, "6": 69 },
+  levelRamp: { extraPercentPerLevelPer300m: 1.0 },
+  distanceRamp: { everyMeters: 150, multiplierPerStepNonDrone: 1.012, excludeEnemyIds: ["drone"] },
+};
+
+export function windowSpawnCap(rules: SpawnRules, level: number): number {
+  const base = rules.maxZombiesPer300MetersByLevel[String(level)] ?? 30;
+  const extra = (rules.levelRamp.extraPercentPerLevelPer300m / 100) * Math.max(0, level - 1);
+  return Math.max(1, Math.floor(base * (1 + extra)));
+}
+
+export function distanceWeightMul(rules: SpawnRules, distance: number, enemyId: string): number {
+  if (rules.distanceRamp.excludeEnemyIds.includes(enemyId)) return 1;
+  const steps = Math.floor(Math.max(0, distance) / rules.distanceRamp.everyMeters);
+  return rules.distanceRamp.multiplierPerStepNonDrone ** steps;
+}
+
+export function packSize(min: number, max: number, rng: () => number): number {
+  const lo = Math.min(min, max);
+  const hi = Math.max(min, max);
+  return lo + Math.floor(rng() * (hi - lo + 1));
+}
+
 export function pickWeighted(entries: { id: string; weight: number }[], rng: () => number): string | null {
   const live = entries.filter((e) => e.weight > 0);
   const sum = live.reduce((a, e) => a + e.weight, 0);
