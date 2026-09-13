@@ -31,12 +31,17 @@ import {
   pointsFromDistance,
   slashRecharge,
   applyOneShot,
+  DEFAULT_SPAWN_RULES,
+  distanceWeightMul,
   ownerHasLiveShot,
+  packSize,
   projectileAdvance,
-  spawnCap,
   speedLevelFor,
   struggleAfterTap,
+  windowSpawnCap,
+  type SpawnRules,
 } from "../lib/rules";
+import { compileShop, hasSlashHaste, type CanonicalShop } from "../lib/shop";
 import { loadSave, writeSave } from "../lib/storage";
 import type {
   Actor,
@@ -71,6 +76,7 @@ export class Game {
   screen: Screen = "menu";
   shopTab: "blades" | "armor" | "slash" = "blades";
   shopScroll = 0;
+  spawnRules: SpawnRules = DEFAULT_SPAWN_RULES;
 
   w = 1280;
   h = 720;
@@ -80,8 +86,8 @@ export class Game {
   runPoints = 0;
   runCoins = 0;
   hudCoinsFlash = 0;
-  hp = 80;
-  maxHp = 80;
+  hp = 102;
+  maxHp = 102;
   playerX = 210;
   playerY = 0;
   playerW = 46;
@@ -124,19 +130,23 @@ export class Game {
   }
 
   async boot(): Promise<void> {
-    const [game, enemies, shop, cinematics, mapProps] = await Promise.all([
+    const [game, enemies, shopRaw, spawnRaw, cinematics, mapProps] = await Promise.all([
       fetch("./data/game.json").then((r) => r.json() as Promise<GameConfig>),
       fetch("./data/enemies.json").then((r) => r.json() as Promise<EnemyCatalog>),
-      fetch("./data/shop.json").then((r) => r.json() as Promise<ShopCatalog>),
+      fetch("./data/shop-canonical.json").then((r) => r.json() as Promise<CanonicalShop>),
+      fetch("./data/spawn-rules.json").then((r) => r.json() as Promise<SpawnRules>),
       fetch("./data/cinematics.json").then((r) => r.json() as Promise<CinematicCatalog>),
       fetch("./assets/map-props/map-props.json").then((r) => r.json() as Promise<MapPropCatalog>),
     ]);
     this.cfg = game;
     this.enemies = enemies;
-    this.shop = shop;
+    this.shop = compileShop(shopRaw);
+    this.spawnRules = { ...DEFAULT_SPAWN_RULES, ...spawnRaw };
     this.cinematics = cinematics;
     this.mapProps = mapProps;
     this.save = loadSave(game.economy.starterCoins);
+    this.sanitizeLoadout();
+    this.persist();
     const q = new URLSearchParams(location.search);
     if (q.has("dojo")) this.unlockDojo();
     this.perchWanted = q.get("perch");
@@ -150,7 +160,7 @@ export class Game {
     this.save.coins = Math.max(this.save.coins, 4000);
     this.save.unlockedKatanas = [...new Set([...this.save.unlockedKatanas, ...this.shop.katanas.map((k) => k.id)])];
     this.save.unlockedArmors = [...new Set([...this.save.unlockedArmors, ...this.shop.armors.map((a) => a.id)])];
-    this.save.equippedKatana = "whisper-blade";
+    this.save.equippedKatana = "kagekiri";
     this.save.equippedArmor = "kitsunes-mirage";
     this.persist();
   }
@@ -170,7 +180,26 @@ export class Game {
   }
 
   hayate(): boolean {
-    return this.katana().perk === "hayate" || this.armor().perk === "gale-dancer";
+    return hasSlashHaste(this.katana().perk, this.armor().perk);
+  }
+
+  slashReach(): number {
+    return this.playerW * this.katana().range;
+  }
+
+  tickleMul(): number {
+    return this.armor().perk === "shadow-tread" ? 0.75 : 1;
+  }
+
+  sanitizeLoadout(): void {
+    const blades = new Set(this.shop.katanas.map((k) => k.id));
+    const suits = new Set(this.shop.armors.map((a) => a.id));
+    this.save.unlockedKatanas = this.save.unlockedKatanas.filter((id) => blades.has(id));
+    this.save.unlockedArmors = this.save.unlockedArmors.filter((id) => suits.has(id));
+    if (!this.save.unlockedKatanas.includes("ikielas-katana")) this.save.unlockedKatanas.unshift("ikielas-katana");
+    if (!this.save.unlockedArmors.includes("ikielas-robes")) this.save.unlockedArmors.unshift("ikielas-robes");
+    if (!blades.has(this.save.equippedKatana)) this.save.equippedKatana = "ikielas-katana";
+    if (!suits.has(this.save.equippedArmor)) this.save.equippedArmor = "ikielas-robes";
   }
 
   shadeActive(): boolean {
@@ -573,19 +602,27 @@ export class Game {
   private maybeSpawn(level: number): void {
     if (this.distance < 20) return;
     if (this.distance - this.lastSpawnAt < this.cfg.spawn.minStaggerMeters) return;
-    const windowStart = this.distance - this.cfg.spawn.windowMeters;
+    const windowStart = this.distance - this.spawnRules.windowMeters;
     this.spawnLog = this.spawnLog.filter((d) => d >= windowStart);
-    if (this.spawnLog.length >= spawnCap(this.cfg, level)) return;
+    const cap = windowSpawnCap(this.spawnRules, level);
+    const left = cap - this.spawnLog.length;
+    if (left <= 0) return;
 
-    const weights = this.enemies.enemies.map((e) => ({ id: e.id, weight: enemyWeight(e, level) }));
-    const id = pickWeighted(weights, Math.random);
-    if (!id) return;
-    if (Math.random() > 0.55 + level * 0.04) return;
-    this.spawnEnemy(id);
-    const cap = spawnCap(this.cfg, level);
-    const even = this.cfg.spawn.windowMeters / Math.max(1, cap);
-    this.lastSpawnAt = this.distance + Math.random() * Math.max(0, even - this.cfg.spawn.minStaggerMeters);
-    this.spawnLog.push(this.distance);
+    const n = Math.min(
+      left,
+      packSize(this.spawnRules.stagger.packSizeMin, this.spawnRules.stagger.packSizeMax, Math.random),
+    );
+    for (let i = 0; i < n; i++) {
+      const weights = this.enemies.enemies.map((e) => ({
+        id: e.id,
+        weight: enemyWeight(e, level) * distanceWeightMul(this.spawnRules, this.distance, e.id),
+      }));
+      const id = pickWeighted(weights, Math.random);
+      if (!id) break;
+      this.spawnEnemy(id, i * (18 + Math.random() * 10));
+      this.spawnLog.push(this.distance);
+    }
+    this.lastSpawnAt = this.distance;
   }
 
   private def(id: string): EnemyDef {
@@ -596,17 +633,17 @@ export class Game {
     return this.enemies.projectiles.find((p) => p.id === id) ?? this.enemies.projectiles[0];
   }
 
-  private spawnEnemy(id: string): void {
+  private spawnEnemy(id: string, packOffset = 0): void {
     const def = this.def(id);
     const trap = def.role === "trap";
-    const spriteH = this.playerH * (trap ? 0.38 : def.flying ? 0.9 : 1);
+    const spriteH = this.playerH * (def.flying ? 0.9 : 1);
     const box = this.spriteBox(enemySpritePath(id, "idle"), spriteH);
     const eh = box.h;
     const ew = box.w;
     const flying = def.flying;
     const forcePerch = !!this.perchWanted;
     const wantRoof = !trap && (forcePerch || flying || Math.random() < 0.3);
-    const x = this.w + 40 + Math.random() * 80;
+    const x = this.w + 40 + packOffset + Math.random() * 24;
     const perch = wantRoof ? this.elevatedSupportAt(x, ew) : null;
     const usedLane: Actor["lane"] = perch ? "roof" : "ground";
     const foot = this.actorFootFrac(id);
@@ -622,7 +659,7 @@ export class Game {
       hp: 1,
       maxHp: 1,
       vx: def.approach,
-      fireCd: (def.fireEvery ?? 2) * (0.4 + Math.random() * 0.4),
+      fireCd: def.projectile ? 0.06 + Math.random() * 0.14 : (def.fireEvery ?? 2) * (0.4 + Math.random() * 0.4),
       lane: usedLane,
       jumpedOver: false,
       electrocuted: false,
@@ -665,7 +702,7 @@ export class Game {
         );
         this.standActorOn(a, floorY);
         a.lane = floorY < this.groundY() - 8 ? "roof" : "ground";
-        if (def.projectile && a.x < this.w * 0.92 && a.x > this.playerX + 80) {
+        if (def.projectile && a.x < this.w + 56) {
           if (ownerHasLiveShot(this.actors, a.id)) continue;
           a.fireCd -= dt;
           if (a.fireCd <= 0) {
@@ -718,7 +755,7 @@ export class Game {
     const pb = this.playerBox();
     for (const a of this.actors) {
       if (!this.overlaps(pb, a)) continue;
-      if (this.slashFlash > 0 && a.x < this.playerX + this.katana().range + 20) {
+      if (this.slashFlash > 0 && a.x < this.playerX + this.slashReach() + 20) {
         this.hurtActor(a, 10, this.onRoof || this.slam);
         continue;
       }
@@ -748,8 +785,7 @@ export class Game {
         duration: 0.28,
       });
     }
-    const range = this.katana().range;
-    const slashBox = { x: this.playerX, y: this.playerY, w: this.playerW + range, h: this.playerH };
+    const slashBox = { x: this.playerX, y: this.playerY, w: this.playerW + this.slashReach(), h: this.playerH };
     for (const a of this.actors) {
       if (!this.overlaps(slashBox, a)) continue;
       this.hurtActor(a, 10, this.onRoof);
@@ -781,8 +817,11 @@ export class Game {
       }
     } else if (id === "blade-of-souls") {
       this.playVfx("blade-of-souls.png", this.playerX, this.playerY - this.h * 0.15, fxW, fxH);
+      const reach = 10 / this.cfg.metersPerPixel;
       for (const a of this.actors) {
-        if (a.x > this.playerX && a.x < this.w) this.hurtActor(a, 18, false);
+        if (a.kind !== "enemy") continue;
+        if (a.x < this.playerX || a.x > this.playerX + reach) continue;
+        this.hurtActor(a, 18, false, { soulHeal: 15 });
       }
     } else if (id === "kitsune-shade") {
       this.shadeUntil = this.distance + 30;
@@ -808,13 +847,16 @@ export class Game {
     }
   }
 
-  private hurtActor(a: Actor, _dmg: number, roofKill: boolean): void {
+  private hurtActor(a: Actor, _dmg: number, roofKill: boolean, extra?: { soulHeal?: number }): void {
     a.hp = applyOneShot(a.hp);
     this.burst(a.x + a.w / 2, a.y + a.h / 2, a.kind === "enemy" ? this.def(a.defId).color : "#fff");
     this.sfx.hit();
     if (a.hp <= 0 && a.kind === "enemy") {
       const bonus = killPoints(this.def(a.defId).killBonus, roofKill || !!a.electrocuted, this.cfg.economy.roofKillMultiplier);
       this.runPoints += bonus;
+      let heal = extra?.soulHeal ?? 0;
+      if (this.armor().perk === "shadow-tread") heal += 5;
+      if (heal > 0) this.hp = Math.min(this.maxHp, this.hp + heal);
     }
   }
 
@@ -873,7 +915,7 @@ export class Game {
     if (!s) return;
     s.elapsed += dt;
     s.showCinematic = Math.max(0, s.showCinematic - dt);
-    this.hp -= s.ticklePerSec * dt;
+    this.hp -= s.ticklePerSec * dt * this.tickleMul();
     const holding =
       input.jumpHeld || this.input.keys.has("Space") || this.input.keys.has("KeyW") || this.input.keys.has("Enter");
     if (input.struggleTap || input.jumpPressed || input.slash) {

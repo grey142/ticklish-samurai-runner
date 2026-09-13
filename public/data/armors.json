@@ -1,0 +1,115 @@
+{
+  "baseHealth": 100,
+  "armors": [
+    {
+      "id": 1,
+      "name": "Ikielas robes",
+      "health": 2,
+      "perk": null,
+      "unlockCostCoins": 0,
+      "starter": true,
+      "ownedByDefault": true,
+      "flavor": "The robes she wore when the city was still peaceful."
+    },
+    {
+      "id": 2,
+      "name": "Hayate Gusoku",
+      "health": 17,
+      "perk": null,
+      "unlockCostCoins": 250,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "a warriors helper"
+    },
+    {
+      "id": 3,
+      "name": "Mamushi Wrap",
+      "health": 25,
+      "perk": null,
+      "unlockCostCoins": 400,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "a warrior of blade and spirit"
+    },
+    {
+      "id": 4,
+      "name": "Gale-Dancer\u2019s Kusazuri",
+      "health": 48,
+      "perk": {
+        "id": "wind_blade",
+        "description": "Cuts slash recharge time in half",
+        "activation": "passive",
+        "slashRechargeMultiplier": 0.5
+      },
+      "unlockCostCoins": 600,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "a swan is fast and free"
+    },
+    {
+      "id": 5,
+      "name": "Storm Petal Cuirass",
+      "health": 65,
+      "perk": {
+        "id": "storm_petal_electrocute",
+        "description": "Jumping over a target electrocutes them, giving a 25% chance to kill them. Double points for electrocuted enemies. Stacks with Raikiri: Call Lightning kills also count as electrocuted and get double points.",
+        "activation": "passive",
+        "trigger": "jump_over_enemy",
+        "killChance": 0.25,
+        "pointsMultiplierOnElectrocute": 2.0,
+        "stacksWith": [
+          "call_lightning"
+        ],
+        "doublePointsAppliesTo": [
+          "jump_over_electrocute",
+          "call_lightning_kills"
+        ]
+      },
+      "unlockCostCoins": 800,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "trust in the currents of the wind and rains."
+    },
+    {
+      "id": 6,
+      "name": "Kitsune\u2019s Mirage",
+      "health": 85,
+      "perk": {
+        "id": "kitsune_shade",
+        "description": "Turns you into shade for 30 meters. You cannot be hit by anything. Recharges after 20 seconds.",
+        "activation": "manual_button",
+        "autoCastOnRecharge": false,
+        "durationMeters": 30,
+        "invulnerable": true,
+        "rechargeSeconds": 20,
+        "ui": {
+          "type": "ability_button",
+          "showsCooldown": true,
+          "pressToActivate": true
+        }
+      },
+      "unlockCostCoins": 1000,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "an assasin lies in deception and trickery"
+    },
+    {
+      "id": 7,
+      "name": "Shadow-Tread O-Yoroi",
+      "health": 125,
+      "perk": {
+        "id": "shadow_tread",
+        "description": "+5 health per kill, cuts tickle damage by 25%, cuts slash attack recharge by half.",
+        "activation": "passive",
+        "healthPerKill": 5,
+        "tickleDamageMultiplier": 0.75,
+        "slashRechargeMultiplier": 0.5
+      },
+      "unlockCostCoins": 2500,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "heroism and death are not synonymous."
+    }
+  ],
+  "notes": "Slots 1-7 filled by user. Active armor perk: kitsune_shade (manual button). Passive stacking for slash recharge with Hayate/Gale-Dancer TBD by user."
+}

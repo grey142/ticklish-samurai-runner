@@ -1,26 +1,38 @@
 {
   "id": "spawn_density",
-  "description": "Enemies must be decently staggered along the route, not piled together. Total zombies per 300 meters cannot exceed the level max (can be less, especially early).",
-  "stagger": {
-    "minSpacingMeters": 24,
-    "preferVariety": true,
-    "note": "No two enemies spawn closer than minSpacingMeters. Extra random delay spreads them through the 300m window so they do not dump as a wall."
-  },
+  "description": "Per 300m window with pack spawns. Level and distance ramps.",
   "windowMeters": 300,
-  "maxZombiesPerWindowByLevel": {
-    "1": 10,
-    "2": 13,
-    "3": 15,
-    "4": 18,
-    "5": 20,
-    "6": 23
+  "stagger": {
+    "baseSlotMeters": 6,
+    "packSizeMin": 1,
+    "packSizeMax": 5,
+    "note": "Each spawn slot may place a random pack of 1\u20135 zombies clustered closer than before, within the liked spacing rhythm. Not always exactly one zombie per slot."
+  },
+  "maxZombiesPer300MetersByLevel": {
+    "1": 30,
+    "2": 39,
+    "3": 45,
+    "4": 54,
+    "5": 60,
+    "6": 69
+  },
+  "levelRamp": {
+    "extraPercentPerLevelPer300m": 1.0,
+    "note": "Each level adds +1% more zombies per 300 meters relative to the prior level baseline."
+  },
+  "distanceRamp": {
+    "everyMeters": 150,
+    "multiplierPerStepNonDrone": 1.012,
+    "excludeEnemyIds": [
+      "drone"
+    ],
+    "note": "Every 150m, raise spawn rate per 300m of all zombies except drones by 1.2% (compounding)."
   },
   "rules": [
-    "For each 300m segment, total spawned enemies <= maxZombiesPerWindowByLevel[level].",
-    "Individual enemy spawnRate is a weight/target within that cap, not a guarantee that can exceed it.",
-    "If weighted rolls would exceed the cap, stop spawning for that segment.",
-    "Apply minSpacingMeters when placing each enemy along the route.",
-    "Lower levels should often spawn below the max; never above."
-  ],
-  "notes": "Density window raised from 100m to 300m so packs sit farther apart."
+    "Use 300m windows (game already moved to 300m).",
+    "Each level: +1% more zombies per 300m vs previous level.",
+    "Spawn in packs of random 1\u20135 at the preferred spacing intervals (allow closer within a pack).",
+    "Every 150m traveled: multiply non-drone spawn rates by 1.012.",
+    "Drones excluded from the 1.2%/150m ramp."
+  ]
 }

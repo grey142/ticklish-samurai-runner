@@ -1,186 +1,30 @@
 {
   "katanas": [
-    {
-      "id": "ikielas-katana",
-      "name": "Ikiela's Katana",
-      "cost": 0,
-      "range": 96,
-      "perk": null,
-      "blurb": "Starter steel. Honest reach."
-    },
-    {
-      "id": "night-needle",
-      "name": "Night Needle",
-      "cost": 250,
-      "range": 118,
-      "perk": null,
-      "blurb": "Longer point. Street-night favorite."
-    },
-    {
-      "id": "whisper-blade",
-      "name": "Whisper Blade",
-      "cost": 500,
-      "range": 128,
-      "perk": "shadow-strike",
-      "blurb": "Manual perk: Shadow Strike — vanish-dash slash."
-    },
-    {
-      "id": "hayate",
-      "name": "Hayate",
-      "cost": 900,
-      "range": 136,
-      "perk": "hayate",
-      "blurb": "Passive: slash recharge ×0.5."
-    },
-    {
-      "id": "stormedge",
-      "name": "Stormedge",
-      "cost": 1400,
-      "range": 148,
-      "perk": "call-lightning",
-      "blurb": "Manual perk: Call Lightning — sky-fire nearby foes."
-    },
-    {
-      "id": "soulbrand",
-      "name": "Soulbrand",
-      "cost": 2000,
-      "range": 160,
-      "perk": "blade-of-souls",
-      "blurb": "Manual perk: Blade of Souls — wave that cuts the lane."
-    },
-    {
-      "id": "imperial-fang",
-      "name": "Imperial Fang",
-      "cost": 3000,
-      "range": 188,
-      "perk": null,
-      "blurb": "Palace reach. No gimmick, just bite."
-    }
+    { "id": "ikielas-katana", "name": "Ikielas Katana", "cost": 0, "range": 1.5, "perk": null, "blurb": "Her first blade — the one she carried when the city still felt safe." },
+    { "id": "kurogane", "name": "Kurogane", "cost": 250, "range": 2.0, "perk": null, "blurb": "Finely folded steel blade with no embellishments." },
+    { "id": "mikazuki", "name": "Mikazuki", "cost": 380, "range": 2.5, "perk": null, "blurb": "Quenched under moonlight to harden the edge" },
+    { "id": "hayate", "name": "Hayate", "cost": 580, "range": 3.0, "perk": "hayate", "blurb": "forged with wind-grooves along the spine, noticeably speeding up attack" },
+    { "id": "kagekiri", "name": "Kagekiri", "cost": 850, "range": 3.0, "perk": "shadow-strike", "blurb": "absorbs darkness, allowing strikes to at times become shadow." },
+    { "id": "raikiri", "name": "Raikiri", "cost": 1250, "range": 3.0, "perk": "call-lightning", "blurb": "crackles with kinetic charge... you best stand behind it.." },
+    { "id": "shin-en", "name": "Shin-En", "cost": 2500, "range": 3.5, "perk": "blade-of-souls", "blurb": "their life is now yours. Your life is now its.." }
   ],
   "armors": [
-    {
-      "id": "ikielas-robes",
-      "name": "Ikiela's Robes",
-      "cost": 0,
-      "hp": 80,
-      "blurb": "Open midriff silver-trim robes. Starter kit."
-    },
-    {
-      "id": "traveler-wraps",
-      "name": "Traveler Wraps",
-      "cost": 200,
-      "hp": 110,
-      "blurb": "Light cloth. A little more give."
-    },
-    {
-      "id": "city-guard",
-      "name": "City Guard Lamellar",
-      "cost": 400,
-      "hp": 140,
-      "blurb": "Stolen night-watch scales."
-    },
-    {
-      "id": "lacquered-cuirass",
-      "name": "Lacquered Cuirass",
-      "cost": 800,
-      "hp": 180,
-      "blurb": "Gloss crimson lacquer over steel."
-    },
-    {
-      "id": "gale-dancer",
-      "name": "Gale-Dancer Kusazuri",
-      "cost": 600,
-      "hp": 180,
-      "perk": "gale-dancer",
-      "blurb": "Passive: slash recharge ×0.5. Teal wind crescent on slash."
-    },
-    {
-      "id": "storm-petal",
-      "name": "Storm Petal Cuirass",
-      "cost": 800,
-      "hp": 210,
-      "perk": "storm-petal",
-      "blurb": "Jump-over electrocute: 25% kill, double points."
-    },
-    {
-      "id": "kitsunes-mirage",
-      "name": "Kitsune's Mirage",
-      "cost": 1000,
-      "hp": 250,
-      "perk": "kitsune-shade",
-      "blurb": "Manual: purple shade 30 m, unhittable. 20s recharge."
-    },
-    {
-      "id": "moonsteel",
-      "name": "Moonsteel Crop",
-      "cost": 1400,
-      "hp": 230,
-      "blurb": "Silver crop armor — still shows the midriff."
-    },
-    {
-      "id": "oni-ward",
-      "name": "Oni-Ward Harness",
-      "cost": 2200,
-      "hp": 290,
-      "blurb": "Warded plates. Holds under a brutal tickle."
-    },
-    {
-      "id": "imperial-plate",
-      "name": "Imperial Plate",
-      "cost": 3500,
-      "hp": 360,
-      "blurb": "Last armor of the old city."
-    }
+    { "id": "ikielas-robes", "name": "Ikielas robes", "cost": 0, "hp": 102, "perk": null, "blurb": "The robes she wore when the city was still peaceful." },
+    { "id": "hayate-gusoku", "name": "Hayate Gusoku", "cost": 250, "hp": 117, "perk": null, "blurb": "a warriors helper" },
+    { "id": "mamushi-wrap", "name": "Mamushi Wrap", "cost": 400, "hp": 125, "perk": null, "blurb": "a warrior of blade and spirit" },
+    { "id": "gale-dancers-kusazuri", "name": "Gale-Dancer’s Kusazuri", "cost": 600, "hp": 148, "perk": "gale-dancer", "blurb": "a swan is fast and free" },
+    { "id": "storm-petal-cuirass", "name": "Storm Petal Cuirass", "cost": 800, "hp": 165, "perk": "storm-petal", "blurb": "trust in the currents of the wind and rains." },
+    { "id": "kitsunes-mirage", "name": "Kitsune’s Mirage", "cost": 1000, "hp": 185, "perk": "kitsune-shade", "blurb": "an assasin lies in deception and trickery" },
+    { "id": "shadow-tread-o-yoroi", "name": "Shadow-Tread O-Yoroi", "cost": 2500, "hp": 225, "perk": "shadow-tread", "blurb": "heroism and death are not synonymous." }
   ],
   "perks": [
-    {
-      "id": "shadow-strike",
-      "name": "Shadow Strike",
-      "manual": true,
-      "cooldown": 8,
-      "blurb": "Dash through the nearest grabber with a wide cut."
-    },
-    {
-      "id": "call-lightning",
-      "name": "Call Lightning",
-      "manual": true,
-      "cooldown": 10,
-      "blurb": "Drop lightning on every foe in front of you."
-    },
-    {
-      "id": "blade-of-souls",
-      "name": "Blade of Souls",
-      "manual": true,
-      "cooldown": 12,
-      "blurb": "A soul wave clears the lane."
-    },
-    {
-      "id": "hayate",
-      "name": "Hayate Flow",
-      "manual": false,
-      "cooldown": 0,
-      "blurb": "Halves final slash recharge. Teal wind slash VFX."
-    },
-    {
-      "id": "gale-dancer",
-      "name": "Gale Step",
-      "manual": false,
-      "cooldown": 0,
-      "blurb": "Halves slash recharge. Same wind crescent as Hayate."
-    },
-    {
-      "id": "storm-petal",
-      "name": "Storm Petal",
-      "manual": false,
-      "cooldown": 0,
-      "blurb": "Jump-over electrocute + teal burst."
-    },
-    {
-      "id": "kitsune-shade",
-      "name": "Kitsune's Mirage",
-      "manual": true,
-      "cooldown": 20,
-      "blurb": "Shade 30 meters. Purple tint. Cannot be grabbed."
-    }
+    { "id": "shadow-strike", "name": "Shadow Strike", "manual": true, "cooldown": 15, "blurb": "Dash-cut the foe in front." },
+    { "id": "call-lightning", "name": "Call Lightning", "manual": true, "cooldown": 25, "blurb": "Sky-fire every foe on screen." },
+    { "id": "blade-of-souls", "name": "Blade of Souls", "manual": true, "cooldown": 45, "blurb": "Kill within 10 m. +15 HP per kill." },
+    { "id": "kitsune-shade", "name": "Kitsune's Mirage", "manual": true, "cooldown": 20, "blurb": "Purple shade 30 m. Unhittable." },
+    { "id": "hayate", "name": "Hayate Flow", "manual": false, "cooldown": 0, "blurb": "Slash recharge ×0.5." },
+    { "id": "gale-dancer", "name": "Wind Blade", "manual": false, "cooldown": 0, "blurb": "Slash recharge ×0.5." },
+    { "id": "storm-petal", "name": "Storm Petal", "manual": false, "cooldown": 0, "blurb": "Jump-over electrocute + double points." },
+    { "id": "shadow-tread", "name": "Shadow-Tread", "manual": false, "cooldown": 0, "blurb": "+5 HP/kill, tickle ×0.75, slash ×0.5." }
   ]
 }

@@ -1,0 +1,134 @@
+{
+  "katanas": [
+    {
+      "id": 1,
+      "name": "Ikielas Katana",
+      "range": 1.5,
+      "perk": null,
+      "unlockCostCoins": 0,
+      "starter": true,
+      "ownedByDefault": true,
+      "flavor": "Her first blade \u2014 the one she carried when the city still felt safe."
+    },
+    {
+      "id": 2,
+      "name": "Kurogane",
+      "range": 2.0,
+      "perk": null,
+      "unlockCostCoins": 250,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "Finely folded steel blade with no embellishments."
+    },
+    {
+      "id": 3,
+      "name": "Mikazuki",
+      "range": 2.5,
+      "perk": null,
+      "unlockCostCoins": 380,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "Quenched under moonlight to harden the edge"
+    },
+    {
+      "id": 4,
+      "name": "Hayate",
+      "range": 3.0,
+      "perk": {
+        "id": "slash_recharge_half",
+        "description": "Recharge time to slash again is cut in half",
+        "slashRechargeMultiplier": 0.5,
+        "activation": "passive",
+        "autoCastOnRecharge": false
+      },
+      "unlockCostCoins": 580,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "forged with wind-grooves along the spine, noticeably speeding up attack"
+    },
+    {
+      "id": 5,
+      "name": "Kagekiri",
+      "range": 3.0,
+      "perk": {
+        "id": "shadow_strike",
+        "description": "On slash, turn into a shadow, teleport to the enemy in front, and cut their head off. Recharges in 15 seconds.",
+        "rechargeSeconds": 15,
+        "activation": "manual_button",
+        "autoCastOnRecharge": false,
+        "ui": {
+          "type": "ability_button",
+          "showsCooldown": true,
+          "pressToActivate": true,
+          "note": "Player chooses when to press. Does not fire automatically when recharged."
+        }
+      },
+      "unlockCostCoins": 850,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "absorbs darkness, allowing strikes to at times become shadow."
+    },
+    {
+      "id": 6,
+      "name": "Raikiri",
+      "range": 3.0,
+      "perk": {
+        "id": "call_lightning",
+        "description": "Calls lightning from the sky to strike your enemies, killing them instantly. Recharges in 25 seconds.",
+        "rechargeSeconds": 25,
+        "activation": "manual_button",
+        "autoCastOnRecharge": false,
+        "ui": {
+          "type": "ability_button",
+          "showsCooldown": true,
+          "pressToActivate": true,
+          "note": "Player chooses when to press. Does not fire automatically when recharged."
+        },
+        "synergy": {
+          "with": "storm_petal_electrocute",
+          "effect": "When Storm Petal Cuirass is equipped, Call Lightning kills count as electrocuted and award double points."
+        }
+      },
+      "unlockCostCoins": 1250,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "crackles with kinetic charge... you best stand behind it.."
+    },
+    {
+      "id": 7,
+      "name": "Shin-En",
+      "range": 3.5,
+      "perk": {
+        "id": "blade_of_souls",
+        "description": "Red shadows kill all enemies on screen within 10 meters. Gain 15 health for each enemy killed this way. Recharges every 45 seconds.",
+        "killRadiusMeters": 10,
+        "healthPerKill": 15,
+        "rechargeSeconds": 45,
+        "activation": "manual_button",
+        "autoCastOnRecharge": false,
+        "ui": {
+          "type": "ability_button",
+          "showsCooldown": true,
+          "pressToActivate": true,
+          "note": "Player chooses when to press. Does not fire automatically when recharged."
+        }
+      },
+      "unlockCostCoins": 2500,
+      "starter": false,
+      "ownedByDefault": false,
+      "flavor": "their life is now yours. Your life is now its.."
+    }
+  ],
+  "notes": "Slots 1-7 filled by user. Active perks are manual buttons.",
+  "perkActivationRules": {
+    "activePerks": [
+      "shadow_strike",
+      "call_lightning",
+      "blade_of_souls"
+    ],
+    "passivePerks": [
+      "slash_recharge_half"
+    ],
+    "rule": "Active blade perks are dedicated UI buttons the player presses on demand. They recharge in the background but never auto-trigger. Passive perks (e.g. Hayate slash recharge half) apply automatically while equipped."
+  }
+}
