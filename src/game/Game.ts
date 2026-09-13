@@ -637,8 +637,13 @@ export class Game {
     return undefined;
   }
 
+  /** Decks above the ground-locked view look like empty sky. */
+  private visibleDeckMinY(): number {
+    return groundCameraY(this.mapH(), this.h) + 24;
+  }
+
   private elevatedSupportAt(x: number, w: number): WorldLedge | null {
-    return supportLedge(this.worldLedges(), x, w, this.perchKind());
+    return supportLedge(this.worldLedges(), x, w, this.perchKind(), this.visibleDeckMinY());
   }
 
   private updateActors(dt: number, run: number, _level: number): void {
@@ -649,7 +654,15 @@ export class Game {
         const def = this.def(a.defId);
         if (a.lane !== "roof") a.x -= def.approach * run * dt;
         const feetY = a.y + a.h * this.actorFootFrac(a.defId);
-        const floorY = floorUnderFeet(ledges, a.x, a.w, feetY, this.groundY());
+        const floorY = floorUnderFeet(
+          ledges,
+          a.x,
+          a.w,
+          feetY,
+          this.groundY(),
+          36,
+          this.visibleDeckMinY(),
+        );
         this.standActorOn(a, floorY);
         a.lane = floorY < this.groundY() - 8 ? "roof" : "ground";
         if (def.projectile && a.x < this.w * 0.92 && a.x > this.playerX + 80) {

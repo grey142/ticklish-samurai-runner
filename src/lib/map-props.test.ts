@@ -130,6 +130,25 @@ describe("map props", () => {
     expect(floorUnderFeet(ledges, gapX, 24, roof!.y, groundY)).toBe(groundY);
   });
 
+  it("skips 2F roofs that sit above the ground-locked camera", () => {
+    const viewH = 720;
+    const mapH = viewH * 1.85;
+    const groundY = mapH * 0.9;
+    const camTop = groundCameraY(mapH, viewH);
+    const placed = layoutProps(catalog, 0, 2000, groundY, Math.round(viewH * 0.74));
+    const house = placed.find((p) => p.def.id === "house_2story")!;
+    const ledges = allLedges([house]);
+    const mid = house.x + house.w * 0.5;
+    const minY = camTop + 24;
+    const roof = supportLedge(ledges, mid, 24);
+    expect(roof?.ledgeId).toBe("roof_top");
+    expect(roof!.y).toBeLessThan(minY);
+    const visible = supportLedge(ledges, mid, 24, undefined, minY);
+    expect(visible).toBeTruthy();
+    expect(visible!.y).toBeGreaterThanOrEqual(minY);
+    expect(visible!.ledgeId).not.toBe("roof_top");
+  });
+
   it("locks the camera to the ground unless the player would leave the top", () => {
     const mapH = 1720;
     const viewH = 1000;
