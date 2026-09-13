@@ -2,6 +2,9 @@ import { catalogPaths, enemySpritePath, ImageBank, measureFootFrac, playerPosePa
 import {
   allLedges,
   climbLedge,
+  dropLedge,
+  followCameraY,
+  groundCameraY,
   landingLedge,
   layoutProps,
   ledgeUnder,
@@ -22,6 +25,7 @@ import {
   pickWeighted,
   pointsFromDistance,
   slashRecharge,
+  ownerHasLiveShot,
   spawnCap,
   speedLevelFor,
   struggleAfterTap,
@@ -203,7 +207,7 @@ export class Game {
   }
 
   mapH(): number {
-    return this.h * 1.72;
+    return this.h * 1.85;
   }
 
   groundY(): number {
@@ -237,13 +241,10 @@ export class Game {
   }
 
   updateCamera(): void {
-    const airborne = this.screen === "playing" && !this.onGround && !this.onRoof;
-    const focus = this.playerY + this.playerH * (airborne ? 0.18 : 0.42);
-    const keep = airborne ? 0.86 : 0.62;
-    const desired = focus - this.h * keep;
-    const maxCam = Math.max(0, this.mapH() - this.h);
-    const target = Math.max(0, Math.min(maxCam, desired));
-    const k = this.screen === "playing" ? 0.22 : 1;
+    const mapH = this.mapH();
+    const target =
+      this.screen === "playing" ? followCameraY(mapH, this.h, this.playerY) : groundCameraY(mapH, this.h);
+    const k = this.screen === "playing" ? 0.28 : 1;
     this.camY += (target - this.camY) * k;
   }
 
@@ -308,7 +309,7 @@ export class Game {
     this.applyLoadout();
     this.hp = this.maxHp;
     this.playerY = standTop(this.groundY(), this.playerH, this.playerFootFrac());
-    this.camY = Math.max(0, this.mapH() - this.h);
+    this.camY = groundCameraY(this.mapH(), this.h);
     this.sfx.slash();
   }
 
@@ -483,13 +484,12 @@ export class Game {
     const v1 = (4 * H1) / T1;
 
     if (input.swipe === "up") {
-      const up = climbLedge(ledges, this.playerX, this.playerFeetY(), this.playerW);
+      const up = climbLedge(ledges, this.playerX, this.playerFeetY(), this.playerW, gY);
       if (up) this.standOn(up.y, true);
     } else if (input.swipe === "down" && this.onRoof) {
-      this.onRoof = false;
-      this.onGround = false;
-      this.vy = 220;
-      this.jumps = 1;
+      const down = dropLedge(ledges, this.playerX, this.playerFeetY(), this.playerW, gY);
+      if (down) this.standOn(down.y, true);
+      else this.standOn(gY, false);
     } else if (input.swipe === "down" && !this.onGround && !this.onRoof) {
       this.slam = true;
       this.vy = 1650;
@@ -665,6 +665,7 @@ export class Game {
           }
         }
         if (def.projectile && a.x < this.w * 0.92 && a.x > this.playerX + 80) {
+          if (ownerHasLiveShot(this.actors, a.id)) continue;
           a.fireCd -= dt;
           if (a.fireCd <= 0) {
             this.fireProjectile(def.projectile, a);
@@ -680,12 +681,14 @@ export class Game {
   }
 
   private fireProjectile(id: string, from: Actor): void {
+    if (ownerHasLiveShot(this.actors, from.id)) return;
     const def = this.projDef(id);
     const box = this.spriteBox(projectilePath(id), from.h * 0.5);
     this.actors.push({
       kind: "projectile",
       id: `p${nextActor++}`,
       defId: id,
+      ownerId: from.id,
       x: from.x - box.w * 0.35,
       y: from.y + from.h * 0.5 - box.h * 0.5,
       w: box.w,

@@ -492,7 +492,7 @@ function drawHowto(g: Game): void {
   const lines = [
     "Always runs right. No pause — only a grab or a game-over stops her.",
     "Tap = jump (~half screen, ~3s if held). Release early to drop. Second tap = double jump.",
-    "Swipe down in air = slam. Swipe up / C = climb the nearest porch or roof. Swipe down on a ledge = drop.",
+    "Swipe down in air = slam. Swipe up / C = climb one story (street → 1F/roof, 1F → 2F). Swipe down on a ledge = drop one story.",
     "SLASH is the right-hand button. Base 1.5s. Shop cuts 0.2s ×5. Hayate halves the final recharge.",
     "Grab / egg-web / bolo / slime / thrown hand = struggle. Mash +6 to 100 before 16s or HP 0.",
     "Pink flash + laugh every second. Cinematic every 4s. Roof-jump kills pay double.",

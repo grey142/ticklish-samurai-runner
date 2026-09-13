@@ -146,6 +146,8 @@ export interface MapLedgeDef {
   x0: number;
   x1: number;
   label: string;
+  /** 0 street, 1 first story, 2 second story. Climb/drop moves one rank. */
+  story?: number;
 }
 
 export interface MapPropDef {
@@ -153,6 +155,7 @@ export interface MapPropDef {
   file: string;
   width: number;
   height: number;
+  storyHeights?: { first: number; second: number };
   ledges: MapLedgeDef[];
 }
 
@@ -175,6 +178,7 @@ export interface Actor {
   lane: "ground" | "roof" | "air";
   jumpedOver?: boolean;
   electrocuted?: boolean;
+  ownerId?: string;
 }
 
 export interface VfxBurst {

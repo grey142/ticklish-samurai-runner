@@ -3,43 +3,49 @@
     {
       "id": "house_2story",
       "file": "house-2story.png",
-      "width": 1280,
-      "height": 720,
+      "width": 787,
+      "height": 772,
+      "storyHeights": { "first": 1.0, "second": 1.5 },
       "ledges": [
         {
           "id": "roof_top",
-          "y": 0.108,
+          "y": 0.105,
           "x0": 0.08,
           "x1": 0.92,
-          "label": "top roof tiles"
+          "label": "top roof tiles",
+          "story": 2
         },
         {
           "id": "balcony",
-          "y": 0.446,
+          "y": 0.348,
           "x0": 0.1,
           "x1": 0.9,
-          "label": "2F balcony floor"
+          "label": "2F balcony floor",
+          "story": 2
         },
         {
           "id": "eave_1f",
-          "y": 0.52,
+          "y": 0.598,
           "x0": 0.06,
           "x1": 0.94,
-          "label": "1F roof eave"
+          "label": "1F roof eave",
+          "story": 1
         },
         {
           "id": "engawa",
-          "y": 0.834,
+          "y": 0.748,
           "x0": 0.08,
           "x1": 0.92,
-          "label": "engawa porch deck"
+          "label": "engawa porch deck",
+          "story": 1
         },
         {
           "id": "ground",
-          "y": 0.936,
+          "y": 0.988,
           "x0": 0.05,
           "x1": 0.95,
-          "label": "foundation bottom"
+          "label": "foundation bottom",
+          "story": 0
         }
       ]
     },
@@ -54,21 +60,24 @@
           "y": 0.185,
           "x0": 0.06,
           "x1": 0.94,
-          "label": "main roof tiles"
+          "label": "main roof tiles",
+          "story": 1
         },
         {
           "id": "engawa",
           "y": 0.775,
           "x0": 0.08,
           "x1": 0.92,
-          "label": "engawa porch deck"
+          "label": "engawa porch deck",
+          "story": 1
         },
         {
           "id": "ground",
           "y": 0.918,
           "x0": 0.05,
           "x1": 0.95,
-          "label": "foundation bottom"
+          "label": "foundation bottom",
+          "story": 0
         }
       ]
     },
@@ -83,24 +92,27 @@
           "y": 0.232,
           "x0": 0.18,
           "x1": 0.82,
-          "label": "gate roof tiles"
+          "label": "gate roof tiles",
+          "story": 1
         },
         {
           "id": "lintel",
           "y": 0.4,
           "x0": 0.28,
           "x1": 0.72,
-          "label": "crossbeam"
+          "label": "crossbeam",
+          "story": 1
         },
         {
           "id": "ground",
           "y": 0.928,
           "x0": 0.05,
           "x1": 0.95,
-          "label": "foundation bottom"
+          "label": "foundation bottom",
+          "story": 0
         }
       ]
     }
   ],
-  "notes": "Ledge y is the walkable surface (top of deck / tiles / beam), not the railing. Ground y is the last opaque foundation row so the stone sits on the street. Player and zombies stand with visible soles on that y."
+  "notes": "house_2story is 787×772, 2F ≈ 1.5× 1F in the art. Layout scales it so ground→eave_1f equals ground→one-story roof. Ledge y is the walkable deck/tile, not the railing. Climb/drop moves one story rank."
 }

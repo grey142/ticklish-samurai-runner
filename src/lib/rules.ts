@@ -75,3 +75,7 @@ export function nextSlashUpgradeCost(cfg: GameConfig, upgrades: number): number 
   if (upgrades >= cfg.slash.maxUpgrades) return null;
   return cfg.slash.upgradeCosts[upgrades] ?? null;
 }
+
+export function ownerHasLiveShot(actors: { kind: string; ownerId?: string }[], ownerId: string): boolean {
+  return actors.some((a) => a.kind === "projectile" && a.ownerId === ownerId);
+}
