@@ -1,3 +1,11 @@
+import {
+  cinematicPath,
+  drawContained,
+  drawCover,
+  enemySpritePath,
+  playerPosePath,
+  projectilePath,
+} from "../lib/assets";
 import { nextSlashUpgradeCost, speedLevelFor } from "../lib/rules";
 import type { Game } from "./Game";
 
@@ -111,12 +119,20 @@ function lanterns(ctx: CanvasRenderingContext2D, w: number, h: number, scroll: n
 function drawPlayer(g: Game): void {
   const { ctx } = g;
   const t = g.time;
-  const bob = g.onGround || g.onRoof ? Math.sin(t * 10) * 3 : 0;
+  const bob = g.onGround || g.onRoof ? Math.sin(t * 12) * 3 : 0;
+  const pose = g.slashFlash > 0 ? "slash" : g.onRoof ? "climb" : !g.onGround ? "jump" : "run";
+  const img = g.images.get(playerPosePath(pose)) ?? g.images.get(playerPosePath("run"));
   ctx.save();
-  ctx.translate(g.playerX, g.playerY + bob);
-  ctx.scale(g.playerH / 110, g.playerH / 110);
   if (g.invuln > 0 && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.45;
-  drawIkielaBody(ctx, 0, 0, false, g.slashFlash > 0);
+  if (img) {
+    const boxW = g.playerH * 1.15;
+    const boxH = g.playerH * 1.28;
+    drawContained(ctx, img, g.playerX - boxW * 0.18, g.playerY + bob - boxH * 0.18, boxW, boxH, "bottom");
+  } else {
+    ctx.translate(g.playerX, g.playerY + bob);
+    ctx.scale(g.playerH / 110, g.playerH / 110);
+    drawIkielaBody(ctx, 0, 0, false, g.slashFlash > 0);
+  }
   ctx.restore();
 }
 
@@ -130,6 +146,17 @@ function drawActors(g: Game): void {
 function drawEnemy(g: Game, id: string, x: number, y: number, w: number, h: number, hp: number): void {
   const def = g.enemies.enemies.find((e) => e.id === id);
   const { ctx } = g;
+  const img = g.images.get(enemySpritePath(id, "idle"));
+  if (img) {
+    ctx.save();
+    drawContained(ctx, img, x - w * 0.15, y - h * 0.08, w * 1.3, h * 1.12, "bottom");
+    ctx.fillStyle = "rgba(0,0,0,0.45)";
+    ctx.fillRect(x + 4, y + h - 6, w - 8, 4);
+    ctx.fillStyle = "#3d1";
+    ctx.fillRect(x + 6, y + 2, (w - 12) * hp, 4);
+    ctx.restore();
+    return;
+  }
   const color = def?.color ?? "#6aa86a";
   const accent = def?.accent ?? "#243";
   ctx.save();
@@ -197,6 +224,11 @@ function drawEnemy(g: Game, id: string, x: number, y: number, w: number, h: numb
 function drawProjectile(g: Game, id: string, x: number, y: number, w: number, h: number): void {
   const p = g.enemies.projectiles.find((d) => d.id === id);
   const { ctx } = g;
+  const img = g.images.get(projectilePath(id));
+  if (img) {
+    drawContained(ctx, img, x - w * 0.4, y - h * 0.4, w * 1.8, h * 1.8, "center");
+    return;
+  }
   ctx.save();
   ctx.translate(x, y);
   ctx.fillStyle = p?.color ?? "#fff";
@@ -299,8 +331,20 @@ function drawStruggle(g: Game): void {
   const { ctx, w, h } = g;
   const s = g.struggle;
   if (!s) return;
-  ctx.fillStyle = "rgba(40, 8, 24, 0.45)";
-  ctx.fillRect(0, 0, w, h);
+  const beat = (s.beat % 3) + 1;
+  const shot = g.images.scene(cinematicPath(s.sourceId, "struggle", beat));
+  if (shot) {
+    ctx.save();
+    ctx.globalAlpha = s.showCinematic > 0 ? 1 : 0.88;
+    drawCover(ctx, shot, 0, 0, w, h);
+    ctx.restore();
+    ctx.fillStyle = "rgba(20, 4, 16, 0.28)";
+    ctx.fillRect(0, 0, w, h);
+  } else {
+    ctx.fillStyle = "rgba(40, 8, 24, 0.45)";
+    ctx.fillRect(0, 0, w, h);
+    drawIkielaPose(ctx, w * 0.5 - 90, h * 0.32, false, 1.35);
+  }
 
   panel(ctx, w * 0.14, 16, w * 0.72, 110, "rgba(20,6,14,0.88)");
   ctx.fillStyle = "#ffb0d0";
@@ -309,45 +353,37 @@ function drawStruggle(g: Game): void {
   ctx.fillText(`STRUGGLE  ·  ${s.sourceName}`, w / 2, 50);
   ctx.font = "16px Trebuchet MS, sans-serif";
   ctx.fillStyle = "#f4e7d8";
-  ctx.fillText(`MASH  +6 / 100    ·    ${Math.floor(s.meter)} / 100    ·    she keeps getting tickled`, w / 2, 78);
+  ctx.fillText(`MASH  +6 / 100    ·    ${Math.floor(s.meter)} / 100    ·    beat ${beat}/3`, w / 2, 78);
   ctx.textAlign = "left";
   ctx.fillStyle = "#3a1020";
   ctx.fillRect(w * 0.2, 92, w * 0.6, 22);
   ctx.fillStyle = "#ff4d8d";
   ctx.fillRect(w * 0.2, 92, w * 0.6 * (s.meter / 100), 22);
-
-  drawIkielaPose(ctx, w * 0.5 - 90, h * 0.32, false, 1.35);
-
-  if (s.showCinematic > 0) {
-    panel(ctx, w * 0.1, h * 0.2, w * 0.8, h * 0.48, "rgba(12,6,14,0.92)");
-    drawIkielaPose(ctx, w * 0.16, h * 0.26, false, 1.2);
-    ctx.fillStyle = "#ffb0d0";
-    ctx.font = "700 20px Trebuchet MS, sans-serif";
-    ctx.fillText(`Beat ${s.beat + 1} / 3`, w * 0.42, h * 0.3);
-    ctx.fillStyle = "#f4e7d8";
-    ctx.font = "18px Trebuchet MS, sans-serif";
-    wrapText(ctx, s.lines[s.beat] ?? g.cinematics.beats[s.beat], w * 0.42, h * 0.38, w * 0.42, 26);
-  }
 }
 
 function drawGameOver(g: Game): void {
   const { ctx, w, h } = g;
-  ctx.fillStyle = "rgba(10,4,10,0.55)";
-  ctx.fillRect(0, 0, w, h);
-  panel(ctx, w * 0.16, 20, w * 0.68, h * 0.58, "rgba(18,6,12,0.9)");
+  const shot = g.images.scene(cinematicPath(g.overSource, "gameover", g.overFrame));
+  if (shot) {
+    drawCover(ctx, shot, 0, 0, w, h);
+    ctx.fillStyle = "rgba(8, 2, 8, 0.38)";
+    ctx.fillRect(0, 0, w, h);
+  } else {
+    ctx.fillStyle = "rgba(10,4,10,0.55)";
+    ctx.fillRect(0, 0, w, h);
+    drawIkielaPose(ctx, w * 0.18, 72, true, 1.15);
+  }
+  panel(ctx, w * 0.08, 16, w * 0.5, 132, "rgba(18,6,12,0.82)");
   ctx.fillStyle = "#ff4d8d";
-  ctx.font = "700 34px Trebuchet MS, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("LAUGHED OUT", w / 2, 58);
-  drawIkielaPose(ctx, w * 0.18, 72, true, 1.15);
+  ctx.font = "700 32px Trebuchet MS, sans-serif";
   ctx.textAlign = "left";
+  ctx.fillText("LAUGHED OUT", w * 0.1, 50);
   ctx.fillStyle = "#f4e7d8";
-  ctx.font = "18px Trebuchet MS, sans-serif";
-  wrapText(ctx, g.overLine, w * 0.4, 110, w * 0.4, 24);
   ctx.font = "16px Trebuchet MS, sans-serif";
+  wrapText(ctx, g.overLine, w * 0.1, 78, w * 0.44, 22);
+  ctx.font = "15px Trebuchet MS, sans-serif";
   ctx.fillStyle = "#d9b88c";
-  ctx.fillText(`${Math.floor(g.distance)} m    +${g.runCoins} coins`, w * 0.4, 220);
-  ctx.fillText(`Bank: ${g.save.coins}    Best: ${g.save.bestDistance} m`, w * 0.4, 246);
+  ctx.fillText(`${Math.floor(g.distance)} m    +${g.runCoins} coins    Bank ${g.save.coins}    Best ${g.save.bestDistance} m`, w * 0.1, 132);
 
   button(ctx, g, "revive", !g.usedRevive && g.save.coins >= g.cfg.economy.reviveCost ? "Revive  300 coins" : "Revive locked");
   button(ctx, g, "retry", "Run again");
@@ -370,7 +406,9 @@ function drawMenu(g: Game): void {
   ctx.fillStyle = "#d9b88c";
   ctx.fillText(`${g.save.coins} coins in the sash  ·  best ${g.save.bestDistance} m`, w / 2, h * 0.34);
   ctx.textAlign = "left";
-  drawIkielaPose(ctx, w * 0.06, h * 0.4, false, 1.15);
+  const run = g.images.get(playerPosePath("run"));
+  if (run) drawContained(ctx, run, w * 0.02, h * 0.36, w * 0.28, h * 0.56, "bottom");
+  else drawIkielaPose(ctx, w * 0.06, h * 0.4, false, 1.15);
   button(ctx, g, "play", "Run");
   button(ctx, g, "shop", "Shop");
   button(ctx, g, "howto", "How to play");

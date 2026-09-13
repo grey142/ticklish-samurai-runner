@@ -1,3 +1,4 @@
+import { catalogPaths, ImageBank } from "../lib/assets";
 import { Sfx } from "../lib/audio";
 import { Input, type InputFrame } from "../lib/input";
 import {
@@ -76,6 +77,8 @@ export class Game {
   usedRevive = false;
   overSource = "drone";
   overLine = "";
+  overFrame = 1;
+  images = new ImageBank();
   time = 0;
   menuPulse = 0;
 
@@ -100,6 +103,9 @@ export class Game {
     this.cinematics = cinematics;
     this.save = loadSave(game.economy.starterCoins);
     this.applyLoadout();
+    const enemyIds = enemies.enemies.map((e) => e.id);
+    const projectileIds = enemies.projectiles.map((p) => p.id);
+    await this.images.load(catalogPaths(enemyIds, projectileIds));
   }
 
   applyLoadout(): void {
@@ -418,9 +424,9 @@ export class Game {
 
   private spawnEnemy(id: string): void {
     const def = this.def(id);
-    const s = this.h / 720;
-    const ew = def.w * s * 1.25;
-    const eh = def.h * s * 1.25;
+    const trap = def.role === "trap";
+    const eh = this.playerH * (trap ? 0.42 : def.flying ? 0.92 : 1.02);
+    const ew = eh * Math.max(0.42, def.w / Math.max(40, def.h));
     const flying = def.flying;
     const roof = !flying && Math.random() < 0.18 && def.role !== "trap";
     const lane: Actor["lane"] = flying ? "air" : roof ? "roof" : "ground";
@@ -468,19 +474,20 @@ export class Game {
   }
 
   private fireProjectile(id: string, from: Actor): void {
-    const p = this.projDef(id);
-    const s = this.h / 720;
+    const def = this.projDef(id);
+    const pw = Math.max(52, this.playerH * 0.32);
+    const ph = Math.max(40, this.playerH * 0.24);
     this.actors.push({
       kind: "projectile",
       id: `p${nextActor++}`,
       defId: id,
       x: from.x - 10,
-      y: from.y + from.h * 0.35,
-      w: p.w * s * 1.2,
-      h: p.h * s * 1.2,
+      y: from.y + from.h * 0.28,
+      w: pw,
+      h: ph,
       hp: 1,
       maxHp: 1,
-      vx: p.speed,
+      vx: def.speed,
       fireCd: 0,
       lane: from.lane,
     });
@@ -610,7 +617,7 @@ export class Game {
       nextFlash: 0,
       nextCinematic: this.cfg.struggle.cinematicEvery,
       beat: 0,
-      showCinematic: 0,
+      showCinematic: 1.6,
       lines: pack.struggle,
       mashClock: 0,
     };
@@ -665,6 +672,7 @@ export class Game {
   private endRun(sourceId: string): void {
     const pack = this.cinematics.bySource[sourceId];
     this.overSource = sourceId;
+    this.overFrame = 1 + Math.floor(Math.random() * 3);
     this.overLine = pack?.gameover[Math.floor(Math.random() * (pack.gameover.length || 1))] ?? "The laugh wins.";
     const distPts = pointsFromDistance(this.distance, this.cfg.economy.metersPerPoint);
     const coins = coinsFromPoints(distPts + this.runPoints, this.cfg.economy.pointsPerCoin);

@@ -1,6 +1,6 @@
 # Ticklish Samurai Runner
 
-Landscape-phone 2D endless runner. **Ikiela**, a ticklish samurai, auto-runs the old imperial city and mashes out of tickle-zombie grabs. Pretty NSFW on purpose. Placeholders in v1.
+Landscape-phone 2D endless runner. **Ikiela**, a ticklish samurai, auto-runs the old imperial city and mashes out of tickle-zombie grabs. Pretty NSFW on purpose. Real PNG sprites + cinematic stills (release `assets-v1`).
 
 Play: **https://grey142.github.io/ticklish-samurai-runner/**
 
@@ -53,16 +53,13 @@ First jump: same max height (~half screen, ~3s if held). Letting go starts the f
 
 ## Layout
 
-- `public/data/` — design JSON (`game`, `enemies`, `shop`, `cinematics`)
-- `public/assets/player|enemies/<id>|projectiles/<id>|cinematics/<id>/{struggle,gameover}` — colored SVG placeholders
-- `src/game/` — canvas loop
+- `public/data/` — design JSON (`game`, `enemies`, `shop`, `cinematics`) plus `cinematics-manifest.json`
+- `public/assets/player/*.png` — `run`, `jump`, `slash`, `climb` (plus `run-sheet`, alts, `ref.jpg`)
+- `public/assets/enemies/<id>/{idle,grab,headless,throw}.png`
+- `public/assets/projectiles/<id>/idle.png`
+- `public/assets/cinematics/<id>/struggle-1..3.png` and `gameover-1..3.png` (12 enemies + 4 projectiles)
+- `src/game/` — canvas loop; loaders knock out the studio backdrop on gameplay sprites
 - `src/lib/rules.ts` — economy / spawn / slash math (unit tested)
-
-Regenerate placeholder art:
-
-```bash
-npm run placeholders
-```
 
 ## GitHub Pages
 

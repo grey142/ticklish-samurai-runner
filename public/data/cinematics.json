@@ -1,4 +1,9 @@
 {
+  "imageLayout": {
+    "struggle": "assets/cinematics/<id>/struggle-1.png … struggle-3.png",
+    "gameover": "assets/cinematics/<id>/gameover-1.png … gameover-3.png",
+    "pick": "struggle cycles 1-2-3 every 4s; game over picks a random 1-3"
+  },
   "struggleArt": "Ikiela in player-ref silver crop armor, bare midriff, katana still sheathed or dropped as they work her ribs and soles.",
   "gameOverArt": "Same woman, red bikini, wrecked laugh, imperial street behind her.",
   "beats": [

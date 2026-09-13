@@ -1,0 +1,238 @@
+{
+  "artStyle": "3D realistic dark fantasy/Grimdark textured semi-realistic concept art; painterly brushwork; rim lighting; shiny skin; no scratches/blood; nighttime imperial China gravel street, buildings, orange lanterns",
+  "player": "Ikiela matching player-ref.jpg \u2014 laughing with slight reddish blush over nose; clothing escalates down toward red bikini",
+  "struggleScenes": 3,
+  "gameOverScenes": 3,
+  "struggleIntervalSeconds": 4,
+  "gameOverPick": "random among 3 for that zombie",
+  "enemies": {
+    "drone": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ],
+      "notes": "Full 6-shot pack done. Clean-skin rule enforced."
+    },
+    "viner": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ],
+      "notes": "Full 6-shot pack done."
+    },
+    "quad-arm": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ],
+      "notes": "Full pack. Some variants may need 4-arm/no-UI polish later."
+    },
+    "bolter": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ]
+    },
+    "hundred-hands": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ]
+    },
+    "licker": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ]
+    },
+    "spider": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ]
+    },
+    "slimer": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ]
+    },
+    "archer": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ]
+    },
+    "volatile": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ]
+    },
+    "brute": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ]
+    },
+    "hand-thrower": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ],
+      "notes": "Full 6-shot pack with flying hand"
+    }
+  },
+  "rules": [
+    "No gore, scratches, or blood on player or zombies",
+    "Zombies actively tickling",
+    "China lantern street background",
+    "Clothing escalates; game over = red bikini bottoms, no top"
+  ],
+  "projectiles": {
+    "bolo-wrap": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ],
+      "parent": "archer",
+      "notes": "Reused archer (ankle bolo / foot tickle)"
+    },
+    "egg-web": {
+      "status": "complete",
+      "parent": "spider",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ],
+      "notes": "Unique pack: egg-web traps player, then hundreds of tiny black spiders crawl all over to tickle. Not Spider grab reuse."
+    },
+    "slime-shot": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ],
+      "parent": "slimer",
+      "notes": "Mostly slimer reuse; struggle-3 unique slime-shot blob focus"
+    },
+    "throwing-hand": {
+      "status": "complete",
+      "struggle": [
+        "struggle-1.png",
+        "struggle-2.png",
+        "struggle-3.png"
+      ],
+      "gameOver": [
+        "gameover-1.png",
+        "gameover-2.png",
+        "gameover-3.png"
+      ],
+      "parent": "hand-thrower",
+      "notes": "Flying hand focused; reuses/extends hand-thrower"
+    }
+  }
+}

@@ -7,6 +7,12 @@ const ctx = canvas.getContext("2d");
 if (!ctx) throw new Error("2d context missing");
 
 const game = new Game(canvas, ctx);
+game.resize();
+ctx.fillStyle = "#120c14";
+ctx.fillRect(0, 0, game.w, game.h);
+ctx.fillStyle = "#ff4d8d";
+ctx.font = "700 28px Trebuchet MS, sans-serif";
+ctx.fillText("Loading Ikiela…", 40, game.h * 0.5);
 
 void game.boot().then(() => {
   game.resize();
