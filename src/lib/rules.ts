@@ -88,6 +88,17 @@ export function applyOneShot(hp: number): number {
 export const GAMEOVER_HOLD_SEC = 5;
 export const GAMEOVER_LINE = "you were tickled to death";
 
+/** Faster rise, same apex: takeoff ×1.05 and hold-gravity ×1.05². */
+export const JUMP_ASCENT_MUL = 1.05;
+
+export function jumpTakeoffSpeed(maxHeight: number, airSeconds: number): number {
+  return ((4 * maxHeight) / airSeconds) * JUMP_ASCENT_MUL;
+}
+
+export function jumpHoldGravity(maxHeight: number, airSeconds: number): number {
+  return ((8 * maxHeight) / (airSeconds * airSeconds)) * JUMP_ASCENT_MUL * JUMP_ASCENT_MUL;
+}
+
 /** Was 0.35; playtest is 2× that flight rate. */
 export const PROJECTILE_FLIGHT_MUL = 0.7;
 

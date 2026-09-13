@@ -121,6 +121,43 @@ function spansLedge(l: WorldLedge, x: number, w: number): boolean {
   return x < l.x1 && x + w > l.x0;
 }
 
+/** Porch, balcony, eave, roof, gate roof — not lintels or empty air. */
+export function isElevatedFloor(ledgeId: string): boolean {
+  return /roof|balcony|eave|engawa|porch/.test(ledgeId);
+}
+
+/** Highest standable deck that actually spans this X. No Y slop. */
+export function supportLedge(ledges: WorldLedge[], x: number, w = 0, kind?: RegExp): WorldLedge | null {
+  let best: WorldLedge | null = null;
+  for (const l of ledges) {
+    if (!l.standable || !isElevatedFloor(l.ledgeId) || !spansLedge(l, x, w)) continue;
+    if (kind && !kind.test(l.ledgeId)) continue;
+    if (!best || l.y < best.y) best = l;
+  }
+  return best;
+}
+
+/**
+ * Floor under the feet at this X: the highest elevated deck at or below the soles,
+ * or the street if none. Ground walkers are not lifted onto roofs they pass under.
+ */
+export function floorUnderFeet(
+  ledges: WorldLedge[],
+  x: number,
+  w: number,
+  feetY: number,
+  groundY: number,
+  slop = 36,
+): number {
+  let best: WorldLedge | null = null;
+  for (const l of ledges) {
+    if (!l.standable || !isElevatedFloor(l.ledgeId) || !spansLedge(l, x, w)) continue;
+    if (l.y < feetY - slop) continue;
+    if (!best || l.y < best.y) best = l;
+  }
+  return best?.y ?? groundY;
+}
+
 export function ledgeUnder(ledges: WorldLedge[], x: number, feetY: number, slop: number, w = 0): WorldLedge | null {
   let best: WorldLedge | null = null;
   let bestDist = slop;
