@@ -2,6 +2,7 @@ import {
   cinematicPath,
   drawContained,
   drawCover,
+  drawSheetFrame,
   enemySpritePath,
   playerPosePath,
   projectilePath,
@@ -16,6 +17,7 @@ export function drawScene(g: Game): void {
   if (g.screen === "playing" || g.screen === "gameover") {
     drawActors(g);
     drawPlayer(g);
+    drawVfx(g);
     drawParticles(g);
   }
   if (g.pinkFlash > 0) {
@@ -122,18 +124,50 @@ function drawPlayer(g: Game): void {
   const bob = g.onGround || g.onRoof ? Math.sin(t * 12) * 3 : 0;
   const pose = g.slashFlash > 0 ? "slash" : g.onRoof ? "climb" : !g.onGround ? "jump" : "run";
   const img = g.images.get(playerPosePath(pose)) ?? g.images.get(playerPosePath("run"));
+  const boxW = g.playerH * 1.15;
+  const boxH = g.playerH * 1.28;
+  const dx = g.playerX - boxW * 0.18;
+  const dy = g.playerY + bob - boxH * 0.18;
   ctx.save();
-  if (g.invuln > 0 && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.45;
-  if (img) {
-    const boxW = g.playerH * 1.15;
-    const boxH = g.playerH * 1.28;
-    drawContained(ctx, img, g.playerX - boxW * 0.18, g.playerY + bob - boxH * 0.18, boxW, boxH, "bottom");
+  if (g.invuln > 0 && !g.shadeActive() && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.45;
+  if (img && g.shadeActive()) {
+    if (!g.tintScratch) g.tintScratch = document.createElement("canvas");
+    const scratch = g.tintScratch;
+    scratch.width = Math.max(8, Math.ceil(boxW));
+    scratch.height = Math.max(8, Math.ceil(boxH));
+    const sctx = scratch.getContext("2d");
+    if (sctx) {
+      sctx.clearRect(0, 0, scratch.width, scratch.height);
+      drawContained(sctx, img, 0, 0, scratch.width, scratch.height, "bottom");
+      sctx.globalCompositeOperation = "source-atop";
+      sctx.fillStyle = "rgba(155, 77, 255, 0.72)";
+      sctx.fillRect(0, 0, scratch.width, scratch.height);
+      sctx.globalCompositeOperation = "source-over";
+    }
+    ctx.globalAlpha = 0.85;
+    ctx.drawImage(scratch, dx, dy, boxW, boxH);
+  } else if (img) {
+    drawContained(ctx, img, dx, dy, boxW, boxH, "bottom");
   } else {
     ctx.translate(g.playerX, g.playerY + bob);
     ctx.scale(g.playerH / 110, g.playerH / 110);
     drawIkielaBody(ctx, 0, 0, false, g.slashFlash > 0);
   }
   ctx.restore();
+}
+
+function drawVfx(g: Game): void {
+  const { ctx } = g;
+  for (const fx of g.vfx) {
+    const img = g.images.get(fx.sheet);
+    if (!img) continue;
+    const progress = Math.min(0.999, fx.t / fx.duration);
+    const frame = fx.startFrame + Math.floor(progress * fx.playFrames);
+    ctx.save();
+    ctx.globalAlpha = 0.95;
+    drawSheetFrame(ctx, img, frame, fx.frames, fx.x, fx.y, fx.w, fx.h);
+    ctx.restore();
+  }
 }
 
 function drawActors(g: Game): void {
@@ -323,7 +357,7 @@ function drawHud(g: Game): void {
 
   ctx.fillStyle = "rgba(244,231,216,0.7)";
   ctx.font = "14px Trebuchet MS, sans-serif";
-  ctx.fillText("tap jump · hold first jump · swipe up roof · swipe down slam · J slash", 16, g.h - 16);
+  ctx.fillText("tap jump · hold first jump · swipe up roof · swipe down slam · J slash · 1–4 abilities", 16, g.h - 16);
   void w;
 }
 
@@ -431,7 +465,7 @@ function drawHowto(g: Game): void {
     "Grab / egg-web / bolo / slime / thrown hand = struggle. Mash +6 to 100 before 16s or HP 0.",
     "Pink flash + laugh every second. Cinematic every 4s. Roof-jump kills pay double.",
     "1 point / 6 m. 1 coin / 6 points. Revive once per run for 300 coins.",
-    "Desktop: Space/W jump, S slam, C climb, J slash, 1/2/3 perks.",
+    "Desktop: Space/W jump, S slam, C climb, J slash, 1–4 abilities (shade = 4).",
   ];
   lines.forEach((line, i) => ctx.fillText(line, 64, 150 + i * 28));
   button(ctx, g, "back", "Back");

@@ -87,6 +87,30 @@
       "blurb": "Gloss crimson lacquer over steel."
     },
     {
+      "id": "gale-dancer",
+      "name": "Gale-Dancer Kusazuri",
+      "cost": 600,
+      "hp": 180,
+      "perk": "gale-dancer",
+      "blurb": "Passive: slash recharge ×0.5. Teal wind crescent on slash."
+    },
+    {
+      "id": "storm-petal",
+      "name": "Storm Petal Cuirass",
+      "cost": 800,
+      "hp": 210,
+      "perk": "storm-petal",
+      "blurb": "Jump-over electrocute: 25% kill, double points."
+    },
+    {
+      "id": "kitsunes-mirage",
+      "name": "Kitsune's Mirage",
+      "cost": 1000,
+      "hp": 250,
+      "perk": "kitsune-shade",
+      "blurb": "Manual: purple shade 30 m, unhittable. 20s recharge."
+    },
+    {
       "id": "moonsteel",
       "name": "Moonsteel Crop",
       "cost": 1400,
@@ -135,7 +159,28 @@
       "name": "Hayate Flow",
       "manual": false,
       "cooldown": 0,
-      "blurb": "Halves final slash recharge."
+      "blurb": "Halves final slash recharge. Teal wind slash VFX."
+    },
+    {
+      "id": "gale-dancer",
+      "name": "Gale Step",
+      "manual": false,
+      "cooldown": 0,
+      "blurb": "Halves slash recharge. Same wind crescent as Hayate."
+    },
+    {
+      "id": "storm-petal",
+      "name": "Storm Petal",
+      "manual": false,
+      "cooldown": 0,
+      "blurb": "Jump-over electrocute + teal burst."
+    },
+    {
+      "id": "kitsune-shade",
+      "name": "Kitsune's Mirage",
+      "manual": true,
+      "cooldown": 20,
+      "blurb": "Shade 30 meters. Purple tint. Cannot be grabbed."
     }
   ]
 }

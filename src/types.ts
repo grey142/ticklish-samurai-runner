@@ -99,6 +99,7 @@ export interface ArmorDef {
   name: string;
   cost: number;
   hp: number;
+  perk?: string | null;
   blurb: string;
 }
 
@@ -151,6 +152,21 @@ export interface Actor {
   vx: number;
   fireCd: number;
   lane: "ground" | "roof" | "air";
+  jumpedOver?: boolean;
+  electrocuted?: boolean;
+}
+
+export interface VfxBurst {
+  sheet: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  t: number;
+  duration: number;
+  frames: number;
+  startFrame: number;
+  playFrames: number;
 }
 
 export interface StruggleState {

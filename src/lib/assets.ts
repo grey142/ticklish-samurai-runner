@@ -51,12 +51,20 @@ export function cinematicPath(id: string, kind: "struggle" | "gameover", n: numb
   return `./assets/cinematics/${id}/${kind}-${n}.png`;
 }
 
+export function vfxPath(file: string): string {
+  return `./assets/ability-vfx/${file}`;
+}
+
 export function catalogPaths(enemyIds: string[], projectileIds: string[]): { path: string; knockout: boolean }[] {
   const out: { path: string; knockout: boolean }[] = [
     { path: playerPosePath("run"), knockout: true },
     { path: playerPosePath("jump"), knockout: true },
     { path: playerPosePath("slash"), knockout: true },
     { path: playerPosePath("climb"), knockout: true },
+    { path: vfxPath("shadow-strike.png"), knockout: false },
+    { path: vfxPath("call-lightning.png"), knockout: false },
+    { path: vfxPath("blade-of-souls.png"), knockout: false },
+    { path: vfxPath("electrocute-wind.png"), knockout: false },
   ];
   for (const id of enemyIds) {
     out.push({ path: enemySpritePath(id, "idle"), knockout: true });
@@ -190,6 +198,23 @@ export function drawContained(
   const dx = x + (boxW - dw) / 2;
   const dy = anchor === "bottom" ? y + boxH - dh : y + (boxH - dh) / 2;
   ctx.drawImage(img, dx, dy, dw, dh);
+}
+
+export function drawSheetFrame(
+  ctx: CanvasRenderingContext2D,
+  img: Drawn,
+  frame: number,
+  frames: number,
+  dx: number,
+  dy: number,
+  dw: number,
+  dh: number,
+): void {
+  const cols = Math.max(1, frames);
+  const fw = img.width / cols;
+  const fh = img.height;
+  const sx = Math.min(cols - 1, Math.max(0, frame)) * fw;
+  ctx.drawImage(img, sx, 0, fw, fh, dx, dy, dw, dh);
 }
 
 export function drawCover(

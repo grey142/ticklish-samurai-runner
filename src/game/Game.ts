@@ -1,4 +1,4 @@
-import { catalogPaths, ImageBank } from "../lib/assets";
+import { catalogPaths, ImageBank, vfxPath } from "../lib/assets";
 import { Sfx } from "../lib/audio";
 import { Input, type InputFrame } from "../lib/input";
 import {
@@ -28,6 +28,7 @@ import type {
   Screen,
   ShopCatalog,
   StruggleState,
+  VfxBurst,
 } from "../types";
 import { drawScene } from "./render";
 
@@ -68,6 +69,9 @@ export class Game {
   slashCd = 0;
   slashFlash = 0;
   perkCd: Record<string, number> = {};
+  vfx: VfxBurst[] = [];
+  shadeUntil = -1;
+  tintScratch: HTMLCanvasElement | null = null;
   actors: Actor[] = [];
   particles: Particle[] = [];
   spawnLog: number[] = [];
@@ -102,10 +106,20 @@ export class Game {
     this.shop = shop;
     this.cinematics = cinematics;
     this.save = loadSave(game.economy.starterCoins);
+    if (new URLSearchParams(location.search).has("dojo")) this.unlockDojo();
     this.applyLoadout();
     const enemyIds = enemies.enemies.map((e) => e.id);
     const projectileIds = enemies.projectiles.map((p) => p.id);
     await this.images.load(catalogPaths(enemyIds, projectileIds));
+  }
+
+  unlockDojo(): void {
+    this.save.coins = Math.max(this.save.coins, 4000);
+    this.save.unlockedKatanas = [...new Set([...this.save.unlockedKatanas, ...this.shop.katanas.map((k) => k.id)])];
+    this.save.unlockedArmors = [...new Set([...this.save.unlockedArmors, ...this.shop.armors.map((a) => a.id)])];
+    this.save.equippedKatana = "whisper-blade";
+    this.save.equippedArmor = "kitsunes-mirage";
+    this.persist();
   }
 
   applyLoadout(): void {
@@ -123,7 +137,44 @@ export class Game {
   }
 
   hayate(): boolean {
-    return this.katana().perk === "hayate";
+    return this.katana().perk === "hayate" || this.armor().perk === "gale-dancer";
+  }
+
+  shadeActive(): boolean {
+    return this.shadeUntil >= 0 && this.distance < this.shadeUntil;
+  }
+
+  manualPerks(): string[] {
+    const ids: string[] = [];
+    for (const id of [this.katana().perk, this.armor().perk]) {
+      if (!id) continue;
+      const def = this.shop.perks.find((p) => p.id === id);
+      if (def?.manual) ids.push(id);
+    }
+    return ids;
+  }
+
+  playVfx(
+    file: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    opts?: { frames?: number; startFrame?: number; playFrames?: number; duration?: number },
+  ): void {
+    const frames = opts?.frames ?? 4;
+    this.vfx.push({
+      sheet: vfxPath(file),
+      x,
+      y,
+      w,
+      h,
+      t: 0,
+      duration: opts?.duration ?? 0.42,
+      frames,
+      startFrame: opts?.startFrame ?? 0,
+      playFrames: opts?.playFrames ?? frames,
+    });
   }
 
   recharge(): number {
@@ -178,6 +229,8 @@ export class Game {
     this.slashCd = 0;
     this.slashFlash = 0;
     this.perkCd = {};
+    this.vfx = [];
+    this.shadeUntil = -1;
     this.pinkFlash = 0;
     this.applyLoadout();
     this.hp = this.maxHp;
@@ -305,12 +358,16 @@ export class Game {
     this.updateActors(dt, run, level);
     if (input.slash) this.trySlash();
     if (input.perk) this.tryPerk(input.perk);
+    this.tickJumpOver();
     this.resolveCombat();
     this.slashCd = Math.max(0, this.slashCd - dt);
     this.slashFlash = Math.max(0, this.slashFlash - dt);
     this.invuln = Math.max(0, this.invuln - dt);
     for (const k of Object.keys(this.perkCd)) this.perkCd[k] = Math.max(0, this.perkCd[k] - dt);
+    if (this.shadeUntil >= 0 && this.distance >= this.shadeUntil) this.shadeUntil = -1;
     this.updateParticles(dt);
+    for (const fx of this.vfx) fx.t += dt;
+    this.vfx = this.vfx.filter((fx) => fx.t < fx.duration);
   }
 
   private updatePlayer(dt: number, input: InputFrame, _run: number): void {
@@ -449,6 +506,8 @@ export class Game {
       vx: def.approach,
       fireCd: (def.fireEvery ?? 2) * (0.4 + Math.random() * 0.4),
       lane,
+      jumpedOver: false,
+      electrocuted: false,
     });
   }
 
@@ -505,7 +564,7 @@ export class Game {
   }
 
   private resolveCombat(): void {
-    if (this.invuln > 0 || this.struggle) return;
+    if (this.invuln > 0 || this.shadeActive() || this.struggle) return;
     const pb = this.playerBox();
     for (const a of this.actors) {
       const pad = a.kind === "enemy" ? this.def(a.defId).grabRange ?? 0 : 0;
@@ -534,6 +593,13 @@ export class Game {
     this.slashCd = this.recharge();
     this.slashFlash = 0.16;
     this.sfx.slash();
+    if (this.hayate()) {
+      this.playVfx("electrocute-wind.png", this.playerX + this.playerW * 0.2, this.playerY - 20, this.playerH * 1.4, this.playerH * 1.1, {
+        startFrame: 3,
+        playFrames: 1,
+        duration: 0.28,
+      });
+    }
     const range = this.katana().range;
     for (const a of this.actors) {
       if (a.x < this.playerX - 20 || a.x > this.playerX + range + a.w) continue;
@@ -544,26 +610,54 @@ export class Game {
   }
 
   private tryPerk(id: string): void {
-    const perk = this.katana().perk;
-    if (perk !== id) return;
+    if (!this.manualPerks().includes(id)) return;
     if ((this.perkCd[id] ?? 0) > 0 || this.struggle) return;
     const def = this.shop.perks.find((p) => p.id === id);
     if (!def || !def.manual) return;
     this.perkCd[id] = def.cooldown;
     this.sfx.perk();
+    const fxW = this.w * 0.55;
+    const fxH = this.h * 0.55;
     if (id === "shadow-strike") {
       this.invuln = 0.45;
+      this.playVfx("shadow-strike.png", this.playerX - 20, this.playerY - this.playerH * 0.3, fxW * 0.7, fxH * 0.7);
       for (const a of this.actors) {
         if (a.x > this.playerX - 30 && a.x < this.playerX + 260) this.hurtActor(a, 16, this.onRoof);
       }
     } else if (id === "call-lightning") {
+      this.playVfx("call-lightning.png", this.playerX + 40, this.h * 0.08, fxW, this.h * 0.72);
       for (const a of this.actors) {
-        if (a.kind === "enemy" && a.x < this.w) this.hurtActor(a, 14, false);
+        if (a.kind === "enemy" && a.x < this.w) {
+          if (this.armor().perk === "storm-petal") a.electrocuted = true;
+          this.hurtActor(a, 14, false);
+        }
       }
     } else if (id === "blade-of-souls") {
+      this.playVfx("blade-of-souls.png", this.playerX, this.playerY - this.h * 0.15, fxW, fxH);
       for (const a of this.actors) {
         if (a.x > this.playerX && a.x < this.w) this.hurtActor(a, 18, false);
       }
+    } else if (id === "kitsune-shade") {
+      this.shadeUntil = this.distance + 30;
+    }
+  }
+
+  private tickJumpOver(): void {
+    if (this.onGround || this.armor().perk !== "storm-petal") return;
+    const pb = this.playerBox();
+    for (const a of this.actors) {
+      if (a.kind !== "enemy" || a.jumpedOver) continue;
+      const overX = pb.x + pb.w > a.x && pb.x < a.x + a.w;
+      const overY = pb.y + pb.h < a.y + a.h * 0.55;
+      if (!overX || !overY) continue;
+      a.jumpedOver = true;
+      a.electrocuted = true;
+      this.playVfx("electrocute-wind.png", a.x - 20, a.y - a.h * 0.4, a.w * 2.2, a.h * 1.6, {
+        startFrame: 0,
+        playFrames: 3,
+        duration: 0.4,
+      });
+      if (Math.random() < 0.25) this.hurtActor(a, 999, true);
     }
   }
 
@@ -572,7 +666,7 @@ export class Game {
     this.burst(a.x + a.w / 2, a.y + a.h / 2, a.kind === "enemy" ? this.def(a.defId).color : "#fff");
     this.sfx.hit();
     if (a.hp <= 0 && a.kind === "enemy") {
-      const bonus = killPoints(this.def(a.defId).killBonus, roofKill, this.cfg.economy.roofKillMultiplier);
+      const bonus = killPoints(this.def(a.defId).killBonus, roofKill || !!a.electrocuted, this.cfg.economy.roofKillMultiplier);
       this.runPoints += bonus;
     }
   }
@@ -689,11 +783,13 @@ export class Game {
     const w = this.w;
     const h = this.h;
     this.input.slashRect = { x: w - 150, y: h - 150, w: 124, h: 124 };
-    const perk = this.katana().perk;
-    this.input.perkRects = [];
-    if (perk && perk !== "hayate") {
-      this.input.perkRects.push({ id: perk, x: w - 150, y: h - 230, w: 124, h: 64 });
-    }
+    this.input.perkRects = this.manualPerks().map((id, i) => ({
+      id,
+      x: w - 150,
+      y: h - 230 - i * 70,
+      w: 124,
+      h: 64,
+    }));
     this.input.uiRects = [];
     if (this.screen === "menu") {
       const top = Math.max(h * 0.44, 150);
@@ -718,8 +814,8 @@ export class Game {
         const colW = Math.min(300, (w - 40) / 2);
         rows.forEach((row, i) => {
           const prefix = this.shopTab === "blades" ? "buy-katana-" : "buy-armor-";
-          const col = i < 4 ? 0 : 1;
-          const rowI = i < 4 ? i : i - 4;
+          const col = i % 2;
+          const rowI = Math.floor(i / 2);
           rects.push({
             id: prefix + row.id,
             x: 16 + col * (colW + 12),

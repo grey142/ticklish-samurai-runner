@@ -58,6 +58,7 @@ First jump: same max height (~half screen, ~3s if held). Letting go starts the f
 - `public/assets/enemies/<id>/{idle,grab,headless,throw}.png`
 - `public/assets/projectiles/<id>/idle.png`
 - `public/assets/cinematics/<id>/struggle-1..3.png` and `gameover-1..3.png` (12 enemies + 4 projectiles)
+- `public/assets/ability-vfx/` — Shadow Strike / Call Lightning / Blade of Souls / electrocute-wind sheets. Kitsune shade tints the existing player sprite `#9B4DFF` (no extra pack).
 - `src/game/` — canvas loop; loaders knock out the studio backdrop on gameplay sprites
 - `src/lib/rules.ts` — economy / spawn / slash math (unit tested)
 

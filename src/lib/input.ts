@@ -58,6 +58,7 @@ export class Input {
       if (e.code === "Digit1") this.perkQueued = "shadow-strike";
       if (e.code === "Digit2") this.perkQueued = "call-lightning";
       if (e.code === "Digit3") this.perkQueued = "blade-of-souls";
+      if (e.code === "Digit4") this.perkQueued = "kitsune-shade";
       if (e.code === "Enter" || e.code === "KeyP") this.tapQueued = true;
     });
     window.addEventListener("keyup", (e) => {

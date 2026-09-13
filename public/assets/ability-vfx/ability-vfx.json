@@ -1,0 +1,49 @@
+{
+  "notes": "Gameplay VFX sheets for blade/armor active abilities. Kitsune shade = purple tint on existing player sprite (no dedicated sheet).",
+  "kitsune_shade": {
+    "id": "kitsune_shade",
+    "visual": "tint_player_sprite_purple",
+    "tint": "#9B4DFF",
+    "opacity": 0.85,
+    "spritePack": null
+  },
+  "vfx": [
+    {
+      "id": "shadow_strike",
+      "weapon": "Kagekiri",
+      "file": "shadow-strike.png",
+      "frames": 4
+    },
+    {
+      "id": "call_lightning",
+      "weapon": "Raikiri",
+      "file": "call-lightning.png",
+      "frames": 4
+    },
+    {
+      "id": "blade_of_souls",
+      "weapon": "Shin-En",
+      "file": "blade-of-souls.png",
+      "frames": 4
+    },
+    {
+      "id": "storm_petal_electrocute",
+      "armor": "Storm Petal Cuirass",
+      "file": "electrocute-wind.png",
+      "frames": "jump-over electrocute + wind slash crescent"
+    },
+    {
+      "id": "wind_blade",
+      "armor": "Gale-Dancer",
+      "source": "electrocute-wind.png",
+      "note": "teal crescent on right of sheet; also usable for Hayate feel"
+    }
+  ],
+  "noVfxNeeded": [
+    "slash_recharge_half",
+    "shadow_tread",
+    "Hayate passive",
+    "Gale-Dancer passive stats"
+  ],
+  "transparency": "Background checkerboard keyed out to real RGBA alpha (border flood). Safe for overlay in canvas."
+}

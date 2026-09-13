@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cinematicPath, enemySpritePath, playerPosePath, projectilePath } from "./assets";
+import { cinematicPath, enemySpritePath, playerPosePath, projectilePath, vfxPath } from "./assets";
 
 describe("asset paths", () => {
   it("points player poses at PNGs", () => {
@@ -12,5 +12,6 @@ describe("asset paths", () => {
     expect(projectilePath("egg-web")).toBe("./assets/projectiles/egg-web/idle.png");
     expect(cinematicPath("drone", "struggle", 2)).toBe("./assets/cinematics/drone/struggle-2.png");
     expect(cinematicPath("egg-web", "gameover", 3)).toBe("./assets/cinematics/egg-web/gameover-3.png");
+    expect(vfxPath("shadow-strike.png")).toBe("./assets/ability-vfx/shadow-strike.png");
   });
 });
