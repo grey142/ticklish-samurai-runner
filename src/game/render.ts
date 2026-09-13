@@ -7,6 +7,7 @@ import {
   playerPosePath,
   projectilePath,
 } from "../lib/assets";
+import { drawStreet } from "./buildings";
 import { nextSlashUpgradeCost, speedLevelFor } from "../lib/rules";
 import type { Game } from "./Game";
 
@@ -81,6 +82,10 @@ function drawCity(g: Game): void {
   const scroll = g.worldX;
   drawSilhouette(ctx, w, mh, scroll * 0.18, g.groundY() - mh * 0.28, "#3a2238", 1);
   drawSilhouette(ctx, w, mh, scroll * 0.35, g.groundY() - mh * 0.18, "#2a1628", 0.75);
+
+  // Standable street of samurai houses and gates whose rooftops sit on the roof lane.
+  drawStreet(g);
+
   lanterns(ctx, w, mh, scroll);
 
   ctx.fillStyle = "#2a1a16";
@@ -93,15 +98,6 @@ function drawCity(g: Game): void {
   for (let x = -tile; x < w + tile; x += tile) {
     ctx.fillRect(x - off, g.groundY() + 10, tile - 8, 6);
   }
-
-  ctx.strokeStyle = "rgba(180,90,60,0.45)";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(0, g.roofY());
-  ctx.lineTo(w, g.roofY());
-  ctx.stroke();
-  ctx.fillStyle = "rgba(90,40,50,0.35)";
-  ctx.fillRect(0, g.roofY() - 12, w, 12);
 }
 
 function drawSilhouette(
