@@ -4,7 +4,10 @@ Landscape-phone 2D endless runner. **Ikiela**, a ticklish samurai, auto-runs the
 
 Play: **https://grey142.github.io/ticklish-samurai-runner/**
 
-If that 404s, a repo admin still needs one Settings click: **Settings → Pages → Source = GitHub Actions**. The deploy workflow is already in `.github/workflows/deploy-pages.yml`.
+That URL goes live after this lands on `main` **and** a repo admin does the leftover GitHub Settings clicks the Actions token cannot do:
+
+1. **Settings → General → Danger Zone → Change repository visibility → Public** (the repo is private today; GitHub Free will not serve a public `*.github.io` site from a private repo).
+2. **Settings → Pages → Source = GitHub Actions**.
 
 ## Local
 
