@@ -428,7 +428,7 @@ export class Game {
       lane === "roof"
         ? this.roofY() - eh
         : lane === "air"
-          ? this.groundY() - eh - this.playerH * 0.28
+          ? this.groundY() - eh - this.playerH * 1.05
           : this.groundY() - eh;
     this.actors.push({
       kind: "enemy",
@@ -625,12 +625,15 @@ export class Game {
     s.elapsed += dt;
     s.showCinematic = Math.max(0, s.showCinematic - dt);
     this.hp -= s.ticklePerSec * dt;
+    const holding =
+      input.jumpHeld || this.input.keys.has("Space") || this.input.keys.has("KeyW") || this.input.keys.has("Enter");
     if (input.struggleTap || input.jumpPressed || input.slash) {
       s.meter = struggleAfterTap(s.meter, this.cfg.struggle.tapGain, this.cfg.struggle.escapeAt);
       s.mashClock = 0;
-    } else if (input.jumpHeld) {
+    }
+    if (holding) {
       s.mashClock += dt;
-      if (s.mashClock >= 0.16) {
+      if (s.mashClock >= 0.1) {
         s.mashClock = 0;
         s.meter = struggleAfterTap(s.meter, this.cfg.struggle.tapGain, this.cfg.struggle.escapeAt);
       }
