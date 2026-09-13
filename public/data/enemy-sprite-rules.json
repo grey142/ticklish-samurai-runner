@@ -1,0 +1,239 @@
+{
+  "artStyle": "Match player (Ikiela) 2D flat vector / cel-shaded game sprites",
+  "facing": "STRICT side view facing LEFT only",
+  "baseBody": "Beautiful feminine body base, ragged clothing with lots of holes, midriff/stomach visible, barefoot",
+  "headCutOff": "No blood. Head looks like it jumps off; whole zombie body falls.",
+  "poseSetsByAttackType": {
+    "trap": [
+      "idle_stationary",
+      "head_cut_off"
+    ],
+    "grab": [
+      "idle_hands_down",
+      "grab_reaching_left",
+      "head_cut_off"
+    ],
+    "ranged": [
+      "idle_standing",
+      "throwing",
+      "head_cut_off"
+    ],
+    "grab+ranged": [
+      "idle_hands_down",
+      "grab_reaching_left",
+      "throwing",
+      "head_cut_off"
+    ]
+  },
+  "workflow": "User describes each enemy appearance first; do not invent looks. Generate only after description.",
+  "enemies": [
+    {
+      "id": "drone",
+      "name": "Drone",
+      "attackType": "grab",
+      "requiredPoses": [
+        "idle_hands_down",
+        "grab_reaching_left",
+        "head_cut_off"
+      ],
+      "appearance": "Regular tickle zombie with two arms, two legs. Light green skin. Beautiful feminine body, ragged holey clothes showing midriff, barefoot.",
+      "sprites": {
+        "grab": "enemy-sprites/drone/grab.png",
+        "headless": "enemy-sprites/drone/headless.png",
+        "idle": "enemy-sprites/drone/idle.png"
+      }
+    },
+    {
+      "id": "viner",
+      "name": "viner",
+      "attackType": "trap",
+      "requiredPoses": [
+        "idle_stationary",
+        "head_cut_off"
+      ],
+      "appearance": "Zombie covered in thin green vines all over.",
+      "sprites": {
+        "headless": "enemy-sprites/viner/headless.png",
+        "idle": "enemy-sprites/viner/idle.png"
+      }
+    },
+    {
+      "id": "quad-arm",
+      "name": "Quad-Arm",
+      "attackType": "grab",
+      "requiredPoses": [
+        "idle_hands_down",
+        "grab_reaching_left",
+        "head_cut_off"
+      ],
+      "appearance": "Has four arms and light green skin. Beautiful feminine body, ragged holey clothes showing midriff, barefoot.",
+      "sprites": {
+        "grab": "enemy-sprites/quad-arm/grab.png",
+        "headless": "enemy-sprites/quad-arm/headless.png",
+        "idle": "enemy-sprites/quad-arm/idle.png"
+      }
+    },
+    {
+      "id": "bolter",
+      "name": "Bolter",
+      "attackType": "grab",
+      "requiredPoses": [
+        "idle_hands_down",
+        "grab_reaching_left",
+        "head_cut_off"
+      ],
+      "appearance": "Skinny athletic feminine zombie; athletic shorts + bikini top showing abs; light green undead skin; barefoot. Side view facing left.",
+      "sprites": {
+        "grab": "enemy-sprites/bolter/grab.png",
+        "headless": "enemy-sprites/bolter/headless.png",
+        "idle": "enemy-sprites/bolter/idle.png"
+      }
+    },
+    {
+      "id": "hundred-hands",
+      "name": "hundred hands",
+      "attackType": "grab",
+      "requiredPoses": [
+        "idle_hands_down",
+        "grab_reaching_left",
+        "head_cut_off"
+      ],
+      "appearance": "Beautiful feminine zombie base with body and arms covered in many small hands; ragged/holey clothes, midriff, barefoot; light green undead skin. Side view facing left.",
+      "sprites": {
+        "grab": "enemy-sprites/hundred-hands/grab.png",
+        "headless": "enemy-sprites/hundred-hands/headless.png",
+        "idle": "enemy-sprites/hundred-hands/idle.png"
+      }
+    },
+    {
+      "id": "licker",
+      "name": "licker",
+      "attackType": "grab",
+      "requiredPoses": [
+        "idle_hands_down",
+        "grab_reaching_left",
+        "head_cut_off"
+      ],
+      "appearance": "Beautiful feminine zombie with abnormally long tongue that can wrap around opponent and tickle with tongue tip; two hands with long nails that tickle; ragged/holey clothes, midriff, barefoot; light green undead skin. Side view facing left.",
+      "sprites": {
+        "grab": "enemy-sprites/licker/grab.png",
+        "headless": "enemy-sprites/licker/headless.png",
+        "idle": "enemy-sprites/licker/idle.png"
+      }
+    },
+    {
+      "id": "spider",
+      "name": "Spider",
+      "attackType": "grab+ranged",
+      "requiredPoses": [
+        "idle_hands_down",
+        "grab_reaching_left",
+        "throwing",
+        "head_cut_off",
+        "projectile_egg_web"
+      ],
+      "appearance": "Six-armed zombie with webs covering its back; also covered in small spiders. Projectile: egg web (small ball of webbing).",
+      "sprites": {
+        "egg-web": "enemy-sprites/spider/egg-web.png",
+        "grab": "enemy-sprites/spider/grab.png",
+        "headless": "enemy-sprites/spider/headless.png",
+        "idle": "enemy-sprites/spider/idle.png",
+        "throw": "enemy-sprites/spider/throw.png"
+      },
+      "projectileSprite": "enemy-sprites/spider/egg-web.png"
+    },
+    {
+      "id": "slimer",
+      "name": "slimer",
+      "attackType": "grab+ranged",
+      "requiredPoses": [
+        "idle_hands_down",
+        "grab_reaching_left",
+        "throwing",
+        "head_cut_off",
+        "projectile_slime_shot"
+      ],
+      "appearance": "Two arms two legs; covered in blue slime with slime tendrils/small tentacles all around; light green body inside the slime. Projectile: slime shot.",
+      "sprites": {
+        "grab": "enemy-sprites/slimer/grab.png",
+        "headless": "enemy-sprites/slimer/headless.png",
+        "idle": "enemy-sprites/slimer/idle.png",
+        "slime-shot": "enemy-sprites/slimer/slime-shot.png",
+        "throw": "enemy-sprites/slimer/throw.png"
+      },
+      "projectileSprite": "enemy-sprites/slimer/slime-shot.png"
+    },
+    {
+      "id": "archer",
+      "name": "archer",
+      "attackType": "ranged",
+      "requiredPoses": [
+        "idle_standing",
+        "throwing",
+        "head_cut_off"
+      ],
+      "appearance": "Two arms, green skin. Holds bolo swinging over its head. Projectile: bolo wrap \u2014 glows blue in the air; wraps ankles then tickles feet.",
+      "sprites": {
+        "bolo-wrap": "enemy-sprites/archer/bolo-wrap.png",
+        "headless": "enemy-sprites/archer/headless.png",
+        "idle": "enemy-sprites/archer/idle.png",
+        "throw": "enemy-sprites/archer/throw.png"
+      },
+      "projectileName": "bolo wrap",
+      "projectileBehavior": "Wraps around the ankles, then comes and tickles the opponent's feet.",
+      "projectileSprite": "enemy-sprites/archer/bolo-wrap.png"
+    },
+    {
+      "id": "volatile",
+      "name": "Volatile",
+      "attackType": "grab",
+      "requiredPoses": [
+        "idle_hands_down",
+        "grab_reaching_left",
+        "head_cut_off"
+      ],
+      "appearance": "Four long tentacles from spine, four arms, red long sharp nails.",
+      "sprites": {
+        "grab": "enemy-sprites/volatile/grab.png",
+        "headless": "enemy-sprites/volatile/headless.png",
+        "idle": "enemy-sprites/volatile/idle.png"
+      }
+    },
+    {
+      "id": "brute",
+      "name": "brute",
+      "attackType": "grab",
+      "requiredPoses": [
+        "idle_hands_down",
+        "grab_reaching_left",
+        "head_cut_off"
+      ],
+      "appearance": "Female bodybuilder look: skinny but muscular.",
+      "sprites": {
+        "grab": "enemy-sprites/brute/grab.png",
+        "headless": "enemy-sprites/brute/headless.png",
+        "idle": "enemy-sprites/brute/idle.png"
+      }
+    },
+    {
+      "id": "hand-thrower",
+      "name": "Hand thrower",
+      "attackType": "ranged",
+      "requiredPoses": [
+        "idle_standing",
+        "throwing",
+        "head_cut_off"
+      ],
+      "appearance": "Missing left hand (no blood); throws it at opponent. Two arms two legs, light green skin. Projectile: flying hand.",
+      "sprites": {
+        "headless": "enemy-sprites/hand-thrower/headless.png",
+        "idle": "enemy-sprites/hand-thrower/idle.png",
+        "throw": "enemy-sprites/hand-thrower/throw.png",
+        "throwing-hand": "enemy-sprites/hand-thrower/throwing-hand.png"
+      },
+      "projectileSprite": "enemy-sprites/hand-thrower/throwing-hand.png",
+      "projectileName": "throwing hand"
+    }
+  ],
+  "consistency": "All poses for one enemy must depict the SAME character: identical face, hair, skin tone, clothing, proportions. Use the idle/first sprite as the visual source of truth for later poses."
+}

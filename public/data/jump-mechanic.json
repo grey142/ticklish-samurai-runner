@@ -1,0 +1,23 @@
+{
+  "id": "jump",
+  "description": "First jump is hold-sensitive; double jump is fixed.",
+  "firstJump": {
+    "maxHeightScreenFraction": 0.5,
+    "behavior": "variable_hold",
+    "onPress": "Start ascending toward max height (same max as before: ~1/2 screen).",
+    "onRelease": "Begin falling immediately when the player lifts their finger, even if max height was not reached.",
+    "ifHeld": "Continue rising until max height, then fall normally.",
+    "airTimeNote": "Original ~3s air time applies when held to full height; early release shortens air time."
+  },
+  "secondJump": {
+    "maxHeightScreenFraction": 0.75,
+    "behavior": "fixed",
+    "note": "Unchanged from original design. Tap in air for double jump (~3/4 screen). Adds ~2s air time from when pressed. Not hold-sensitive.",
+    "onPress": "Apply fixed double-jump impulse.",
+    "onRelease": "No effect on double jump arc."
+  },
+  "related": {
+    "swipeDownInAir": "Fast ground slam (unchanged)",
+    "noFallDamage": true
+  }
+}

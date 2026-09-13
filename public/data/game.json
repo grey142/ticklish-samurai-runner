@@ -1,0 +1,47 @@
+{
+  "title": "Ticklish Samurai Runner",
+  "protagonist": "Ikiela",
+  "metersPerPixel": 0.03125,
+  "baseRunSpeedPx": 180,
+  "speedLevels": [
+    { "level": 1, "distance": 0, "speedMul": 1.0 },
+    { "level": 2, "distance": 200, "speedMul": 1.02 },
+    { "level": 3, "distance": 350, "speedMul": 1.04 },
+    { "level": 4, "distance": 500, "speedMul": 1.06 },
+    { "level": 5, "distance": 800, "speedMul": 1.08 },
+    { "level": 6, "distance": 1000, "speedMul": 1.1 }
+  ],
+  "spawn": {
+    "minStaggerMeters": 24,
+    "windowMeters": 300,
+    "maxZombiesPerWindow": [0, 10, 13, 15, 18, 20, 23]
+  },
+  "economy": {
+    "metersPerPoint": 6,
+    "pointsPerCoin": 6,
+    "roofKillMultiplier": 2,
+    "reviveCost": 300,
+    "starterCoins": 150
+  },
+  "jump": {
+    "firstMaxHeightScreen": 0.5,
+    "firstMaxAirSeconds": 3,
+    "doubleMaxHeightScreen": 0.75,
+    "doubleAirSeconds": 2
+  },
+  "slash": {
+    "baseRecharge": 1.5,
+    "upgradeStep": 0.2,
+    "maxUpgrades": 5,
+    "upgradeCosts": [100, 200, 400, 800, 1600],
+    "hayateMultiplier": 0.5
+  },
+  "struggle": {
+    "tapGain": 6,
+    "escapeAt": 100,
+    "maxHoldSeconds": 16,
+    "cinematicEvery": 4,
+    "cinematicBeats": 3,
+    "flashInterval": 1
+  }
+}
