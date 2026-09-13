@@ -108,6 +108,8 @@ export class Input {
         }
         e.preventDefault();
       }
+      if ((e.code === "KeyC" || e.code === "KeyE") && !e.repeat) this.swipe = "up";
+      if ((e.code === "KeyS" || e.code === "ArrowDown") && !e.repeat) this.swipe = "down";
       if (e.code === "KeyJ" || e.code === "KeyK") this.slashQueued = true;
       if (e.code === "Digit1") this.perkQueued = "shadow-strike";
       if (e.code === "Digit2") this.perkQueued = "call-lightning";
@@ -204,14 +206,12 @@ export class Input {
   }
 
   consume(): InputFrame {
-    const swipeDownKey = this.keys.has("ArrowDown") || this.keys.has("KeyS");
-    const swipeUpKey = this.keys.has("KeyC") || this.keys.has("KeyE");
     const ui = this.lastUi;
     const frame: InputFrame = {
       jumpPressed: this.jumpPressed,
       jumpHeld: this.jumpHeld || this.keys.has("Space") || this.keys.has("KeyW"),
       jumpReleased: this.jumpReleased,
-      swipe: this.swipe ?? (swipeDownKey ? "down" : swipeUpKey ? "up" : null),
+      swipe: this.swipe,
       slash: this.slashQueued,
       perk: this.perkQueued,
       struggleTap: this.tapQueued,
