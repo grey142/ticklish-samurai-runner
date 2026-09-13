@@ -85,6 +85,9 @@ export function applyOneShot(hp: number): number {
   return hp > 0 ? 0 : hp;
 }
 
+export const GAMEOVER_HOLD_SEC = 5;
+export const GAMEOVER_LINE = "you were tickled to death";
+
 /** Was 0.35; playtest is 2× that flight rate. */
 export const PROJECTILE_FLIGHT_MUL = 0.7;
 

@@ -16,10 +16,11 @@ import {
 } from "../lib/map-props";
 import { Sfx } from "../lib/audio";
 import { Input, type InputFrame } from "../lib/input";
-import { layoutGameOver, layoutHowto, layoutMenu, layoutPlayControls, layoutShop } from "../lib/touch-layout";
+import { layoutHowto, layoutMenu, layoutPlayControls, layoutShop } from "../lib/touch-layout";
 import {
   coinsFromPoints,
   enemyWeight,
+  GAMEOVER_HOLD_SEC,
   killPoints,
   nextSlashUpgradeCost,
   pickWeighted,
@@ -104,6 +105,7 @@ export class Game {
   overSource = "drone";
   overLine = "";
   overFrame = 1;
+  overT = 0;
   images = new ImageBank();
   time = 0;
   menuPulse = 0;
@@ -326,14 +328,14 @@ export class Game {
     this.resizeButtons();
     const input = this.input.consume();
     if (this.screen === "playing") this.updatePlay(dt, input);
-    else this.updateMeta(input);
+    else this.updateMeta(dt, input);
     this.pinkFlash = Math.max(0, this.pinkFlash - dt);
     this.hudCoinsFlash = Math.max(0, this.hudCoinsFlash - dt);
     this.updateCamera();
     drawScene(this);
   }
 
-  private updateMeta(input: InputFrame): void {
+  private updateMeta(dt: number, input: InputFrame): void {
     const id = input.ui;
     if (this.screen === "menu") {
       if (id === "play") this.startRun();
@@ -351,10 +353,8 @@ export class Game {
       if (id?.startsWith("buy-armor-")) this.buyArmor(id.slice(10));
       if (id === "buy-slash") this.buySlash();
     } else if (this.screen === "gameover") {
-      if (id === "retry") this.startRun();
-      if (id === "shop") this.screen = "shop";
-      if (id === "menu") this.screen = "menu";
-      if (id === "revive") this.tryRevive();
+      this.overT += dt;
+      if (this.overT >= GAMEOVER_HOLD_SEC || input.anyTap) this.screen = "menu";
     }
   }
 
@@ -926,6 +926,7 @@ export class Game {
     this.save.bestDistance = Math.max(this.save.bestDistance, Math.floor(this.distance));
     this.persist();
     this.screen = "gameover";
+    this.overT = 0;
     this.struggle = null;
     this.input.mashAll = false;
     this.sfx.die();
@@ -944,8 +945,6 @@ export class Game {
       const blades = this.shopTab === "blades";
       const rows = blades ? this.shop.katanas : this.shopTab === "armor" ? this.shop.armors : [];
       this.input.uiRects = layoutShop(w, h, this.shopTab, rows.map((r) => r.id), blades ? "buy-katana-" : "buy-armor-");
-    } else if (this.screen === "gameover") {
-      this.input.uiRects = layoutGameOver(w, h, !this.usedRevive);
     }
   }
 }

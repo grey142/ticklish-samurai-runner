@@ -8,6 +8,8 @@ import {
   pointsFromDistance,
   slashRecharge,
   applyOneShot,
+  GAMEOVER_HOLD_SEC,
+  GAMEOVER_LINE,
   ownerHasLiveShot,
   projectileAdvance,
   spawnCap,
@@ -100,5 +102,12 @@ describe("one-shot slash", () => {
   it("kills any live actor in one hit", () => {
     expect(applyOneShot(18)).toBe(0);
     expect(applyOneShot(1)).toBe(0);
+  });
+});
+
+describe("game over card", () => {
+  it("holds the cinematic then returns home", () => {
+    expect(GAMEOVER_LINE).toBe("you were tickled to death");
+    expect(GAMEOVER_HOLD_SEC).toBe(5);
   });
 });
