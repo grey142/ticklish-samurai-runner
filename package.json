@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "placeholders": "node scripts/generate-placeholders.mjs"
+    "placeholders": "node scripts/generate-placeholders.mjs",
+    "knockout": "python3 scripts/knockout-sprites.py"
   },
   "devDependencies": {
     "jsdom": "^25.0.1",

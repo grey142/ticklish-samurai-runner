@@ -88,13 +88,24 @@ function knockoutCrop(img: HTMLImageElement): HTMLCanvasElement {
   const d = image.data;
   const w = src.width;
   const h = src.height;
+  const corner = (x: number, y: number): [number, number, number] => {
+    const i = (y * w + x) * 4;
+    return [d[i], d[i + 1], d[i + 2]];
+  };
+  const samples = [corner(2, 2), corner(w - 3, 2), corner(2, h - 3), corner(w - 3, h - 3)];
+  const bg: [number, number, number] = [
+    samples.reduce((a, s) => a + s[0], 0) / 4,
+    samples.reduce((a, s) => a + s[1], 0) / 4,
+    samples.reduce((a, s) => a + s[2], 0) / 4,
+  ];
   const flat = (i: number): boolean => {
     const r = d[i];
     const g = d[i + 1];
     const b = d[i + 2];
-    const min = Math.min(r, g, b);
-    const max = Math.max(r, g, b);
-    return min > 214 && max - min < 20;
+    const avg = (r + g + b) / 3;
+    const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+    const dist = Math.abs(r - bg[0]) + Math.abs(g - bg[1]) + Math.abs(b - bg[2]);
+    return (avg > 196 && chroma < 32) || dist < 48;
   };
   const seen = new Uint8Array(w * h);
   const stack: number[] = [];
@@ -123,6 +134,10 @@ function knockoutCrop(img: HTMLImageElement): HTMLCanvasElement {
     push(x - 1, y);
     push(x, y + 1);
     push(x, y - 1);
+    push(x + 1, y + 1);
+    push(x - 1, y - 1);
+    push(x + 1, y - 1);
+    push(x - 1, y + 1);
   }
   ctx.putImageData(image, 0, 0);
 
