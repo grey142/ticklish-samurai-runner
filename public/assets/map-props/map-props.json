@@ -8,14 +8,14 @@
       "ledges": [
         {
           "id": "roof_top",
-          "y": 0.1,
+          "y": 0.108,
           "x0": 0.08,
           "x1": 0.92,
-          "label": "top roof"
+          "label": "top roof tiles"
         },
         {
           "id": "balcony",
-          "y": 0.42,
+          "y": 0.446,
           "x0": 0.1,
           "x1": 0.9,
           "label": "2F balcony floor"
@@ -29,17 +29,17 @@
         },
         {
           "id": "engawa",
-          "y": 0.78,
+          "y": 0.834,
           "x0": 0.08,
           "x1": 0.92,
-          "label": "engawa porch"
+          "label": "engawa porch deck"
         },
         {
           "id": "ground",
-          "y": 0.96,
+          "y": 0.936,
           "x0": 0.05,
           "x1": 0.95,
-          "label": "foundation/ground"
+          "label": "foundation bottom"
         }
       ]
     },
@@ -51,24 +51,24 @@
       "ledges": [
         {
           "id": "roof",
-          "y": 0.18,
+          "y": 0.185,
           "x0": 0.06,
           "x1": 0.94,
-          "label": "main roof"
+          "label": "main roof tiles"
         },
         {
           "id": "engawa",
-          "y": 0.72,
+          "y": 0.775,
           "x0": 0.08,
           "x1": 0.92,
-          "label": "engawa porch"
+          "label": "engawa porch deck"
         },
         {
           "id": "ground",
-          "y": 0.95,
+          "y": 0.918,
           "x0": 0.05,
           "x1": 0.95,
-          "label": "foundation/ground"
+          "label": "foundation bottom"
         }
       ]
     },
@@ -80,10 +80,10 @@
       "ledges": [
         {
           "id": "roof",
-          "y": 0.22,
+          "y": 0.232,
           "x0": 0.18,
           "x1": 0.82,
-          "label": "gate roof"
+          "label": "gate roof tiles"
         },
         {
           "id": "lintel",
@@ -94,13 +94,13 @@
         },
         {
           "id": "ground",
-          "y": 0.92,
+          "y": 0.928,
           "x0": 0.05,
           "x1": 0.95,
-          "label": "foundation/ground"
+          "label": "foundation bottom"
         }
       ]
     }
   ],
-  "notes": "Side-view map platforms. Collision ledges are normalized 0-1 relative to sprite width/height (y from top). Player stands on ledge y."
+  "notes": "Ledge y is the walkable surface (top of deck / tiles / beam), not the railing. Ground y is the last opaque foundation row so the stone sits on the street. Player and zombies stand with visible soles on that y."
 }

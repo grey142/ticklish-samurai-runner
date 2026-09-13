@@ -7,6 +7,7 @@ import {
   layoutProps,
   ledgeUnder,
   mapPropPath,
+  standTop,
 } from "./map-props";
 
 const catalog: MapPropCatalog = {
@@ -71,5 +72,10 @@ describe("map props", () => {
     expect(hit?.ledgeId).toBe("roof_top");
     expect(ledgeUnder(ledges, x, roof, 6)?.ledgeId).toBe("roof_top");
     expect(climbLedge(ledges, x, porch + 2)?.ledgeId).toBe("roof_top");
+  });
+
+  it("standTop puts visible soles on the ledge plane", () => {
+    const y = standTop(200, 80, 0.95);
+    expect(y + 80 * 0.95).toBeCloseTo(200);
   });
 });

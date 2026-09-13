@@ -23,6 +23,12 @@ export function mapPropPath(file: string): string {
   return `./assets/map-props/${file}`;
 }
 
+/** Draw-box top so visible soles at footFrac sit on ledgeY. */
+export function standTop(ledgeY: number, drawH: number, footFrac: number): number {
+  const frac = footFrac > 0.2 && footFrac <= 1 ? footFrac : 1;
+  return ledgeY - drawH * frac;
+}
+
 export function mapPropImageEntries(props: { file: string }[]): { path: string; knockout: boolean }[] {
   return props.map((p) => ({ path: mapPropPath(p.file), knockout: false }));
 }

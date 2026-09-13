@@ -1,5 +1,37 @@
 export type Drawn = HTMLCanvasElement | HTMLImageElement;
 
+const footFracCache = new WeakMap<object, number>();
+
+/** Fraction of draw-box height where visible soles sit (1 = image bottom). */
+export function measureFootFrac(img: Drawn | null): number {
+  if (!img || !img.width || !img.height) return 1;
+  const cached = footFracCache.get(img);
+  if (cached != null) return cached;
+  let frac = 1;
+  try {
+    const c = document.createElement("canvas");
+    c.width = img.width;
+    c.height = img.height;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    if (ctx) {
+      ctx.drawImage(img, 0, 0);
+      const { data } = ctx.getImageData(0, 0, c.width, c.height);
+      scan: for (let y = c.height - 1; y >= 0; y--) {
+        for (let x = 0; x < c.width; x++) {
+          if (data[(y * c.width + x) * 4 + 3] > 16) {
+            frac = (y + 1) / c.height;
+            break scan;
+          }
+        }
+      }
+    }
+  } catch {
+    frac = 1;
+  }
+  footFracCache.set(img, frac);
+  return frac;
+}
+
 export class ImageBank {
   private raw = new Map<string, HTMLImageElement>();
   private cut = new Map<string, HTMLCanvasElement>();
