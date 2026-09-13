@@ -57,7 +57,8 @@ export function spawnCap(cfg: GameConfig, level: number): number {
 
 export interface SpawnRules {
   windowMeters: number;
-  stagger: { baseSlotMeters: number; packSizeMin: number; packSizeMax: number };
+  firstSpawnMeters: number;
+  stagger: { baseSlotMeters: number; packSizeMin: number; packSizeMax: number; packGapPx: number };
   maxZombiesPer300MetersByLevel: Record<string, number>;
   levelRamp: { extraPercentPerLevelPer300m: number };
   distanceRamp: { everyMeters: number; multiplierPerStepNonDrone: number; excludeEnemyIds: string[] };
@@ -65,7 +66,8 @@ export interface SpawnRules {
 
 export const DEFAULT_SPAWN_RULES: SpawnRules = {
   windowMeters: 300,
-  stagger: { baseSlotMeters: 6, packSizeMin: 1, packSizeMax: 5 },
+  firstSpawnMeters: 48,
+  stagger: { baseSlotMeters: 6, packSizeMin: 1, packSizeMax: 5, packGapPx: 110 },
   maxZombiesPer300MetersByLevel: { "1": 30, "2": 39, "3": 45, "4": 54, "5": 60, "6": 69 },
   levelRamp: { extraPercentPerLevelPer300m: 1.0 },
   distanceRamp: { everyMeters: 150, multiplierPerStepNonDrone: 1.012, excludeEnemyIds: ["drone"] },
@@ -83,10 +85,36 @@ export function distanceWeightMul(rules: SpawnRules, distance: number, enemyId: 
   return rules.distanceRamp.multiplierPerStepNonDrone ** steps;
 }
 
+/** Cap is a ceiling. Most slots are one zombie so the run stays readable like Pages. */
 export function packSize(min: number, max: number, rng: () => number): number {
   const lo = Math.min(min, max);
   const hi = Math.max(min, max);
-  return lo + Math.floor(rng() * (hi - lo + 1));
+  if (hi <= lo) return lo;
+  const r = rng();
+  if (r < 0.64) return lo;
+  if (r < 0.86) return Math.min(hi, lo + 1);
+  if (r < 0.95) return Math.min(hi, lo + 2);
+  if (r < 0.99) return Math.min(hi, lo + 3);
+  return hi;
+}
+
+export function simulateWindowSpawns(
+  firstSpawnMeters: number,
+  staggerMeters: number,
+  windowMeters: number,
+  cap: number,
+  rng: () => number,
+): number {
+  let last = 0;
+  let n = 0;
+  for (let dist = firstSpawnMeters; dist <= windowMeters + 1e-6; dist += staggerMeters) {
+    if (dist - last < staggerMeters && last > 0) continue;
+    const left = cap - n;
+    if (left <= 0) break;
+    n += Math.min(left, packSize(1, 5, rng));
+    last = dist;
+  }
+  return n;
 }
 
 export function pickWeighted(entries: { id: string; weight: number }[], rng: () => number): string | null {

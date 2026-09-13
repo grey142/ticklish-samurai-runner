@@ -175,7 +175,11 @@ export class Game {
     this.cfg = game;
     this.enemies = enemies;
     this.shop = compileShop(shopRaw);
-    this.spawnRules = { ...DEFAULT_SPAWN_RULES, ...spawnRaw };
+    this.spawnRules = {
+      ...DEFAULT_SPAWN_RULES,
+      ...spawnRaw,
+      stagger: { ...DEFAULT_SPAWN_RULES.stagger, ...spawnRaw.stagger },
+    };
     this.cinematics = cinematics;
     this.mapProps = mapProps;
     this.cheats.load(cheatsRaw);
@@ -413,7 +417,7 @@ export class Game {
     this.onRoof = false;
     this.holdingFirst = false;
     this.slam = false;
-    this.invuln = 1.5;
+    this.invuln = 2.2;
     this.slashCd = 0;
     this.slashFlash = 0;
     this.perkCd = {};
@@ -747,7 +751,8 @@ export class Game {
   }
 
   private maybeSpawn(level: number): void {
-    if (this.distance < 20) return;
+    const firstAt = this.spawnRules.firstSpawnMeters ?? 48;
+    if (this.distance < firstAt) return;
     if (this.distance - this.lastSpawnAt < this.cfg.spawn.minStaggerMeters) return;
     const windowStart = this.distance - this.spawnRules.windowMeters;
     this.spawnLog = this.spawnLog.filter((d) => d >= windowStart);
@@ -766,7 +771,8 @@ export class Game {
       }));
       const id = pickWeighted(weights, Math.random);
       if (!id) break;
-      this.spawnEnemy(id, i * (18 + Math.random() * 10));
+      const gap = this.spawnRules.stagger.packGapPx ?? 110;
+      this.spawnEnemy(id, i * (gap + Math.random() * 36));
       this.spawnLog.push(this.distance);
     }
     this.lastSpawnAt = this.distance;
@@ -849,7 +855,7 @@ export class Game {
         );
         this.standActorOn(a, floorY);
         a.lane = floorY < this.groundY() - 8 ? "roof" : "ground";
-        if (def.projectile && a.x < this.w + 56) {
+        if (def.projectile && a.x < this.w - 40 && a.x + a.w > 0) {
           if (ownerHasLiveShot(this.actors, a.id)) continue;
           a.fireCd -= dt;
           if (a.fireCd <= 0) {

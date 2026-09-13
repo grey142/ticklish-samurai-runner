@@ -21,6 +21,7 @@ import {
   DEFAULT_SPAWN_RULES,
   distanceWeightMul,
   packSize,
+  simulateWindowSpawns,
   windowSpawnCap,
 } from "./rules";
 
@@ -69,7 +70,21 @@ describe("spawn rules", () => {
     expect(windowSpawnCap(DEFAULT_SPAWN_RULES, 2)).toBe(Math.floor(39 * 1.01));
     expect(windowSpawnCap(DEFAULT_SPAWN_RULES, 3)).toBe(Math.floor(45 * 1.02));
     expect(packSize(1, 5, () => 0)).toBe(1);
+    expect(packSize(1, 5, () => 0.5)).toBe(1);
+    expect(packSize(1, 5, () => 0.7)).toBe(2);
     expect(packSize(1, 5, () => 0.99)).toBe(5);
+  });
+
+  it("keeps a 300m window readable instead of filling the 30-zombie cap", () => {
+    let i = 0;
+    const rng = () => {
+      i += 1;
+      return (i * 0.37) % 1;
+    };
+    const n = simulateWindowSpawns(48, 24, 300, 30, rng);
+    expect(n).toBeGreaterThanOrEqual(10);
+    expect(n).toBeLessThanOrEqual(22);
+    expect(n).toBeLessThan(30);
   });
 
   it("ramps non-drone weights 1.2% every 150m", () => {
