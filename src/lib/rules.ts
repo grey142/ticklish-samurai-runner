@@ -52,7 +52,7 @@ export function enemyWeight(def: EnemyDef, level: number): number {
 }
 
 export function spawnCap(cfg: GameConfig, level: number): number {
-  return cfg.spawn.maxZombiesPer100m[level] ?? cfg.spawn.maxZombiesPer100m.at(-1) ?? 10;
+  return cfg.spawn.maxZombiesPerWindow[level] ?? cfg.spawn.maxZombiesPerWindow.at(-1) ?? 10;
 }
 
 export function pickWeighted(entries: { id: string; weight: number }[], rng: () => number): string | null {

@@ -18,7 +18,7 @@ const cfg = {
     { level: 2, distance: 200, speedMul: 1.02 },
     { level: 6, distance: 1000, speedMul: 1.1 },
   ],
-  spawn: { minStaggerMeters: 6, maxZombiesPer100m: [0, 10, 13, 15, 18, 20, 23] },
+  spawn: { minStaggerMeters: 6, windowMeters: 300, maxZombiesPerWindow: [0, 10, 13, 15, 18, 20, 23] },
   slash: { baseRecharge: 1.5, upgradeStep: 0.2, maxUpgrades: 5, upgradeCosts: [100, 200, 400, 800, 1600], hayateMultiplier: 0.5 },
   economy: { metersPerPoint: 6, pointsPerCoin: 6, roofKillMultiplier: 2, reviveCost: 300, starterCoins: 150 },
 } as GameConfig;
@@ -47,7 +47,7 @@ describe("slash recharge", () => {
 });
 
 describe("spawn rules", () => {
-  it("caps zombies per 100m by level", () => {
+  it("caps zombies per 300m window by level", () => {
     expect(spawnCap(cfg, 1)).toBe(10);
     expect(spawnCap(cfg, 6)).toBe(23);
   });

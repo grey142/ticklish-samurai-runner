@@ -13,7 +13,8 @@
   ],
   "spawn": {
     "minStaggerMeters": 6,
-    "maxZombiesPer100m": [0, 10, 13, 15, 18, 20, 23]
+    "windowMeters": 300,
+    "maxZombiesPerWindow": [0, 10, 13, 15, 18, 20, 23]
   },
   "economy": {
     "metersPerPoint": 6,

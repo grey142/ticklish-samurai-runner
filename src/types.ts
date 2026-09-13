@@ -16,7 +16,8 @@ export interface GameConfig {
   speedLevels: SpeedLevel[];
   spawn: {
     minStaggerMeters: number;
-    maxZombiesPer100m: number[];
+    windowMeters: number;
+    maxZombiesPerWindow: number[];
   };
   economy: {
     metersPerPoint: number;

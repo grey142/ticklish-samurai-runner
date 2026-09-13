@@ -1,12 +1,13 @@
 {
   "id": "spawn_density",
-  "description": "Enemies must be decently staggered along the route, not piled together. Total zombies per 100 meters cannot exceed the level max (can be less, especially early).",
+  "description": "Enemies must be decently staggered along the route, not piled together. Total zombies per 300 meters cannot exceed the level max (can be less, especially early).",
   "stagger": {
     "minSpacingMeters": 6,
     "preferVariety": true,
     "note": "No two enemies spawn closer than minSpacingMeters. Prefer mixing types over clumps of the same enemy."
   },
-  "maxZombiesPer100MetersByLevel": {
+  "windowMeters": 300,
+  "maxZombiesPerWindowByLevel": {
     "1": 10,
     "2": 13,
     "3": 15,
@@ -15,11 +16,11 @@
     "6": 23
   },
   "rules": [
-    "For each 100m segment, total spawned enemies <= maxZombiesPer100MetersByLevel[level].",
-    "Individual enemy spawnRatePer100Meters is a weight/target within that cap, not a guarantee that can exceed it.",
+    "For each 300m segment, total spawned enemies <= maxZombiesPerWindowByLevel[level].",
+    "Individual enemy spawnRate is a weight/target within that cap, not a guarantee that can exceed it.",
     "If weighted rolls would exceed the cap, stop spawning for that segment.",
     "Apply minSpacingMeters when placing each enemy along the route.",
     "Lower levels should often spawn below the max; never above."
   ],
-  "notes": "Caps raised +25% from initial defaults on 2026-09-12. User can retune further."
+  "notes": "Density window raised from 100m to 300m so packs sit farther apart."
 }

@@ -483,7 +483,7 @@ export class Game {
   private maybeSpawn(level: number): void {
     if (this.distance < 20) return;
     if (this.distance - this.lastSpawnAt < this.cfg.spawn.minStaggerMeters) return;
-    const windowStart = this.distance - 100;
+    const windowStart = this.distance - this.cfg.spawn.windowMeters;
     this.spawnLog = this.spawnLog.filter((d) => d >= windowStart);
     if (this.spawnLog.length >= spawnCap(this.cfg, level)) return;
 
