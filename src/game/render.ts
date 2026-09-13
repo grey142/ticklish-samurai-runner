@@ -8,7 +8,7 @@ import {
   projectilePath,
 } from "../lib/assets";
 import { mapPropPath } from "../lib/map-props";
-import { nextSlashUpgradeCost, speedLevelFor } from "../lib/rules";
+import { GAMEOVER_LINE, nextSlashUpgradeCost, speedLevelFor } from "../lib/rules";
 import type { Game } from "./Game";
 
 export function drawScene(g: Game): void {
@@ -17,24 +17,23 @@ export function drawScene(g: Game): void {
   ctx.save();
   ctx.translate(0, -g.camY);
   drawCity(g);
-  if (g.screen === "playing" || g.screen === "gameover") {
+  if (g.screen === "playing" && !g.struggle) {
     drawActors(g);
     drawPlayer(g);
     drawVfx(g);
     drawParticles(g);
   }
   ctx.restore();
+  if (g.screen === "menu") drawMenu(g);
+  else if (g.screen === "howto") drawHowto(g);
+  else if (g.screen === "shop") drawShop(g);
+  else if (g.screen === "playing" && g.struggle) drawStruggle(g);
+  else if (g.screen === "playing") drawHud(g);
+  else if (g.screen === "gameover") drawGameOver(g);
   if (g.pinkFlash > 0) {
     ctx.fillStyle = `rgba(255, 70, 150, ${0.28 * (g.pinkFlash / 0.22)})`;
     ctx.fillRect(0, 0, w, h);
   }
-  if (g.screen === "menu") drawMenu(g);
-  else if (g.screen === "howto") drawHowto(g);
-  else if (g.screen === "shop") drawShop(g);
-  else if (g.screen === "playing") {
-    drawHud(g);
-    if (g.struggle) drawStruggle(g);
-  } else if (g.screen === "gameover") drawGameOver(g);
 }
 
 function drawSprite(
@@ -190,22 +189,18 @@ function drawVfx(g: Game): void {
 
 function drawActors(g: Game): void {
   for (const a of g.actors) {
-    if (a.kind === "enemy") drawEnemy(g, a.defId, a.x, a.y, a.w, a.h, a.hp / a.maxHp);
+    if (a.kind === "enemy") drawEnemy(g, a.defId, a.x, a.y, a.w, a.h);
     else drawProjectile(g, a.defId, a.x, a.y, a.w, a.h);
   }
 }
 
-function drawEnemy(g: Game, id: string, x: number, y: number, w: number, h: number, hp: number): void {
+function drawEnemy(g: Game, id: string, x: number, y: number, w: number, h: number): void {
   const def = g.enemies.enemies.find((e) => e.id === id);
   const { ctx } = g;
   const img = g.images.get(enemySpritePath(id, "idle"));
   if (img) {
     ctx.save();
     drawSprite(ctx, img, x, y, w, h);
-    ctx.fillStyle = "rgba(0,0,0,0.45)";
-    ctx.fillRect(x, y - 8, w, 4);
-    ctx.fillStyle = "#3d1";
-    ctx.fillRect(x, y - 8, w * hp, 4);
     ctx.restore();
     return;
   }
@@ -266,10 +261,6 @@ function drawEnemy(g: Game, id: string, x: number, y: number, w: number, h: numb
       ctx.fillRect(w - 6, 28, 16, 8);
     }
   }
-  ctx.fillStyle = "rgba(0,0,0,0.35)";
-  ctx.fillRect(4, h - 6, w - 8, 4);
-  ctx.fillStyle = "#3d1";
-  ctx.fillRect(6, 4, (w - 12) * hp, 4);
   ctx.restore();
 }
 
@@ -388,43 +379,34 @@ function drawStruggle(g: Game): void {
   const beat = (s.beat % 3) + 1;
   const shot = g.images.scene(cinematicPath(s.sourceId, "struggle", beat));
   if (shot) {
-    ctx.save();
-    ctx.globalAlpha = s.showCinematic > 0 ? 1 : 0.88;
     drawCover(ctx, shot, 0, 0, w, h);
-    ctx.restore();
-    ctx.fillStyle = "rgba(20, 4, 16, 0.28)";
-    ctx.fillRect(0, 0, w, h);
   } else {
-    ctx.fillStyle = "rgba(40, 8, 24, 0.45)";
+    ctx.fillStyle = "#120c14";
     ctx.fillRect(0, 0, w, h);
     drawIkielaPose(ctx, w * 0.5 - 90, h * 0.32, false, 1.35);
   }
 
-  panel(ctx, w * 0.14, 16, w * 0.72, 110, "rgba(20,6,14,0.88)");
-  ctx.fillStyle = "#ffb0d0";
-  ctx.font = "700 26px Trebuchet MS, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText(`STRUGGLE  ·  ${s.sourceName}`, w / 2, 50);
-  ctx.font = "16px Trebuchet MS, sans-serif";
-  ctx.fillStyle = "#f4e7d8";
-  ctx.fillText(`MASH  +6 / 100    ·    ${Math.floor(s.meter)} / 100    ·    beat ${beat}/3`, w / 2, 78);
+  const pad = 10;
+  const barW = Math.min(168, Math.round(w * 0.22));
+  const barH = 8;
+  const boxW = barW + 16;
+  const boxH = 44;
+  panel(ctx, pad, pad, boxW, boxH, "rgba(10,6,12,0.62)");
+  ctx.fillStyle = "#d9b88c";
+  ctx.font = "10px Trebuchet MS, sans-serif";
   ctx.textAlign = "left";
-  ctx.fillStyle = "#3a1020";
-  ctx.fillRect(w * 0.2, 92, w * 0.6, 22);
+  ctx.fillText("HP", pad + 8, pad + 12);
+  ctx.fillStyle = "#6d2038";
+  ctx.fillRect(pad + 8, pad + 15, barW, barH);
   ctx.fillStyle = "#ff4d8d";
-  ctx.fillRect(w * 0.2, 92, w * 0.6 * (s.meter / 100), 22);
-
-  const mashH = Math.max(72, h * 0.22);
-  ctx.fillStyle = "rgba(255, 77, 141, 0.82)";
-  round(ctx, w * 0.08, h - mashH - 12, w * 0.84, mashH, 18);
-  ctx.fill();
-  ctx.fillStyle = "#f4e7d8";
-  ctx.font = "700 28px Trebuchet MS, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("TAP ANYWHERE — MASH", w / 2, h - mashH * 0.45);
-  ctx.font = "16px Trebuchet MS, sans-serif";
-  ctx.fillText("or hold — every tap counts", w / 2, h - mashH * 0.22);
-  ctx.textAlign = "left";
+  ctx.fillRect(pad + 8, pad + 15, barW * Math.max(0, g.hp / g.maxHp), barH);
+  ctx.fillStyle = "#d9b88c";
+  ctx.fillText("mash", pad + 8, pad + 32);
+  ctx.fillStyle = "#3a1020";
+  ctx.fillRect(pad + 8, pad + 34, barW, barH);
+  ctx.fillStyle = "#ff8ab0";
+  ctx.fillRect(pad + 8, pad + 34, barW * Math.min(1, s.meter / 100), barH);
+  void h;
 }
 
 function drawGameOver(g: Game): void {
@@ -432,29 +414,16 @@ function drawGameOver(g: Game): void {
   const shot = g.images.scene(cinematicPath(g.overSource, "gameover", g.overFrame));
   if (shot) {
     drawCover(ctx, shot, 0, 0, w, h);
-    ctx.fillStyle = "rgba(8, 2, 8, 0.38)";
-    ctx.fillRect(0, 0, w, h);
   } else {
-    ctx.fillStyle = "rgba(10,4,10,0.55)";
+    ctx.fillStyle = "#120c14";
     ctx.fillRect(0, 0, w, h);
     drawIkielaPose(ctx, w * 0.18, 72, true, 1.15);
   }
-  panel(ctx, w * 0.08, 16, w * 0.5, 132, "rgba(18,6,12,0.82)");
-  ctx.fillStyle = "#ff4d8d";
-  ctx.font = "700 32px Trebuchet MS, sans-serif";
+  ctx.fillStyle = "#ff2a2a";
+  ctx.font = "700 18px Trebuchet MS, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(GAMEOVER_LINE, w / 2, 28);
   ctx.textAlign = "left";
-  ctx.fillText("LAUGHED OUT", w * 0.1, 50);
-  ctx.fillStyle = "#f4e7d8";
-  ctx.font = "16px Trebuchet MS, sans-serif";
-  wrapText(ctx, g.overLine, w * 0.1, 78, w * 0.44, 22);
-  ctx.font = "15px Trebuchet MS, sans-serif";
-  ctx.fillStyle = "#d9b88c";
-  ctx.fillText(`${Math.floor(g.distance)} m    +${g.runCoins} coins    Bank ${g.save.coins}    Best ${g.save.bestDistance} m`, w * 0.1, 132);
-
-  button(ctx, g, "revive", !g.usedRevive && g.save.coins >= g.cfg.economy.reviveCost ? "Revive  300 coins" : "Revive locked");
-  button(ctx, g, "retry", "Run again");
-  button(ctx, g, "shop", "Shop");
-  button(ctx, g, "menu", "Title");
 }
 
 function drawMenu(g: Game): void {
@@ -493,8 +462,8 @@ function drawHowto(g: Game): void {
     "Always runs right. No pause — only a grab or a game-over stops her.",
     "Tap = jump (~half screen, ~3s if held). Release early to drop. Second tap = double jump.",
     "Swipe down in air = slam. Swipe up / C = climb one story (street → 1F/roof, 1F → 2F). Swipe down on a ledge = drop one story.",
-    "SLASH is the right-hand button. Base 1.5s. Shop cuts 0.2s ×5. Hayate halves the final recharge.",
-    "Grab / egg-web / bolo / slime / thrown hand = struggle. Mash +6 to 100 before 16s or HP 0.",
+    "SLASH one-shots any zombie or projectile it hits. Base 1.5s. Shop cuts 0.2s ×5. Hayate halves recharge.",
+    "Grab / web / bolo / slime / hand = struggle cinematic. Mash anywhere. HP and mash bars sit together in the corner.",
     "Pink flash + laugh every second. Cinematic every 4s. Roof-jump kills pay double.",
     "1 point / 6 m. 1 coin / 6 points. Revive once per run for 300 coins.",
     "Desktop: Space/W jump, S slam, C climb, J slash, 1–4 abilities (shade = 4).",
@@ -577,21 +546,6 @@ function round(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h
   ctx.arcTo(x, y + h, x, y, r);
   ctx.arcTo(x, y, x + w, y, r);
   ctx.closePath();
-}
-
-function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, max: number, lh: number): void {
-  const words = text.split(" ");
-  let line = "";
-  let yy = y;
-  for (const word of words) {
-    const test = line ? `${line} ${word}` : word;
-    if (ctx.measureText(test).width > max) {
-      ctx.fillText(line, x, yy);
-      line = word;
-      yy += lh;
-    } else line = test;
-  }
-  if (line) ctx.fillText(line, x, yy);
 }
 
 function drawIkielaPose(ctx: CanvasRenderingContext2D, x: number, y: number, bikini: boolean, scale = 1): void {

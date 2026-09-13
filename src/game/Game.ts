@@ -16,16 +16,19 @@ import {
 } from "../lib/map-props";
 import { Sfx } from "../lib/audio";
 import { Input, type InputFrame } from "../lib/input";
-import { layoutGameOver, layoutHowto, layoutMenu, layoutPlayControls, layoutShop } from "../lib/touch-layout";
+import { layoutHowto, layoutMenu, layoutPlayControls, layoutShop } from "../lib/touch-layout";
 import {
   coinsFromPoints,
   enemyWeight,
+  GAMEOVER_HOLD_SEC,
   killPoints,
   nextSlashUpgradeCost,
   pickWeighted,
   pointsFromDistance,
   slashRecharge,
+  applyOneShot,
   ownerHasLiveShot,
+  projectileAdvance,
   spawnCap,
   speedLevelFor,
   struggleAfterTap,
@@ -102,6 +105,7 @@ export class Game {
   overSource = "drone";
   overLine = "";
   overFrame = 1;
+  overT = 0;
   images = new ImageBank();
   time = 0;
   menuPulse = 0;
@@ -324,14 +328,14 @@ export class Game {
     this.resizeButtons();
     const input = this.input.consume();
     if (this.screen === "playing") this.updatePlay(dt, input);
-    else this.updateMeta(input);
+    else this.updateMeta(dt, input);
     this.pinkFlash = Math.max(0, this.pinkFlash - dt);
     this.hudCoinsFlash = Math.max(0, this.hudCoinsFlash - dt);
     this.updateCamera();
     drawScene(this);
   }
 
-  private updateMeta(input: InputFrame): void {
+  private updateMeta(dt: number, input: InputFrame): void {
     const id = input.ui;
     if (this.screen === "menu") {
       if (id === "play") this.startRun();
@@ -349,10 +353,8 @@ export class Game {
       if (id?.startsWith("buy-armor-")) this.buyArmor(id.slice(10));
       if (id === "buy-slash") this.buySlash();
     } else if (this.screen === "gameover") {
-      if (id === "retry") this.startRun();
-      if (id === "shop") this.screen = "shop";
-      if (id === "menu") this.screen = "menu";
-      if (id === "revive") this.tryRevive();
+      this.overT += dt;
+      if (this.overT >= GAMEOVER_HOLD_SEC || input.anyTap) this.screen = "menu";
     }
   }
 
@@ -622,8 +624,8 @@ export class Game {
       y,
       w: ew,
       h: eh,
-      hp: def.hp,
-      maxHp: def.hp,
+      hp: 1,
+      maxHp: 1,
       vx: def.approach,
       fireCd: (def.fireEvery ?? 2) * (0.4 + Math.random() * 0.4),
       lane: usedLane,
@@ -657,12 +659,14 @@ export class Game {
         const def = this.def(a.defId);
         if (a.lane !== "roof") a.x -= def.approach * run * dt;
         if (a.lane === "roof") {
-          const stay = ledgeUnder(ledges, a.x, a.y + a.h * this.actorFootFrac(a.defId), 22, a.w);
+          const stay = ledgeUnder(ledges, a.x, a.y + a.h * this.actorFootFrac(a.defId), 28, a.w);
           if (stay) this.standActorOn(a, stay.y);
           else {
             a.lane = "ground";
             this.standActorOn(a, this.groundY());
           }
+        } else if (a.lane === "ground" && !def.flying) {
+          this.standActorOn(a, this.groundY());
         }
         if (def.projectile && a.x < this.w * 0.92 && a.x > this.playerX + 80) {
           if (ownerHasLiveShot(this.actors, a.id)) continue;
@@ -674,7 +678,7 @@ export class Game {
         }
       } else {
         const p = this.projDef(a.defId);
-        a.x -= p.speed * dt * 0.35;
+        a.x -= projectileAdvance(p.speed, dt);
       }
     }
     this.actors = this.actors.filter((a) => a.x > -180 && a.hp > 0);
@@ -807,8 +811,8 @@ export class Game {
     }
   }
 
-  private hurtActor(a: Actor, dmg: number, roofKill: boolean): void {
-    a.hp -= dmg;
+  private hurtActor(a: Actor, _dmg: number, roofKill: boolean): void {
+    a.hp = applyOneShot(a.hp);
     this.burst(a.x + a.w / 2, a.y + a.h / 2, a.kind === "enemy" ? this.def(a.defId).color : "#fff");
     this.sfx.hit();
     if (a.hp <= 0 && a.kind === "enemy") {
@@ -922,6 +926,7 @@ export class Game {
     this.save.bestDistance = Math.max(this.save.bestDistance, Math.floor(this.distance));
     this.persist();
     this.screen = "gameover";
+    this.overT = 0;
     this.struggle = null;
     this.input.mashAll = false;
     this.sfx.die();
@@ -940,8 +945,6 @@ export class Game {
       const blades = this.shopTab === "blades";
       const rows = blades ? this.shop.katanas : this.shopTab === "armor" ? this.shop.armors : [];
       this.input.uiRects = layoutShop(w, h, this.shopTab, rows.map((r) => r.id), blades ? "buy-katana-" : "buy-armor-");
-    } else if (this.screen === "gameover") {
-      this.input.uiRects = layoutGameOver(w, h, !this.usedRevive);
     }
   }
 }
