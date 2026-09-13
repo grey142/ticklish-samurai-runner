@@ -11,6 +11,7 @@ import {
   ledgeUnder,
   mapPropPath,
   oneStoryClimb,
+  PROP_SPACING_MUL,
   propDrawHeight,
   standTop,
 } from "./map-props";
@@ -60,12 +61,14 @@ describe("map props", () => {
 
   it("tiles a scrolling strip whose ground ledges sit on the street", () => {
     const groundY = 400;
-    const placed = layoutProps(catalog, 0, 800, groundY, 200);
+    const placed = layoutProps(catalog, 0, 12000, groundY, 200);
     expect(placed.length).toBeGreaterThan(2);
     expect(placed.some((p) => p.def.id === "gate_1story")).toBe(true);
-    const two = placed.find((p) => p.def.id === "house_2story");
-    expect(two).toBeTruthy();
-    expect(two!.y + two!.h * 0.96).toBeCloseTo(groundY);
+    const twos = placed.filter((p) => p.def.id === "house_2story");
+    expect(twos.length).toBeGreaterThan(1);
+    expect(twos[0].y + twos[0].h * 0.96).toBeCloseTo(groundY);
+    expect(twos[1].x - twos[0].x).toBeGreaterThan(twos[0].w * 6);
+    expect(PROP_SPACING_MUL).toBe(8);
   });
 
   it("lands on the highest ledge the feet cross", () => {

@@ -7,7 +7,9 @@ import {
   pickWeighted,
   pointsFromDistance,
   slashRecharge,
+  applyOneShot,
   ownerHasLiveShot,
+  projectileAdvance,
   spawnCap,
   speedLevelFor,
   struggleAfterTap,
@@ -87,5 +89,16 @@ describe("projectiles", () => {
     expect(ownerHasLiveShot(actors, "e1")).toBe(true);
     expect(ownerHasLiveShot(actors, "e2")).toBe(false);
     expect(ownerHasLiveShot([], "e1")).toBe(false);
+  });
+
+  it("moves projectiles twice as fast as the original 0.35 flight rate", () => {
+    expect(projectileAdvance(100, 1)).toBeCloseTo(70);
+  });
+});
+
+describe("one-shot slash", () => {
+  it("kills any live actor in one hit", () => {
+    expect(applyOneShot(18)).toBe(0);
+    expect(applyOneShot(1)).toBe(0);
   });
 });

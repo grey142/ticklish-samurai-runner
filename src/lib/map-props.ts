@@ -2,6 +2,9 @@ import type { MapPropCatalog, MapPropDef } from "../types";
 
 export const PROP_PATTERN = ["house_2story", "house_1story", "gate_1story", "house_1story"] as const;
 
+/** Packed stride was ~0.94× building width; playtest wants ~8× that gap. */
+export const PROP_SPACING_MUL = 8;
+
 export interface PlacedProp {
   def: MapPropDef;
   x: number;
@@ -77,7 +80,7 @@ export function layoutProps(
     const w = h * ar;
     const ground = def.ledges.find((l) => l.id === "ground");
     const gy = ground?.y ?? 0.95;
-    return { def, w, h, y: groundY - h * gy, stride: w * 0.94 };
+    return { def, w, h, y: groundY - h * gy, stride: w * 0.94 * PROP_SPACING_MUL };
   });
   const periodW = tiles.reduce((sum, t) => sum + t.stride, 0);
   if (periodW <= 0) return [];

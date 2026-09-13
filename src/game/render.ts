@@ -190,22 +190,18 @@ function drawVfx(g: Game): void {
 
 function drawActors(g: Game): void {
   for (const a of g.actors) {
-    if (a.kind === "enemy") drawEnemy(g, a.defId, a.x, a.y, a.w, a.h, a.hp / a.maxHp);
+    if (a.kind === "enemy") drawEnemy(g, a.defId, a.x, a.y, a.w, a.h);
     else drawProjectile(g, a.defId, a.x, a.y, a.w, a.h);
   }
 }
 
-function drawEnemy(g: Game, id: string, x: number, y: number, w: number, h: number, hp: number): void {
+function drawEnemy(g: Game, id: string, x: number, y: number, w: number, h: number): void {
   const def = g.enemies.enemies.find((e) => e.id === id);
   const { ctx } = g;
   const img = g.images.get(enemySpritePath(id, "idle"));
   if (img) {
     ctx.save();
     drawSprite(ctx, img, x, y, w, h);
-    ctx.fillStyle = "rgba(0,0,0,0.45)";
-    ctx.fillRect(x, y - 8, w, 4);
-    ctx.fillStyle = "#3d1";
-    ctx.fillRect(x, y - 8, w * hp, 4);
     ctx.restore();
     return;
   }
@@ -266,10 +262,6 @@ function drawEnemy(g: Game, id: string, x: number, y: number, w: number, h: numb
       ctx.fillRect(w - 6, 28, 16, 8);
     }
   }
-  ctx.fillStyle = "rgba(0,0,0,0.35)";
-  ctx.fillRect(4, h - 6, w - 8, 4);
-  ctx.fillStyle = "#3d1";
-  ctx.fillRect(6, 4, (w - 12) * hp, 4);
   ctx.restore();
 }
 
@@ -493,7 +485,7 @@ function drawHowto(g: Game): void {
     "Always runs right. No pause — only a grab or a game-over stops her.",
     "Tap = jump (~half screen, ~3s if held). Release early to drop. Second tap = double jump.",
     "Swipe down in air = slam. Swipe up / C = climb one story (street → 1F/roof, 1F → 2F). Swipe down on a ledge = drop one story.",
-    "SLASH is the right-hand button. Base 1.5s. Shop cuts 0.2s ×5. Hayate halves the final recharge.",
+    "SLASH one-shots any zombie or projectile it hits. Base 1.5s. Shop cuts 0.2s ×5. Hayate halves recharge.",
     "Grab / egg-web / bolo / slime / thrown hand = struggle. Mash +6 to 100 before 16s or HP 0.",
     "Pink flash + laugh every second. Cinematic every 4s. Roof-jump kills pay double.",
     "1 point / 6 m. 1 coin / 6 points. Revive once per run for 300 coins.",

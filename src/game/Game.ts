@@ -25,7 +25,9 @@ import {
   pickWeighted,
   pointsFromDistance,
   slashRecharge,
+  applyOneShot,
   ownerHasLiveShot,
+  projectileAdvance,
   spawnCap,
   speedLevelFor,
   struggleAfterTap,
@@ -622,8 +624,8 @@ export class Game {
       y,
       w: ew,
       h: eh,
-      hp: def.hp,
-      maxHp: def.hp,
+      hp: 1,
+      maxHp: 1,
       vx: def.approach,
       fireCd: (def.fireEvery ?? 2) * (0.4 + Math.random() * 0.4),
       lane: usedLane,
@@ -657,12 +659,14 @@ export class Game {
         const def = this.def(a.defId);
         if (a.lane !== "roof") a.x -= def.approach * run * dt;
         if (a.lane === "roof") {
-          const stay = ledgeUnder(ledges, a.x, a.y + a.h * this.actorFootFrac(a.defId), 22, a.w);
+          const stay = ledgeUnder(ledges, a.x, a.y + a.h * this.actorFootFrac(a.defId), 28, a.w);
           if (stay) this.standActorOn(a, stay.y);
           else {
             a.lane = "ground";
             this.standActorOn(a, this.groundY());
           }
+        } else if (a.lane === "ground" && !def.flying) {
+          this.standActorOn(a, this.groundY());
         }
         if (def.projectile && a.x < this.w * 0.92 && a.x > this.playerX + 80) {
           if (ownerHasLiveShot(this.actors, a.id)) continue;
@@ -674,7 +678,7 @@ export class Game {
         }
       } else {
         const p = this.projDef(a.defId);
-        a.x -= p.speed * dt * 0.35;
+        a.x -= projectileAdvance(p.speed, dt);
       }
     }
     this.actors = this.actors.filter((a) => a.x > -180 && a.hp > 0);
@@ -807,8 +811,8 @@ export class Game {
     }
   }
 
-  private hurtActor(a: Actor, dmg: number, roofKill: boolean): void {
-    a.hp -= dmg;
+  private hurtActor(a: Actor, _dmg: number, roofKill: boolean): void {
+    a.hp = applyOneShot(a.hp);
     this.burst(a.x + a.w / 2, a.y + a.h / 2, a.kind === "enemy" ? this.def(a.defId).color : "#fff");
     this.sfx.hit();
     if (a.hp <= 0 && a.kind === "enemy") {

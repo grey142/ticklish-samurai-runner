@@ -79,3 +79,15 @@ export function nextSlashUpgradeCost(cfg: GameConfig, upgrades: number): number 
 export function ownerHasLiveShot(actors: { kind: string; ownerId?: string }[], ownerId: string): boolean {
   return actors.some((a) => a.kind === "projectile" && a.ownerId === ownerId);
 }
+
+/** Playtest: every successful hit removes the actor (zombie or projectile). */
+export function applyOneShot(hp: number): number {
+  return hp > 0 ? 0 : hp;
+}
+
+/** Was 0.35; playtest is 2× that flight rate. */
+export const PROJECTILE_FLIGHT_MUL = 0.7;
+
+export function projectileAdvance(speed: number, dt: number): number {
+  return speed * dt * PROJECTILE_FLIGHT_MUL;
+}
