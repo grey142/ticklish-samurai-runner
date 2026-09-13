@@ -1,7 +1,6 @@
 import {
   cinematicPath,
   drawContained,
-  drawCover,
   drawSheetFrame,
   enemySpritePath,
   playerPosePath,
@@ -377,12 +376,12 @@ function drawStruggle(g: Game): void {
   const s = g.struggle;
   if (!s) return;
   const beat = (s.beat % 3) + 1;
+  ctx.fillStyle = "#120c14";
+  ctx.fillRect(0, 0, w, h);
   const shot = g.images.scene(cinematicPath(s.sourceId, "struggle", beat));
   if (shot) {
-    drawCover(ctx, shot, 0, 0, w, h);
+    drawContained(ctx, shot, 0, 0, w, h, "center");
   } else {
-    ctx.fillStyle = "#120c14";
-    ctx.fillRect(0, 0, w, h);
     drawIkielaPose(ctx, w * 0.5 - 90, h * 0.32, false, 1.35);
   }
 
@@ -406,17 +405,16 @@ function drawStruggle(g: Game): void {
   ctx.fillRect(pad + 8, pad + 34, barW, barH);
   ctx.fillStyle = "#ff8ab0";
   ctx.fillRect(pad + 8, pad + 34, barW * Math.min(1, s.meter / 100), barH);
-  void h;
 }
 
 function drawGameOver(g: Game): void {
   const { ctx, w, h } = g;
+  ctx.fillStyle = "#120c14";
+  ctx.fillRect(0, 0, w, h);
   const shot = g.images.scene(cinematicPath(g.overSource, "gameover", g.overFrame));
   if (shot) {
-    drawCover(ctx, shot, 0, 0, w, h);
+    drawContained(ctx, shot, 0, 0, w, h, "center");
   } else {
-    ctx.fillStyle = "#120c14";
-    ctx.fillRect(0, 0, w, h);
     drawIkielaPose(ctx, w * 0.18, 72, true, 1.15);
   }
   ctx.fillStyle = "#ff2a2a";
