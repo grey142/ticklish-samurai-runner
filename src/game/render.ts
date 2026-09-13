@@ -507,12 +507,13 @@ function drawShop(g: Game): void {
   const { ctx, w, h } = g;
   ctx.fillStyle = "rgba(10,6,14,0.78)";
   ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = "#f4e7d8";
-  ctx.font = "700 28px Trebuchet MS, sans-serif";
-  ctx.fillText("Night Market", 140, 36);
-  ctx.font = "18px Trebuchet MS, sans-serif";
+  const back = g.input.uiRects.find((r) => r.id === "back");
+  const headerY = back ? back.y + back.h / 2 + 6 : 36;
   ctx.fillStyle = "#d9b88c";
-  ctx.fillText(`${g.save.coins} coins`, 400, 36);
+  ctx.font = "18px Trebuchet MS, sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText(`${g.save.coins} coins`, w - 16, headerY);
+  ctx.textAlign = "left";
   button(ctx, g, "back", "Back");
   button(ctx, g, "tab-blades", g.shopTab === "blades" ? "• Blades" : "Blades");
   button(ctx, g, "tab-armor", g.shopTab === "armor" ? "• Armor" : "Armor");
