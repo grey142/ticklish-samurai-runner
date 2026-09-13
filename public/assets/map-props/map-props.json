@@ -5,46 +5,49 @@
       "file": "house-2story.png",
       "width": 787,
       "height": 772,
-      "storyHeights": { "first": 1.0, "second": 1.5 },
+      "storyHeights": {
+        "first": 1.0,
+        "second": 1.5
+      },
       "ledges": [
         {
           "id": "roof_top",
-          "y": 0.105,
+          "y": 0.08,
           "x0": 0.08,
           "x1": 0.92,
-          "label": "top roof tiles",
+          "label": "top roof",
           "story": 2
         },
         {
           "id": "balcony",
-          "y": 0.348,
+          "y": 0.33,
           "x0": 0.1,
           "x1": 0.9,
-          "label": "2F balcony floor",
+          "label": "2F balcony",
           "story": 2
         },
         {
           "id": "eave_1f",
-          "y": 0.598,
+          "y": 0.6,
           "x0": 0.06,
           "x1": 0.94,
-          "label": "1F roof eave",
+          "label": "1F roof eave / story split",
           "story": 1
         },
         {
           "id": "engawa",
-          "y": 0.748,
+          "y": 0.82,
           "x0": 0.08,
           "x1": 0.92,
-          "label": "engawa porch deck",
+          "label": "engawa porch",
           "story": 1
         },
         {
           "id": "ground",
-          "y": 0.988,
+          "y": 0.97,
           "x0": 0.05,
           "x1": 0.95,
-          "label": "foundation bottom",
+          "label": "foundation/ground",
           "story": 0
         }
       ]
@@ -57,26 +60,26 @@
       "ledges": [
         {
           "id": "roof",
-          "y": 0.185,
+          "y": 0.18,
           "x0": 0.06,
           "x1": 0.94,
-          "label": "main roof tiles",
+          "label": "main roof",
           "story": 1
         },
         {
           "id": "engawa",
-          "y": 0.775,
+          "y": 0.72,
           "x0": 0.08,
           "x1": 0.92,
-          "label": "engawa porch deck",
+          "label": "engawa porch",
           "story": 1
         },
         {
           "id": "ground",
-          "y": 0.918,
+          "y": 0.95,
           "x0": 0.05,
           "x1": 0.95,
-          "label": "foundation bottom",
+          "label": "foundation/ground",
           "story": 0
         }
       ]
@@ -89,10 +92,10 @@
       "ledges": [
         {
           "id": "roof",
-          "y": 0.232,
+          "y": 0.22,
           "x0": 0.18,
           "x1": 0.82,
-          "label": "gate roof tiles",
+          "label": "gate roof",
           "story": 1
         },
         {
@@ -105,14 +108,14 @@
         },
         {
           "id": "ground",
-          "y": 0.928,
+          "y": 0.92,
           "x0": 0.05,
           "x1": 0.95,
-          "label": "foundation bottom",
+          "label": "foundation/ground",
           "story": 0
         }
       ]
     }
   ],
-  "notes": "house_2story is 787×772, 2F ≈ 1.5× 1F in the art. Layout scales it so ground→eave_1f equals ground→one-story roof. Ledge y is the walkable deck/tile, not the railing. Climb/drop moves one story rank."
+  "notes": "house_2story rebuilt: story2 = 1.5 * story1, split at eave_1f y\u22480.60. Layout scales 2-story so ground\u2192eave_1f equals ground\u2192one-story roof. Climb/drop moves one story rank. Ledge y from assets-v1."
 }
