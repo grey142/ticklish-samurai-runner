@@ -445,7 +445,6 @@ export class Game {
   private updatePlayer(dt: number, input: InputFrame, _run: number): void {
     const gY = this.groundY();
     const ledges = this.worldLedges();
-    const midX = this.feetX();
     const H1 = this.h * this.cfg.jump.firstMaxHeightScreen;
     const T1 = this.cfg.jump.firstMaxAirSeconds;
     const gHold = (8 * H1) / (T1 * T1);
@@ -453,7 +452,7 @@ export class Game {
     const v1 = (4 * H1) / T1;
 
     if (input.swipe === "up") {
-      const up = climbLedge(ledges, midX, this.playerY + this.playerH);
+      const up = climbLedge(ledges, this.playerX, this.playerY + this.playerH, this.playerW);
       if (up) this.standOn(up.y, true);
     } else if (input.swipe === "down" && this.onRoof) {
       this.onRoof = false;
@@ -492,7 +491,7 @@ export class Game {
     }
 
     if (this.onRoof) {
-      const stay = ledgeUnder(ledges, midX, this.playerY + this.playerH, 18);
+      const stay = ledgeUnder(ledges, this.playerX, this.playerY + this.playerH, 18, this.playerW);
       if (stay) this.playerY = stay.y - this.playerH;
       else {
         this.onRoof = false;
@@ -508,7 +507,7 @@ export class Game {
       this.playerY += this.vy * dt;
       const feetTo = this.playerY + this.playerH;
       if (this.vy >= 0 && !this.slam) {
-        const hit = landingLedge(ledges, midX, feetFrom, feetTo);
+        const hit = landingLedge(ledges, this.playerX, feetFrom, feetTo, this.playerW);
         if (hit) {
           this.standOn(hit.y, true);
           return;
@@ -616,10 +615,14 @@ export class Game {
       a.x -= run * dt;
       if (a.kind === "enemy") {
         const def = this.def(a.defId);
-        a.x -= def.approach * run * dt;
+        if (a.lane !== "roof") a.x -= def.approach * run * dt;
         if (a.lane === "roof") {
-          const stay = ledgeUnder(ledges, a.x + a.w * 0.5, a.y + a.h, 22);
+          const stay = ledgeUnder(ledges, a.x, a.y + a.h, 22, a.w);
           if (stay) a.y = stay.y - a.h;
+          else {
+            a.lane = "ground";
+            a.y = this.groundY() - a.h;
+          }
         }
         if (def.projectile && a.x < this.w * 0.92 && a.x > this.playerX + 80) {
           a.fireCd -= dt;

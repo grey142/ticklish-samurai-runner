@@ -78,11 +78,16 @@ export function allLedges(placed: PlacedProp[]): WorldLedge[] {
   return placed.flatMap(ledgesOf);
 }
 
-export function ledgeUnder(ledges: WorldLedge[], x: number, feetY: number, slop: number): WorldLedge | null {
+function spansLedge(l: WorldLedge, x: number, w: number): boolean {
+  if (w <= 1) return x >= l.x0 && x <= l.x1;
+  return x < l.x1 && x + w > l.x0;
+}
+
+export function ledgeUnder(ledges: WorldLedge[], x: number, feetY: number, slop: number, w = 0): WorldLedge | null {
   let best: WorldLedge | null = null;
   let bestDist = slop;
   for (const l of ledges) {
-    if (!l.standable || x < l.x0 || x > l.x1) continue;
+    if (!l.standable || !spansLedge(l, x, w)) continue;
     const dist = Math.abs(feetY - l.y);
     if (dist <= bestDist) {
       best = l;
@@ -92,11 +97,11 @@ export function ledgeUnder(ledges: WorldLedge[], x: number, feetY: number, slop:
   return best;
 }
 
-export function landingLedge(ledges: WorldLedge[], x: number, feetFrom: number, feetTo: number): WorldLedge | null {
+export function landingLedge(ledges: WorldLedge[], x: number, feetFrom: number, feetTo: number, w = 0): WorldLedge | null {
   if (feetTo < feetFrom) return null;
   let best: WorldLedge | null = null;
   for (const l of ledges) {
-    if (!l.standable || x < l.x0 || x > l.x1) continue;
+    if (!l.standable || !spansLedge(l, x, w)) continue;
     if (feetFrom <= l.y + 4 && feetTo >= l.y - 2) {
       if (!best || l.y < best.y) best = l;
     }
@@ -104,19 +109,19 @@ export function landingLedge(ledges: WorldLedge[], x: number, feetFrom: number, 
   return best;
 }
 
-export function climbLedge(ledges: WorldLedge[], x: number, feetY: number): WorldLedge | null {
+export function climbLedge(ledges: WorldLedge[], x: number, feetY: number, w = 0): WorldLedge | null {
   let best: WorldLedge | null = null;
   for (const l of ledges) {
-    if (!l.standable || x < l.x0 || x > l.x1) continue;
+    if (!l.standable || !spansLedge(l, x, w)) continue;
     if (l.y < feetY - 10 && (!best || l.y > best.y)) best = l;
   }
   return best;
 }
 
-export function dropLedge(ledges: WorldLedge[], x: number, feetY: number): WorldLedge | null {
+export function dropLedge(ledges: WorldLedge[], x: number, feetY: number, w = 0): WorldLedge | null {
   let best: WorldLedge | null = null;
   for (const l of ledges) {
-    if (!l.standable || x < l.x0 || x > l.x1) continue;
+    if (!l.standable || !spansLedge(l, x, w)) continue;
     if (l.y > feetY + 10 && (!best || l.y < best.y)) best = l;
   }
   return best;
