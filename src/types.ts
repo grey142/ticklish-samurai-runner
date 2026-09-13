@@ -140,6 +140,26 @@ export interface SaveData {
   bestDistance: number;
 }
 
+export interface MapLedgeDef {
+  id: string;
+  y: number;
+  x0: number;
+  x1: number;
+  label: string;
+}
+
+export interface MapPropDef {
+  id: string;
+  file: string;
+  width: number;
+  height: number;
+  ledges: MapLedgeDef[];
+}
+
+export interface MapPropCatalog {
+  props: MapPropDef[];
+}
+
 export interface Actor {
   kind: "enemy" | "projectile";
   id: string;

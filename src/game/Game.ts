@@ -1,4 +1,15 @@
 import { catalogPaths, enemySpritePath, ImageBank, projectilePath, vfxPath } from "../lib/assets";
+import {
+  allLedges,
+  climbLedge,
+  landingLedge,
+  layoutProps,
+  ledgeUnder,
+  mapPropImageEntries,
+  roofLedgeY,
+  type PlacedProp,
+  type WorldLedge,
+} from "../lib/map-props";
 import { Sfx } from "../lib/audio";
 import { Input, type InputFrame } from "../lib/input";
 import {
@@ -21,6 +32,7 @@ import type {
   EnemyCatalog,
   EnemyDef,
   GameConfig,
+  MapPropCatalog,
   KatanaDef,
   Particle,
   ProjectileDef,
@@ -39,6 +51,7 @@ export class Game {
   enemies!: EnemyCatalog;
   shop!: ShopCatalog;
   cinematics!: CinematicCatalog;
+  mapProps: MapPropCatalog = { props: [] };
   save!: SaveData;
   input: Input;
   sfx = new Sfx();
@@ -96,22 +109,24 @@ export class Game {
   }
 
   async boot(): Promise<void> {
-    const [game, enemies, shop, cinematics] = await Promise.all([
+    const [game, enemies, shop, cinematics, mapProps] = await Promise.all([
       fetch("./data/game.json").then((r) => r.json() as Promise<GameConfig>),
       fetch("./data/enemies.json").then((r) => r.json() as Promise<EnemyCatalog>),
       fetch("./data/shop.json").then((r) => r.json() as Promise<ShopCatalog>),
       fetch("./data/cinematics.json").then((r) => r.json() as Promise<CinematicCatalog>),
+      fetch("./assets/map-props/map-props.json").then((r) => r.json() as Promise<MapPropCatalog>),
     ]);
     this.cfg = game;
     this.enemies = enemies;
     this.shop = shop;
     this.cinematics = cinematics;
+    this.mapProps = mapProps;
     this.save = loadSave(game.economy.starterCoins);
     if (new URLSearchParams(location.search).has("dojo")) this.unlockDojo();
     this.applyLoadout();
     const enemyIds = enemies.enemies.map((e) => e.id);
     const projectileIds = enemies.projectiles.map((p) => p.id);
-    await this.images.load(catalogPaths(enemyIds, projectileIds));
+    await this.images.load([...catalogPaths(enemyIds, projectileIds), ...mapPropImageEntries(mapProps.props)]);
   }
 
   unlockDojo(): void {
@@ -191,7 +206,23 @@ export class Game {
   }
 
   roofY(): number {
-    return this.mapH() * 0.36;
+    return roofLedgeY(this.worldLedges(), this.groundY() - this.h * 0.42);
+  }
+
+  propH(): number {
+    return Math.round(this.h * 0.74);
+  }
+
+  placedProps(): PlacedProp[] {
+    return layoutProps(this.mapProps, this.worldX, this.w, this.groundY(), this.propH());
+  }
+
+  worldLedges(): WorldLedge[] {
+    return allLedges(this.placedProps());
+  }
+
+  private feetX(): number {
+    return this.playerX + this.playerW * 0.5;
   }
 
   spriteBox(path: string, height: number): { w: number; h: number } {
@@ -228,7 +259,10 @@ export class Game {
     this.canvas.style.height = `${h}px`;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (this.onGround) this.playerY = this.groundY() - this.playerH;
-    if (this.onRoof) this.playerY = this.roofY() - this.playerH;
+    if (this.onRoof) {
+      const ledge = ledgeUnder(this.worldLedges(), this.feetX(), this.playerY + this.playerH, 24);
+      this.playerY = (ledge?.y ?? this.roofY()) - this.playerH;
+    }
     this.updateCamera();
   }
 
@@ -397,23 +431,30 @@ export class Game {
     this.vfx = this.vfx.filter((fx) => fx.t < fx.duration);
   }
 
+  private standOn(y: number, roof: boolean): void {
+    this.playerY = y - this.playerH;
+    this.vy = 0;
+    this.onGround = !roof;
+    this.onRoof = roof;
+    this.jumps = 0;
+    this.holdingFirst = false;
+    if (this.slam) this.slamBurst();
+    this.slam = false;
+  }
+
   private updatePlayer(dt: number, input: InputFrame, _run: number): void {
     const gY = this.groundY();
-    const rY = this.roofY();
+    const ledges = this.worldLedges();
+    const midX = this.feetX();
     const H1 = this.h * this.cfg.jump.firstMaxHeightScreen;
     const T1 = this.cfg.jump.firstMaxAirSeconds;
     const gHold = (8 * H1) / (T1 * T1);
     const gFall = gHold * 2.35;
     const v1 = (4 * H1) / T1;
 
-    if (input.swipe === "up" && !this.onGround) {
-      this.onRoof = true;
-      this.onGround = false;
-      this.playerY = rY - this.playerH;
-      this.vy = 0;
-      this.jumps = 0;
-      this.slam = false;
-      this.holdingFirst = false;
+    if (input.swipe === "up") {
+      const up = climbLedge(ledges, midX, this.playerY + this.playerH);
+      if (up) this.standOn(up.y, true);
     } else if (input.swipe === "down" && this.onRoof) {
       this.onRoof = false;
       this.onGround = false;
@@ -450,26 +491,37 @@ export class Game {
       if (this.vy < 0) this.vy *= 0.28;
     }
 
+    if (this.onRoof) {
+      const stay = ledgeUnder(ledges, midX, this.playerY + this.playerH, 18);
+      if (stay) this.playerY = stay.y - this.playerH;
+      else {
+        this.onRoof = false;
+        this.onGround = false;
+        this.jumps = Math.max(1, this.jumps);
+      }
+    }
+
     if (!this.onGround && !this.onRoof) {
+      const feetFrom = this.playerY + this.playerH;
       const g = this.holdingFirst && this.jumps === 1 ? gHold : gFall;
       this.vy += g * dt;
       this.playerY += this.vy * dt;
-      const floor = (this.onRoof ? rY : gY) - this.playerH;
+      const feetTo = this.playerY + this.playerH;
+      if (this.vy >= 0 && !this.slam) {
+        const hit = landingLedge(ledges, midX, feetFrom, feetTo);
+        if (hit) {
+          this.standOn(hit.y, true);
+          return;
+        }
+      }
       if (this.playerY >= gY - this.playerH) {
-        this.playerY = gY - this.playerH;
-        this.vy = 0;
-        this.onGround = true;
-        this.jumps = 0;
-        this.holdingFirst = false;
-        if (this.slam) this.slamBurst();
-        this.slam = false;
+        this.standOn(gY, false);
       }
       const ceiling = 8;
       if (this.playerY < ceiling) {
         this.playerY = ceiling;
         if (this.vy < 0) this.vy = 0;
       }
-      void floor;
     }
   }
 
@@ -516,23 +568,25 @@ export class Game {
     const eh = box.h;
     const ew = box.w;
     const flying = def.flying;
-    const roof = !flying && !trap && Math.random() < 0.16;
+    const roof = !flying && !trap && Math.random() < 0.22;
     const highAir = flying && Math.random() < 0.42;
     const lane: Actor["lane"] = flying ? "air" : roof ? "roof" : "ground";
     const underGap = this.playerH * 0.3;
+    const perch = lane === "roof" ? this.pickRoofPerch(ew) : null;
+    const usedLane: Actor["lane"] = lane === "roof" && !perch ? "ground" : lane;
     const y =
-      lane === "roof"
-        ? this.roofY() - eh
-        : lane === "air" && highAir
+      perch
+        ? perch.y - eh
+        : usedLane === "air" && highAir
           ? Math.max(12, this.roofY() - eh - this.playerH * 0.12)
-          : lane === "air"
+          : usedLane === "air"
             ? this.groundY() - this.playerH - underGap - eh
             : this.groundY() - eh;
     this.actors.push({
       kind: "enemy",
       id: `e${nextActor++}`,
       defId: id,
-      x: this.w + 40 + Math.random() * 80,
+      x: perch ? perch.x : this.w + 40 + Math.random() * 80,
       y,
       w: ew,
       h: eh,
@@ -540,18 +594,33 @@ export class Game {
       maxHp: def.hp,
       vx: def.approach,
       fireCd: (def.fireEvery ?? 2) * (0.4 + Math.random() * 0.4),
-      lane,
+      lane: usedLane,
       jumpedOver: false,
       electrocuted: false,
     });
   }
 
+  private pickRoofPerch(enemyW: number): { x: number; y: number } | null {
+    const ledges = this.worldLedges().filter(
+      (l) => l.standable && l.x1 > this.w * 0.55 && /roof|balcony|eave|lintel/.test(l.ledgeId),
+    );
+    if (!ledges.length) return null;
+    const ledge = ledges[Math.floor(Math.random() * ledges.length)];
+    const span = Math.max(8, ledge.x1 - ledge.x0 - enemyW);
+    return { x: ledge.x0 + Math.random() * span, y: ledge.y };
+  }
+
   private updateActors(dt: number, run: number, _level: number): void {
+    const ledges = this.worldLedges();
     for (const a of this.actors) {
       a.x -= run * dt;
       if (a.kind === "enemy") {
         const def = this.def(a.defId);
         a.x -= def.approach * run * dt;
+        if (a.lane === "roof") {
+          const stay = ledgeUnder(ledges, a.x + a.w * 0.5, a.y + a.h, 22);
+          if (stay) a.y = stay.y - a.h;
+        }
         if (def.projectile && a.x < this.w * 0.92 && a.x > this.playerX + 80) {
           a.fireCd -= dt;
           if (a.fireCd <= 0) {

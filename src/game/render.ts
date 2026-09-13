@@ -7,6 +7,7 @@ import {
   playerPosePath,
   projectilePath,
 } from "../lib/assets";
+import { mapPropPath } from "../lib/map-props";
 import { nextSlashUpgradeCost, speedLevelFor } from "../lib/rules";
 import type { Game } from "./Game";
 
@@ -81,7 +82,6 @@ function drawCity(g: Game): void {
   const scroll = g.worldX;
   drawSilhouette(ctx, w, mh, scroll * 0.18, g.groundY() - mh * 0.28, "#3a2238", 1);
   drawSilhouette(ctx, w, mh, scroll * 0.35, g.groundY() - mh * 0.18, "#2a1628", 0.75);
-  lanterns(ctx, w, mh, scroll);
 
   ctx.fillStyle = "#2a1a16";
   ctx.fillRect(0, g.groundY(), w, mh - g.groundY());
@@ -94,14 +94,16 @@ function drawCity(g: Game): void {
     ctx.fillRect(x - off, g.groundY() + 10, tile - 8, 6);
   }
 
-  ctx.strokeStyle = "rgba(180,90,60,0.45)";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(0, g.roofY());
-  ctx.lineTo(w, g.roofY());
-  ctx.stroke();
-  ctx.fillStyle = "rgba(90,40,50,0.35)";
-  ctx.fillRect(0, g.roofY() - 12, w, 12);
+  drawMapProps(g);
+}
+
+function drawMapProps(g: Game): void {
+  const { ctx } = g;
+  for (const prop of g.placedProps()) {
+    const img = g.images.get(mapPropPath(prop.def.file));
+    if (!img) continue;
+    ctx.drawImage(img, prop.x, prop.y, prop.w, prop.h);
+  }
 }
 
 function drawSilhouette(
@@ -135,30 +137,11 @@ function drawSilhouette(
   }
 }
 
-function lanterns(ctx: CanvasRenderingContext2D, w: number, mh: number, scroll: number): void {
-  const gap = 180;
-  const off = (scroll * 0.55) % gap;
-  for (let x = -40; x < w + 80; x += gap) {
-    const px = x - off;
-    const top = mh * 0.1;
-    ctx.fillStyle = "rgba(20,10,12,0.8)";
-    ctx.fillRect(px + 18, top, 3, mh * 0.22);
-    ctx.fillStyle = "#ff6a3a";
-    ctx.beginPath();
-    ctx.ellipse(px + 20, top + mh * 0.08, 10, 14, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,140,60,0.15)";
-    ctx.beginPath();
-    ctx.arc(px + 20, top + mh * 0.09, 28, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
 function drawPlayer(g: Game): void {
   const { ctx } = g;
   const t = g.time;
   const bob = g.onGround || g.onRoof ? Math.sin(t * 12) * 3 : 0;
-  const pose = g.slashFlash > 0 ? "slash" : g.onRoof ? "climb" : !g.onGround ? "jump" : "run";
+  const pose = g.slashFlash > 0 ? "slash" : !g.onGround && !g.onRoof ? "jump" : "run";
   const img = g.images.get(playerPosePath(pose)) ?? g.images.get(playerPosePath("run"));
   const boxW = g.playerW;
   const boxH = g.playerH;
@@ -393,7 +376,7 @@ function drawHud(g: Game): void {
 
   ctx.fillStyle = "rgba(244,231,216,0.7)";
   ctx.font = "14px Trebuchet MS, sans-serif";
-  ctx.fillText("tap jump · hold first jump · swipe up roof · swipe down slam · J slash · 1–4 abilities", 16, g.h - 16);
+  ctx.fillText("tap jump · hold first jump · swipe up climb ledge · swipe down slam/drop · J slash · 1–4 abilities", 16, g.h - 16);
   void w;
 }
 
@@ -496,7 +479,7 @@ function drawHowto(g: Game): void {
   const lines = [
     "Always runs right. No pause — only a grab or a game-over stops her.",
     "Tap = jump (~half screen, ~3s if held). Release early to drop. Second tap = double jump.",
-    "Swipe down in air = slam. Swipe up = climb roofs. Swipe down on a roof = drop. No fall damage.",
+    "Swipe down in air = slam. Swipe up / C = climb the nearest porch or roof. Swipe down on a ledge = drop.",
     "SLASH is the right-hand button. Base 1.5s. Shop cuts 0.2s ×5. Hayate halves the final recharge.",
     "Grab / egg-web / bolo / slime / thrown hand = struggle. Mash +6 to 100 before 16s or HP 0.",
     "Pink flash + laugh every second. Cinematic every 4s. Roof-jump kills pay double.",

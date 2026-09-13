@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { cinematicPath, enemySpritePath, playerPosePath, projectilePath, vfxPath } from "./assets";
+import { mapPropPath } from "./map-props";
 
 describe("asset paths", () => {
   it("points player poses at PNGs", () => {
@@ -13,5 +14,6 @@ describe("asset paths", () => {
     expect(cinematicPath("drone", "struggle", 2)).toBe("./assets/cinematics/drone/struggle-2.png");
     expect(cinematicPath("egg-web", "gameover", 3)).toBe("./assets/cinematics/egg-web/gameover-3.png");
     expect(vfxPath("shadow-strike.png")).toBe("./assets/ability-vfx/shadow-strike.png");
+    expect(mapPropPath("gate-1story.png")).toBe("./assets/map-props/gate-1story.png");
   });
 });
