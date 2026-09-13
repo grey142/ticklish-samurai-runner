@@ -183,7 +183,7 @@ export class Game {
   }
 
   mapH(): number {
-    return this.h * 2.15;
+    return this.h * 1.72;
   }
 
   groundY(): number {
@@ -201,11 +201,13 @@ export class Game {
   }
 
   updateCamera(): void {
-    const focus = this.playerY + this.playerH * 0.42;
-    const desired = focus - this.h * 0.62;
+    const airborne = this.screen === "playing" && !this.onGround && !this.onRoof;
+    const focus = this.playerY + this.playerH * (airborne ? 0.18 : 0.42);
+    const keep = airborne ? 0.86 : 0.62;
+    const desired = focus - this.h * keep;
     const maxCam = Math.max(0, this.mapH() - this.h);
     const target = Math.max(0, Math.min(maxCam, desired));
-    const k = this.screen === "playing" ? 0.18 : 1;
+    const k = this.screen === "playing" ? 0.22 : 1;
     this.camY += (target - this.camY) * k;
   }
 
