@@ -1,0 +1,63 @@
+{
+  "id": "cheats",
+  "entryMethod": "Title/pause Cheats menu \u2014 toggle list (codes optional). Multiple cheats stack unless noted.",
+  "cheats": [
+    {
+      "id": "infinite_health",
+      "name": "Infinite health",
+      "effect": "Player health never decreases."
+    },
+    {
+      "id": "instant_struggle_fill",
+      "name": "Instant struggle meter fill",
+      "effect": "Struggle meter fills to full immediately when trapped / on tap path \u2014 instant escape."
+    },
+    {
+      "id": "double_health",
+      "name": "Double health",
+      "effect": "Base health \u00d72 (200 before armor bonuses)."
+    },
+    {
+      "id": "half_max_hold_timer",
+      "name": "Half max hold timer",
+      "effect": "Creature max hold/tickle timer halved (e.g. 16s \u2192 8s)."
+    },
+    {
+      "id": "all_shop_free",
+      "name": "All items in shop free",
+      "effect": "All katanas, armors, and upgrades cost 0 and unlock."
+    },
+    {
+      "id": "double_struggle_fill_rate",
+      "name": "Double struggle fill rate",
+      "effect": "Struggle taps fill 2\u00d7 as fast."
+    },
+    {
+      "id": "half_struggle_fill_rate",
+      "name": "Half struggle fill rate",
+      "effect": "Struggle taps fill at half rate (challenge)."
+    },
+    {
+      "id": "double_tickle_damage",
+      "name": "Double tickle damage",
+      "effect": "All enemy tickleDamagePerSecond doubled (incl. grab DPS)."
+    },
+    {
+      "id": "double_projectile_damage",
+      "name": "Double projectile damage",
+      "effect": "All projectileTickleDamagePerSecond doubled. Stacks with double tickle if both on."
+    },
+    {
+      "id": "double_zombie_struggle_damage",
+      "name": "Double zombie struggle meter damage",
+      "effect": "Enemy struggleDamagePerHalfSecond doubled (harder escape)."
+    }
+  ],
+  "compendium": {
+    "tabs": [
+      "Compendium",
+      "Gallery"
+    ],
+    "note": "Compendium/Gallery lists every zombie with display name, idle sprite, and all struggle-1..3 + gameover-1..3 cinematics (plus projectile packs where separate)."
+  }
+}

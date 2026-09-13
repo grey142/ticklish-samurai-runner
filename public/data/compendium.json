@@ -1,0 +1,260 @@
+{
+  "entries": [
+    {
+      "id": "drone",
+      "name": "Drone",
+      "kind": "zombie",
+      "idleSprite": "enemies/drone/idle.png",
+      "struggle": [
+        "cinematics/drone/struggle-1.png",
+        "cinematics/drone/struggle-2.png",
+        "cinematics/drone/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/drone/gameover-1.png",
+        "cinematics/drone/gameover-2.png",
+        "cinematics/drone/gameover-3.png"
+      ]
+    },
+    {
+      "id": "viner",
+      "name": "viner",
+      "kind": "zombie",
+      "idleSprite": "enemies/viner/idle.png",
+      "struggle": [
+        "cinematics/viner/struggle-1.png",
+        "cinematics/viner/struggle-2.png",
+        "cinematics/viner/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/viner/gameover-1.png",
+        "cinematics/viner/gameover-2.png",
+        "cinematics/viner/gameover-3.png"
+      ]
+    },
+    {
+      "id": "quad-arm",
+      "name": "Quad-Arm",
+      "kind": "zombie",
+      "idleSprite": "enemies/quad-arm/idle.png",
+      "struggle": [
+        "cinematics/quad-arm/struggle-1.png",
+        "cinematics/quad-arm/struggle-2.png",
+        "cinematics/quad-arm/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/quad-arm/gameover-1.png",
+        "cinematics/quad-arm/gameover-2.png",
+        "cinematics/quad-arm/gameover-3.png"
+      ]
+    },
+    {
+      "id": "bolter",
+      "name": "Bolter",
+      "kind": "zombie",
+      "idleSprite": "enemies/bolter/idle.png",
+      "struggle": [
+        "cinematics/bolter/struggle-1.png",
+        "cinematics/bolter/struggle-2.png",
+        "cinematics/bolter/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/bolter/gameover-1.png",
+        "cinematics/bolter/gameover-2.png",
+        "cinematics/bolter/gameover-3.png"
+      ]
+    },
+    {
+      "id": "hundred-hands",
+      "name": "hundred hands",
+      "kind": "zombie",
+      "idleSprite": "enemies/hundred-hands/idle.png",
+      "struggle": [
+        "cinematics/hundred-hands/struggle-1.png",
+        "cinematics/hundred-hands/struggle-2.png",
+        "cinematics/hundred-hands/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/hundred-hands/gameover-1.png",
+        "cinematics/hundred-hands/gameover-2.png",
+        "cinematics/hundred-hands/gameover-3.png"
+      ]
+    },
+    {
+      "id": "licker",
+      "name": "licker",
+      "kind": "zombie",
+      "idleSprite": "enemies/licker/idle.png",
+      "struggle": [
+        "cinematics/licker/struggle-1.png",
+        "cinematics/licker/struggle-2.png",
+        "cinematics/licker/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/licker/gameover-1.png",
+        "cinematics/licker/gameover-2.png",
+        "cinematics/licker/gameover-3.png"
+      ]
+    },
+    {
+      "id": "spider",
+      "name": "Spider",
+      "kind": "zombie",
+      "idleSprite": "enemies/spider/idle.png",
+      "struggle": [
+        "cinematics/spider/struggle-1.png",
+        "cinematics/spider/struggle-2.png",
+        "cinematics/spider/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/spider/gameover-1.png",
+        "cinematics/spider/gameover-2.png",
+        "cinematics/spider/gameover-3.png"
+      ]
+    },
+    {
+      "id": "slimer",
+      "name": "slimer",
+      "kind": "zombie",
+      "idleSprite": "enemies/slimer/idle.png",
+      "struggle": [
+        "cinematics/slimer/struggle-1.png",
+        "cinematics/slimer/struggle-2.png",
+        "cinematics/slimer/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/slimer/gameover-1.png",
+        "cinematics/slimer/gameover-2.png",
+        "cinematics/slimer/gameover-3.png"
+      ]
+    },
+    {
+      "id": "archer",
+      "name": "archer",
+      "kind": "zombie",
+      "idleSprite": "enemies/archer/idle.png",
+      "struggle": [
+        "cinematics/archer/struggle-1.png",
+        "cinematics/archer/struggle-2.png",
+        "cinematics/archer/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/archer/gameover-1.png",
+        "cinematics/archer/gameover-2.png",
+        "cinematics/archer/gameover-3.png"
+      ]
+    },
+    {
+      "id": "volatile",
+      "name": "Volatile",
+      "kind": "zombie",
+      "idleSprite": "enemies/volatile/idle.png",
+      "struggle": [
+        "cinematics/volatile/struggle-1.png",
+        "cinematics/volatile/struggle-2.png",
+        "cinematics/volatile/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/volatile/gameover-1.png",
+        "cinematics/volatile/gameover-2.png",
+        "cinematics/volatile/gameover-3.png"
+      ]
+    },
+    {
+      "id": "brute",
+      "name": "brute",
+      "kind": "zombie",
+      "idleSprite": "enemies/brute/idle.png",
+      "struggle": [
+        "cinematics/brute/struggle-1.png",
+        "cinematics/brute/struggle-2.png",
+        "cinematics/brute/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/brute/gameover-1.png",
+        "cinematics/brute/gameover-2.png",
+        "cinematics/brute/gameover-3.png"
+      ]
+    },
+    {
+      "id": "hand-thrower",
+      "name": "Hand thrower",
+      "kind": "zombie",
+      "idleSprite": "enemies/hand-thrower/idle.png",
+      "struggle": [
+        "cinematics/hand-thrower/struggle-1.png",
+        "cinematics/hand-thrower/struggle-2.png",
+        "cinematics/hand-thrower/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/hand-thrower/gameover-1.png",
+        "cinematics/hand-thrower/gameover-2.png",
+        "cinematics/hand-thrower/gameover-3.png"
+      ]
+    },
+    {
+      "id": "bolo-wrap",
+      "name": "Bolo Wrap (Archer)",
+      "kind": "projectile",
+      "parentEnemy": "archer",
+      "struggle": [
+        "cinematics/bolo-wrap/struggle-1.png",
+        "cinematics/bolo-wrap/struggle-2.png",
+        "cinematics/bolo-wrap/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/bolo-wrap/gameover-1.png",
+        "cinematics/bolo-wrap/gameover-2.png",
+        "cinematics/bolo-wrap/gameover-3.png"
+      ]
+    },
+    {
+      "id": "egg-web",
+      "name": "Egg Web (Spider)",
+      "kind": "projectile",
+      "parentEnemy": "spider",
+      "struggle": [
+        "cinematics/egg-web/struggle-1.png",
+        "cinematics/egg-web/struggle-2.png",
+        "cinematics/egg-web/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/egg-web/gameover-1.png",
+        "cinematics/egg-web/gameover-2.png",
+        "cinematics/egg-web/gameover-3.png"
+      ]
+    },
+    {
+      "id": "slime-shot",
+      "name": "Slime Shot (Slimer)",
+      "kind": "projectile",
+      "parentEnemy": "slimer",
+      "struggle": [
+        "cinematics/slime-shot/struggle-1.png",
+        "cinematics/slime-shot/struggle-2.png",
+        "cinematics/slime-shot/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/slime-shot/gameover-1.png",
+        "cinematics/slime-shot/gameover-2.png",
+        "cinematics/slime-shot/gameover-3.png"
+      ]
+    },
+    {
+      "id": "throwing-hand",
+      "name": "Throwing Hand",
+      "kind": "projectile",
+      "parentEnemy": "hand-thrower",
+      "struggle": [
+        "cinematics/throwing-hand/struggle-1.png",
+        "cinematics/throwing-hand/struggle-2.png",
+        "cinematics/throwing-hand/struggle-3.png"
+      ],
+      "gameOver": [
+        "cinematics/throwing-hand/gameover-1.png",
+        "cinematics/throwing-hand/gameover-2.png",
+        "cinematics/throwing-hand/gameover-3.png"
+      ]
+    }
+  ]
+}

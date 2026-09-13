@@ -18,7 +18,17 @@ import {
 } from "../lib/map-props";
 import { Sfx } from "../lib/audio";
 import { Input, type InputFrame } from "../lib/input";
-import { layoutHowto, layoutMenu, layoutPlayControls, layoutShop } from "../lib/touch-layout";
+import {
+  browseBody,
+  layoutBackChrome,
+  layoutCheatRows,
+  layoutHowto,
+  layoutMenu,
+  layoutPauseBtn,
+  layoutPauseOverlay,
+  layoutPlayControls,
+  layoutShop,
+} from "../lib/touch-layout";
 import {
   coinsFromPoints,
   enemyWeight,
@@ -41,6 +51,8 @@ import {
   windowSpawnCap,
   type SpawnRules,
 } from "../lib/rules";
+import { CheatState, maxHpForArmor, maxHoldMul, shopCost, struggleTapMul, tickleScale } from "../lib/cheats";
+import { buildBrowseGroups, layoutBrowse, type BrowseGroup, type ThumbHit } from "../lib/compendium";
 import { compileShop, hasSlashHaste, type CanonicalShop } from "../lib/shop";
 import { loadSave, writeSave } from "../lib/storage";
 import type {
@@ -77,6 +89,18 @@ export class Game {
   shopTab: "blades" | "armor" | "slash" = "blades";
   shopScroll = 0;
   spawnRules: SpawnRules = DEFAULT_SPAWN_RULES;
+  cheats = new CheatState();
+  browse: BrowseGroup[] = [];
+  browseScroll = 0;
+  cheatScroll = 0;
+  paused = false;
+  cheatsFrom: "menu" | "pause" = "menu";
+  viewer: { src: string; label: string } | null = null;
+  thumbs: ThumbHit[] = [];
+  browseHeaders: { text: string; x: number; y: number }[] = [];
+  browseBodyY = 0;
+  browseBodyH = 0;
+  wheelAcc = 0;
 
   w = 1280;
   h = 720;
@@ -127,16 +151,26 @@ export class Game {
   ) {
     this.input = new Input();
     this.input.attach(canvas);
+    canvas.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        this.wheelAcc += e.deltaY;
+      },
+      { passive: false },
+    );
   }
 
   async boot(): Promise<void> {
-    const [game, enemies, shopRaw, spawnRaw, cinematics, mapProps] = await Promise.all([
+    const [game, enemies, shopRaw, spawnRaw, cinematics, mapProps, cheatsRaw, compendiumRaw] = await Promise.all([
       fetch("./data/game.json").then((r) => r.json() as Promise<GameConfig>),
       fetch("./data/enemies.json").then((r) => r.json() as Promise<EnemyCatalog>),
       fetch("./data/shop-canonical.json").then((r) => r.json() as Promise<CanonicalShop>),
       fetch("./data/spawn-rules.json").then((r) => r.json() as Promise<SpawnRules>),
       fetch("./data/cinematics.json").then((r) => r.json() as Promise<CinematicCatalog>),
       fetch("./assets/map-props/map-props.json").then((r) => r.json() as Promise<MapPropCatalog>),
+      fetch("./data/cheats.json").then((r) => r.json() as Promise<unknown>),
+      fetch("./data/compendium.json").then((r) => r.json() as Promise<unknown>),
     ]);
     this.cfg = game;
     this.enemies = enemies;
@@ -144,8 +178,11 @@ export class Game {
     this.spawnRules = { ...DEFAULT_SPAWN_RULES, ...spawnRaw };
     this.cinematics = cinematics;
     this.mapProps = mapProps;
+    this.cheats.load(cheatsRaw);
+    this.browse = buildBrowseGroups(compendiumRaw, enemies.enemies, enemies.projectiles);
     this.save = loadSave(game.economy.starterCoins);
     this.sanitizeLoadout();
+    this.syncFreeShop();
     this.persist();
     const q = new URLSearchParams(location.search);
     if (q.has("dojo")) this.unlockDojo();
@@ -167,8 +204,46 @@ export class Game {
 
   applyLoadout(): void {
     const armor = this.armor();
-    this.maxHp = armor.hp;
+    const next = maxHpForArmor(armor.hp, this.cheats.on);
+    if (next > this.maxHp) this.hp += next - this.maxHp;
+    this.maxHp = next;
     this.hp = Math.min(this.hp, this.maxHp);
+  }
+
+  shopPrice(base: number): number {
+    return shopCost(base, this.cheats.on);
+  }
+
+  slashUpgradeCost(): number | null {
+    const cost = nextSlashUpgradeCost(this.cfg, this.save.slashUpgrades);
+    if (cost == null) return null;
+    return this.shopPrice(cost);
+  }
+
+  syncFreeShop(): void {
+    if (!this.cheats.active("all_shop_free")) return;
+    this.save.unlockedKatanas = [...new Set([...this.save.unlockedKatanas, ...this.shop.katanas.map((k) => k.id)])];
+    this.save.unlockedArmors = [...new Set([...this.save.unlockedArmors, ...this.shop.armors.map((a) => a.id)])];
+  }
+
+  toggleCheat(id: string): void {
+    this.cheats.toggle(id);
+    if (id === "all_shop_free") this.syncFreeShop();
+    if (id === "double_health") this.applyLoadout();
+    if (id === "instant_struggle_fill" && this.struggle && this.cheats.active(id)) {
+      this.struggle.meter = this.cfg.struggle.escapeAt;
+    }
+    this.persist();
+  }
+
+  leaveCheats(): void {
+    this.viewer = null;
+    if (this.cheatsFrom === "pause") {
+      this.screen = "playing";
+      this.paused = true;
+    } else {
+      this.screen = "menu";
+    }
   }
 
   katana(): KatanaDef {
@@ -319,6 +394,8 @@ export class Game {
   }
 
   startRun(): void {
+    this.paused = false;
+    this.viewer = null;
     this.screen = "playing";
     this.worldX = 0;
     this.distance = 0;
@@ -370,13 +447,29 @@ export class Game {
 
   private updateMeta(dt: number, input: InputFrame): void {
     const id = input.ui;
+    if (this.viewer) {
+      if (id === "back" || input.anyTap) this.viewer = null;
+      return;
+    }
     if (this.screen === "menu") {
       if (id === "play") this.startRun();
       if (id === "shop") this.screen = "shop";
       if (id === "howto") this.screen = "howto";
+      if (id === "cheats") {
+        this.cheatsFrom = "menu";
+        this.cheatScroll = 0;
+        this.screen = "cheats";
+      }
+      if (id === "compendium") {
+        this.browseScroll = 0;
+        this.screen = "compendium";
+      }
+      if (id === "gallery") {
+        this.browseScroll = 0;
+        this.screen = "gallery";
+      }
     } else if (this.screen === "howto") {
-      if (id === "back" || input.anyTap && !id) this.screen = "menu";
-      if (id === "back") this.screen = "menu";
+      if (id === "back" || (input.anyTap && !id)) this.screen = "menu";
     } else if (this.screen === "shop") {
       if (id === "back") this.screen = "menu";
       if (id === "tab-blades") this.shopTab = "blades";
@@ -385,9 +478,44 @@ export class Game {
       if (id?.startsWith("buy-katana-")) this.buyKatana(id.slice(11));
       if (id?.startsWith("buy-armor-")) this.buyArmor(id.slice(10));
       if (id === "buy-slash") this.buySlash();
+    } else if (this.screen === "cheats") {
+      this.applyListScroll("cheat", input);
+      if (id === "back") this.leaveCheats();
+      if (id?.startsWith("cheat-")) this.toggleCheat(id.slice(6));
+    } else if (this.screen === "compendium" || this.screen === "gallery") {
+      this.applyListScroll("browse", input);
+      if (id === "back") this.screen = "menu";
+      if (!id && input.anyTap && Math.abs(input.scroll) < 8) {
+        const thumb = this.thumbs.find((t) => input.tapX >= t.x && input.tapY >= t.y && input.tapX <= t.x + t.w && input.tapY <= t.y + t.h);
+        if (thumb) this.viewer = { src: thumb.src, label: thumb.label };
+      }
     } else if (this.screen === "gameover") {
       this.overT += dt;
       if (this.overT >= GAMEOVER_HOLD_SEC || input.anyTap) this.screen = "menu";
+    }
+  }
+
+  private applyListScroll(which: "cheat" | "browse", input: InputFrame): void {
+    const wheel = this.wheelAcc;
+    this.wheelAcc = 0;
+    const page = this.h * 0.7;
+    let delta = input.scroll + wheel;
+    if (input.ui === "page-up") delta -= page;
+    if (input.ui === "page-down") delta += page;
+    if (input.swipe === "up") delta += page * 0.45;
+    if (input.swipe === "down") delta -= page * 0.45;
+    if (which === "cheat") {
+      const { maxScroll } = layoutCheatRows(
+        this.w,
+        this.h,
+        this.cheats.book.cheats.map((c) => c.id),
+        this.cheatScroll,
+      );
+      this.cheatScroll = Math.max(0, Math.min(maxScroll, this.cheatScroll + delta));
+    } else {
+      const { bodyY, bodyH } = browseBody(this.w, this.h);
+      const laid = layoutBrowse(this.w, bodyY, bodyH, this.browseScroll, this.browse, this.screen === "gallery" ? "gallery" : "compendium");
+      this.browseScroll = Math.max(0, Math.min(laid.maxScroll, this.browseScroll + delta));
     }
   }
 
@@ -399,8 +527,9 @@ export class Game {
       this.persist();
       return;
     }
-    if (this.save.coins < item.cost) return;
-    this.save.coins -= item.cost;
+    const cost = this.shopPrice(item.cost);
+    if (this.save.coins < cost) return;
+    this.save.coins -= cost;
     this.save.unlockedKatanas.push(id);
     this.save.equippedKatana = id;
     this.persist();
@@ -416,8 +545,9 @@ export class Game {
       this.persist();
       return;
     }
-    if (this.save.coins < item.cost) return;
-    this.save.coins -= item.cost;
+    const cost = this.shopPrice(item.cost);
+    if (this.save.coins < cost) return;
+    this.save.coins -= cost;
     this.save.unlockedArmors.push(id);
     this.save.equippedArmor = id;
     this.applyLoadout();
@@ -426,7 +556,7 @@ export class Game {
   }
 
   buySlash(): void {
-    const cost = nextSlashUpgradeCost(this.cfg, this.save.slashUpgrades);
+    const cost = this.slashUpgradeCost();
     if (cost == null || this.save.coins < cost) return;
     this.save.coins -= cost;
     this.save.slashUpgrades += 1;
@@ -447,6 +577,23 @@ export class Game {
   }
 
   private updatePlay(dt: number, input: InputFrame): void {
+    if (this.viewer) {
+      if (input.ui === "back" || input.anyTap) this.viewer = null;
+      return;
+    }
+    if (!this.struggle && (input.pauseToggle || input.ui === "pause")) {
+      this.paused = !this.paused;
+      return;
+    }
+    if (this.paused) {
+      if (input.ui === "resume") this.paused = false;
+      if (input.ui === "cheats") {
+        this.cheatsFrom = "pause";
+        this.cheatScroll = 0;
+        this.screen = "cheats";
+      }
+      return;
+    }
     if (this.struggle) {
       this.updateStruggle(dt, input);
       return;
@@ -762,12 +909,12 @@ export class Game {
       if (a.kind === "projectile") {
         const p = this.projDef(a.defId);
         a.hp = 0;
-        this.beginStruggle(a.defId, p.name, "projectile", p.ticklePerSec);
+        this.beginStruggle(a.defId, p.name, "projectile", p.ticklePerSec * tickleScale("projectile", this.cheats.on));
         return;
       }
       const def = this.def(a.defId);
       if (def.role === "ranged") continue;
-      this.beginStruggle(def.id, def.name, "enemy", def.ticklePerSec);
+      this.beginStruggle(def.id, def.name, "enemy", def.ticklePerSec * tickleScale("enemy", this.cheats.on));
       a.hp = 0;
       return;
     }
@@ -894,7 +1041,7 @@ export class Game {
       sourceId,
       sourceName,
       kind,
-      meter: 0,
+      meter: this.cheats.active("instant_struggle_fill") ? this.cfg.struggle.escapeAt : 0,
       elapsed: 0,
       ticklePerSec: tickle,
       nextFlash: 0,
@@ -915,18 +1062,23 @@ export class Game {
     if (!s) return;
     s.elapsed += dt;
     s.showCinematic = Math.max(0, s.showCinematic - dt);
-    this.hp -= s.ticklePerSec * dt * this.tickleMul();
+    if (!this.cheats.active("infinite_health")) {
+      this.hp -= s.ticklePerSec * dt * this.tickleMul();
+    }
+    const tapGain = this.cfg.struggle.tapGain * struggleTapMul(this.cheats.on);
     const holding =
       input.jumpHeld || this.input.keys.has("Space") || this.input.keys.has("KeyW") || this.input.keys.has("Enter");
-    if (input.struggleTap || input.jumpPressed || input.slash) {
-      s.meter = struggleAfterTap(s.meter, this.cfg.struggle.tapGain, this.cfg.struggle.escapeAt);
+    if (this.cheats.active("instant_struggle_fill")) {
+      s.meter = this.cfg.struggle.escapeAt;
+    } else if (input.struggleTap || input.jumpPressed || input.slash) {
+      s.meter = struggleAfterTap(s.meter, tapGain, this.cfg.struggle.escapeAt);
       s.mashClock = 0;
     }
-    if (holding) {
+    if (!this.cheats.active("instant_struggle_fill") && holding) {
       s.mashClock += dt;
       if (s.mashClock >= 0.1) {
         s.mashClock = 0;
-        s.meter = struggleAfterTap(s.meter, this.cfg.struggle.tapGain, this.cfg.struggle.escapeAt);
+        s.meter = struggleAfterTap(s.meter, tapGain, this.cfg.struggle.escapeAt);
       }
     }
     s.nextFlash -= dt;
@@ -947,7 +1099,7 @@ export class Game {
       this.sfx.slash();
       return;
     }
-    if (this.hp <= 0 || s.elapsed >= this.cfg.struggle.maxHoldSeconds) {
+    if (this.hp <= 0 || s.elapsed >= this.cfg.struggle.maxHoldSeconds * maxHoldMul(this.cheats.on)) {
       this.hp = 0;
       this.endRun(s.sourceId);
     }
@@ -975,15 +1127,34 @@ export class Game {
     const w = this.w;
     const h = this.h;
     const play = layoutPlayControls(w, h, this.screen === "playing" ? this.manualPerks() : []);
-    this.input.slashRect = this.screen === "playing" && !this.struggle ? play.slash : { x: 0, y: 0, w: 0, h: 0 };
-    this.input.perkRects = this.screen === "playing" && !this.struggle ? play.perks : [];
+    this.input.slashRect = this.screen === "playing" && !this.struggle && !this.paused ? play.slash : { x: 0, y: 0, w: 0, h: 0 };
+    this.input.perkRects = this.screen === "playing" && !this.struggle && !this.paused ? play.perks : [];
     this.input.uiRects = [];
+    if (this.viewer) {
+      this.input.uiRects = [{ id: "back", x: 12, y: 10, w: Math.max(120, Math.min(180, w * 0.2)), h: Math.max(48, Math.min(56, Math.round(h * 0.12))) }];
+      return;
+    }
     if (this.screen === "menu") this.input.uiRects = layoutMenu(w, h);
     else if (this.screen === "howto") this.input.uiRects = layoutHowto(w, h);
     else if (this.screen === "shop") {
       const blades = this.shopTab === "blades";
       const rows = blades ? this.shop.katanas : this.shopTab === "armor" ? this.shop.armors : [];
       this.input.uiRects = layoutShop(w, h, this.shopTab, rows.map((r) => r.id), blades ? "buy-katana-" : "buy-armor-");
+    } else if (this.screen === "cheats") {
+      const chrome = layoutBackChrome(w, h);
+      const { rows, bodyY, bodyH } = layoutCheatRows(w, h, this.cheats.book.cheats.map((c) => c.id), this.cheatScroll);
+      this.input.uiRects = [...chrome, ...rows.filter((r) => r.y + r.h > bodyY && r.y < bodyY + bodyH)];
+    } else if (this.screen === "compendium" || this.screen === "gallery") {
+      const chrome = layoutBackChrome(w, h);
+      const { bodyY, bodyH } = browseBody(w, h);
+      const laid = layoutBrowse(w, bodyY, bodyH, this.browseScroll, this.browse, this.screen === "gallery" ? "gallery" : "compendium");
+      this.browseBodyY = bodyY;
+      this.browseBodyH = bodyH;
+      this.browseHeaders = laid.headers;
+      this.thumbs = laid.thumbs.filter((t) => t.y + t.h > bodyY && t.y < bodyY + bodyH);
+      this.input.uiRects = chrome;
+    } else if (this.screen === "playing" && !this.struggle) {
+      this.input.uiRects = this.paused ? [layoutPauseBtn(w, h), ...layoutPauseOverlay(w, h)] : [layoutPauseBtn(w, h)];
     }
   }
 }
