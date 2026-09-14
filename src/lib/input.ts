@@ -7,6 +7,8 @@ export interface InputFrame {
   swipe: SwipeDir | null;
   slash: boolean;
   perk: string | null;
+  perkHeld: string | null;
+  perkReleased: string | null;
   struggleTap: boolean;
   anyTap: boolean;
   ui: string | null;
@@ -30,7 +32,8 @@ interface Pointer {
   startX: number;
   startY: number;
   startT: number;
-  zone: "play" | "slash" | "ui";
+  zone: "play" | "slash" | "ui" | "perk";
+  perkId?: string;
 }
 
 const SWIPE_MIN = 42;
@@ -66,6 +69,7 @@ export class Input {
   private swipe: SwipeDir | null = null;
   private slashQueued = false;
   private perkQueued: string | null = null;
+  private perkReleasedQueued: string | null = null;
   private tapQueued = false;
   keys = new Set<string>();
   /** Logical/CSS view size — must match Game.w/h and the ctx transform space. */
@@ -130,6 +134,7 @@ export class Input {
         this.jumpHeld = false;
         this.jumpReleased = true;
       }
+      if (/^Digit[1-8]$/.test(e.code)) this.perkReleasedQueued = `slot-${e.code.slice(5)}`;
     });
   }
 
@@ -167,7 +172,16 @@ export class Input {
     if (hit.perk) {
       this.perkQueued = hit.perk;
       this.tapQueued = true;
-      this.pointers.set(e.pointerId, { id: e.pointerId, x, y, startX: x, startY: y, startT: performance.now(), zone: "ui" });
+      this.pointers.set(e.pointerId, {
+        id: e.pointerId,
+        x,
+        y,
+        startX: x,
+        startY: y,
+        startT: performance.now(),
+        zone: "perk",
+        perkId: hit.perk,
+      });
       return;
     }
     if (hit.ui) {
@@ -204,6 +218,10 @@ export class Input {
     const { x, y } = this.local(e, canvas);
     this.pointers.delete(e.pointerId);
     if (!p) return;
+    if (p.zone === "perk") {
+      this.perkReleasedQueued = p.perkId ?? null;
+      return;
+    }
     if (p.zone === "play") {
       const dx = x - p.startX;
       const dy = y - p.startY;
@@ -217,6 +235,14 @@ export class Input {
 
   consume(): InputFrame {
     const ui = this.lastUi;
+    const heldPtr = [...this.pointers.values()].find((p) => p.zone === "perk" && p.perkId);
+    let digitHeld: string | null = null;
+    for (let n = 1; n <= 8; n++) {
+      if (this.keys.has(`Digit${n}`)) {
+        digitHeld = `slot-${n}`;
+        break;
+      }
+    }
     const frame: InputFrame = {
       jumpPressed: this.jumpPressed,
       jumpHeld: this.jumpHeld || this.keys.has("Space") || this.keys.has("KeyW"),
@@ -224,6 +250,8 @@ export class Input {
       swipe: this.swipe,
       slash: this.slashQueued,
       perk: this.perkQueued,
+      perkHeld: heldPtr?.perkId ?? digitHeld,
+      perkReleased: this.perkReleasedQueued,
       struggleTap: this.tapQueued,
       anyTap: this.tapQueued || this.slashQueued,
       ui,
@@ -237,6 +265,7 @@ export class Input {
     this.swipe = null;
     this.slashQueued = false;
     this.perkQueued = null;
+    this.perkReleasedQueued = null;
     this.tapQueued = false;
     this.lastUi = null;
     this.scrollAcc = 0;

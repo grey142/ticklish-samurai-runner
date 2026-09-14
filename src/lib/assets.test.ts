@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cinematicPath, containDest, enemySpritePath, playerPosePath, projectilePath, vfxPath } from "./assets";
+import { cinematicPath, containDest, enemySpritePath, playerPosePath, playerShotPath, projectilePath, vfxPath } from "./assets";
 import { mapPropPath } from "./map-props";
 
 describe("asset paths", () => {
@@ -13,7 +13,9 @@ describe("asset paths", () => {
     expect(projectilePath("egg-web")).toBe("./assets/projectiles/egg-web/idle.png");
     expect(cinematicPath("drone", "struggle", 2)).toBe("./assets/cinematics/drone/struggle-2.png");
     expect(cinematicPath("egg-web", "gameover", 3)).toBe("./assets/cinematics/egg-web/gameover-3.png");
-    expect(vfxPath("shadow-strike.png")).toBe("./assets/ability-vfx/shadow-strike.png");
+    expect(playerShotPath("kunai-projectile")).toBe("./assets/projectiles/player/kunai-projectile.png");
+    expect(playerShotPath("flaming-arrow")).toBe("./assets/projectiles/player/flaming-arrow.png");
+    expect(playerShotPath("fireball-boost")).toBe("./assets/projectiles/player/fireball-boost.png");
     expect(mapPropPath("gate-1story.png")).toBe("./assets/map-props/gate-1story.png");
   });
 });

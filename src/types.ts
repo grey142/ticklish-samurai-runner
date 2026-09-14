@@ -161,6 +161,9 @@ export interface SaveData {
   unlockedTechniques: string[];
   kunaiUpgrades: number;
   bowUpgrades: number;
+  flyingBoostUpgrades: number;
+  etherealUpgrades: number;
+  shadowStrikeUpgrades: number;
   techniquePower: number;
   bestDistance: number;
 }
@@ -199,11 +202,16 @@ export interface Actor {
   hp: number;
   maxHp: number;
   vx: number;
+  vy?: number;
   fireCd: number;
   lane: "ground" | "roof" | "air";
   jumpedOver?: boolean;
   electrocuted?: boolean;
   ownerId?: string;
+  falling?: boolean;
+  homingId?: string;
+  aimX?: number;
+  aimY?: number;
 }
 
 export interface VfxBurst {
