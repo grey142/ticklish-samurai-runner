@@ -301,59 +301,137 @@
   },
   "techniques": [
     {
-      "id": "kunai",
-      "name": "Kunai Pouch",
-      "order": 1,
-      "unlockCostCoins": 200,
-      "sprite": "player/kunai.png",
-      "activation": "manual_button",
-      "description": "Throw a kunai that kills on hit. Capacity upgrades in Upgrades.",
-      "baseCapacity": 3,
-      "rechargeSeconds": 0.8
-    },
-    {
-      "id": "bow",
-      "name": "Horse Bow",
-      "order": 2,
-      "unlockCostCoins": 350,
-      "sprite": "player/bow.png",
-      "activation": "manual_button",
-      "description": "Draw and fire an arrow that kills on hit. Bow recharge upgrades in Upgrades.",
-      "baseRechargeSeconds": 2.5
-    },
-    {
       "id": "flying_boost",
       "name": "Flying Boost",
-      "order": 3,
+      "order": 1,
       "unlockCostCoins": 500,
       "sprite": "player/fireball.png",
+      "projectileSprite": "projectiles/player/fireball-boost.png",
       "activation": "manual_button",
-      "description": "Fireball boost dash forward \u2014 clears foes in the path. Recharges after use.",
-      "rechargeSeconds": 12,
-      "vfx": "fireball"
-    },
-    {
-      "id": "shadow_strike",
-      "name": "Shadow Strike",
-      "order": 4,
-      "unlockCostCoins": 750,
-      "sprite": "player/shadow.png",
-      "activation": "manual_button",
-      "description": "Turn into a shadow, teleport to the enemy in front, and cut them down. Recharges in 15 seconds. (Also granted by Kagekiri.)",
-      "rechargeSeconds": 15,
-      "vfx": "shadow-strike"
+      "description": "Invulnerable. Fly at 25 m/s inside a fireball. Kills everything on the bottom floor in front of you for the boost distance.",
+      "invulnerable": true,
+      "flySpeedMetersPerSecond": 25,
+      "baseKillDistanceMeters": 250,
+      "killLane": "ground",
+      "upgrade": {
+        "id": "flying_boost_range",
+        "maxLevel": 5,
+        "metersPerLevel": 50,
+        "costsCoins": [
+          200,
+          400,
+          800,
+          1600,
+          3200
+        ],
+        "note": "Each upgrade +50m kill/fly distance (250\u2192500 at max)."
+      }
     },
     {
       "id": "ethereal",
       "name": "Ethereal",
-      "order": 5,
+      "order": 2,
       "unlockCostCoins": 900,
-      "sprite": null,
       "activation": "manual_button",
-      "description": "Turn the player sprite purple and become unhittable for 30 meters. Recharges in 20 seconds. (Also granted by Kitsune's Mirage.)",
-      "durationMeters": 30,
-      "rechargeSeconds": 20,
-      "visual": "purple_tint"
+      "description": "Can't be hit for the ethereal distance. Player sprite turns purple.",
+      "invulnerable": true,
+      "visual": "purple_tint",
+      "baseDurationMeters": 30,
+      "upgrade": {
+        "id": "ethereal_range",
+        "maxLevel": 5,
+        "metersPerLevel": 15,
+        "costsCoins": [
+          200,
+          400,
+          800,
+          1600,
+          3200
+        ],
+        "note": "Each upgrade +15m (30\u2192105 at max)."
+      }
+    },
+    {
+      "id": "shadow_strike",
+      "name": "Shadow Strike",
+      "order": 3,
+      "unlockCostCoins": 750,
+      "sprite": "player/shadow.png",
+      "activation": "manual_button",
+      "description": "Invulnerable shadowy ghost. Teleports to each enemy and beheads every zombie within range.",
+      "invulnerable": true,
+      "visual": "shadow_ghost",
+      "baseRangeMeters": 30,
+      "beheadAllInRange": true,
+      "upgrade": {
+        "id": "shadow_strike_range",
+        "maxLevel": 5,
+        "metersPerLevel": 15,
+        "costsCoins": [
+          200,
+          400,
+          800,
+          1600,
+          3200
+        ],
+        "note": "Each upgrade +15m (30\u2192105 at max)."
+      }
+    },
+    {
+      "id": "kunai",
+      "name": "Kunai Throwing Knife Pouch",
+      "order": 4,
+      "unlockCostCoins": 200,
+      "sprite": "player/kunai.png",
+      "projectileSprite": "projectiles/player/kunai-projectile.png",
+      "activation": "manual_button",
+      "description": "Throw at an enemy ahead. Flies straight, then falls after leaving the screen; cannot be picked up. Reloads every 3 minutes.",
+      "reloadSeconds": 180,
+      "baseCapacity": 3,
+      "flight": "straight_then_fall_offscreen",
+      "pickupable": false,
+      "upgrade": {
+        "id": "kunai_capacity",
+        "maxLevel": 5,
+        "perLevel": "+1 kunai capacity",
+        "costsCoins": [
+          100,
+          200,
+          400,
+          800,
+          1600
+        ]
+      }
+    },
+    {
+      "id": "bow",
+      "name": "Three Arrow Bow",
+      "order": 5,
+      "unlockCostCoins": 350,
+      "sprite": "player/bow.png",
+      "projectileSprite": "projectiles/player/flaming-arrow.png",
+      "activation": "hold_to_aim_release_to_fire",
+      "description": "Aim with red crosshairs on 1\u20133 zombie heads ahead on screen. Time slows while aiming. Release to fire flaming arrows. Reloads every 3 minutes.",
+      "reloadSeconds": 180,
+      "maxTargets": 3,
+      "minTargets": 1,
+      "aim": {
+        "crosshair": "red",
+        "timeScale": 0.35,
+        "target": "heads_on_screen_ahead"
+      },
+      "upgrade": {
+        "id": "bow_recharge",
+        "maxLevel": 4,
+        "secondsReducedPerLevel": 22.5,
+        "costsCoins": [
+          150,
+          300,
+          600,
+          1200
+        ],
+        "note": "Stacked \u221222.5s per level off 180s reload (180\u219290 at max)."
+      }
     }
   ],
   "upgrades": [
@@ -362,14 +440,7 @@
       "name": "Slash Speed",
       "tab": "Upgrades",
       "source": "slash-recharge.json",
-      "description": "Reduce slash recharge. Base 1.5s, -0.2s per level x5. Costs 100,200,400,800,1600."
-    },
-    {
-      "id": "kunai_capacity",
-      "name": "Kunai Capacity",
-      "tab": "Upgrades",
       "maxLevel": 5,
-      "perLevel": "+1 kunai",
       "costsCoins": [
         100,
         200,
@@ -377,35 +448,96 @@
         800,
         1600
       ],
-      "requires": "kunai"
+      "description": "Reduce slash recharge. Base 1.5s, -0.2s per level x5."
+    },
+    {
+      "id": "flying_boost_range",
+      "name": "Flying Boost Range",
+      "tab": "Upgrades",
+      "maxLevel": 5,
+      "costsCoins": [
+        200,
+        400,
+        800,
+        1600,
+        3200
+      ],
+      "requires": "flying_boost",
+      "description": "Each upgrade +50m kill/fly distance (250\u2192500 at max).",
+      "metersPerLevel": 50,
+      "secondsReducedPerLevel": null,
+      "perLevel": null
+    },
+    {
+      "id": "ethereal_range",
+      "name": "Ethereal Range",
+      "tab": "Upgrades",
+      "maxLevel": 5,
+      "costsCoins": [
+        200,
+        400,
+        800,
+        1600,
+        3200
+      ],
+      "requires": "ethereal",
+      "description": "Each upgrade +15m (30\u2192105 at max).",
+      "metersPerLevel": 15,
+      "secondsReducedPerLevel": null,
+      "perLevel": null
+    },
+    {
+      "id": "shadow_strike_range",
+      "name": "Shadow Strike Range",
+      "tab": "Upgrades",
+      "maxLevel": 5,
+      "costsCoins": [
+        200,
+        400,
+        800,
+        1600,
+        3200
+      ],
+      "requires": "shadow_strike",
+      "description": "Each upgrade +15m (30\u2192105 at max).",
+      "metersPerLevel": 15,
+      "secondsReducedPerLevel": null,
+      "perLevel": null
+    },
+    {
+      "id": "kunai_capacity",
+      "name": "Kunai Capacity",
+      "tab": "Upgrades",
+      "maxLevel": 5,
+      "costsCoins": [
+        100,
+        200,
+        400,
+        800,
+        1600
+      ],
+      "requires": "kunai",
+      "description": "+1 kunai capacity",
+      "metersPerLevel": null,
+      "secondsReducedPerLevel": null,
+      "perLevel": "+1 kunai capacity"
     },
     {
       "id": "bow_recharge",
-      "name": "Bow Recharge",
+      "name": "Bow Reload",
       "tab": "Upgrades",
-      "maxLevel": 5,
-      "secondsReducedPerLevel": 0.25,
-      "baseRechargeSeconds": 2.5,
+      "maxLevel": 4,
       "costsCoins": [
-        120,
-        240,
-        480,
-        960,
-        1920
-      ],
-      "requires": "bow"
-    },
-    {
-      "id": "technique_level",
-      "name": "Technique Power",
-      "tab": "Upgrades",
-      "maxLevel": 3,
-      "description": "Shortens Flying Boost / Shadow Strike / Ethereal recharges by 10% per level.",
-      "costsCoins": [
+        150,
         300,
         600,
         1200
-      ]
+      ],
+      "requires": "bow",
+      "description": "Stacked \u221222.5s per level off 180s reload (180\u219290 at max).",
+      "metersPerLevel": null,
+      "secondsReducedPerLevel": 22.5,
+      "perLevel": null
     }
   ]
 }

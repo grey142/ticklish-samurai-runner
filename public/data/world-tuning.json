@@ -1,0 +1,6 @@
+{
+  "zombieCountMultiplier": 1.5,
+  "speedIncreasePerLevelPercent": 2.0,
+  "jumpUpMultiplier": 1.5,
+  "gravityFallMultiplier": 2.0
+}

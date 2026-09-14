@@ -26,7 +26,8 @@ import {
   bowRecharge,
   kunaiCapacity,
   nextTierCost,
-  techniqueRechargeMul,
+  rangeMeters,
+  levelSpeedMul,
 } from "./rules";
 
 const cfg = {
@@ -140,14 +141,15 @@ describe("projectiles", () => {
 });
 
 describe("technique upgrades", () => {
-  it("adds kunai capacity and shortens bow / art recharge", () => {
+  it("adds kunai capacity, bow reload cuts, and range stacks", () => {
     expect(kunaiCapacity(3, 2)).toBe(5);
-    expect(bowRecharge(2.5, 5, 0.25)).toBeCloseTo(1.25);
-    expect(techniqueRechargeMul(0)).toBe(1);
-    expect(techniqueRechargeMul(1)).toBeCloseTo(0.9);
-    expect(techniqueRechargeMul(3)).toBeCloseTo(0.729);
-    expect(nextTierCost([300, 600, 1200], 2)).toBe(1200);
-    expect(nextTierCost([300, 600, 1200], 3)).toBeNull();
+    expect(bowRecharge(180, 0, 22.5)).toBe(180);
+    expect(bowRecharge(180, 4, 22.5)).toBe(90);
+    expect(rangeMeters(250, 5, 50)).toBe(500);
+    expect(rangeMeters(30, 5, 15)).toBe(105);
+    expect(levelSpeedMul(1, 6, 2)).toBeCloseTo(1.1);
+    expect(nextTierCost([150, 300, 600, 1200], 3)).toBe(1200);
+    expect(nextTierCost([150, 300, 600, 1200], 4)).toBeNull();
   });
 });
 
@@ -159,13 +161,13 @@ describe("one-shot slash", () => {
 });
 
 describe("jump ascent", () => {
-  it("raises takeoff speed 5% and keeps the same apex", () => {
-    expect(JUMP_ASCENT_MUL).toBeCloseTo(1.05);
+  it("raises takeoff 1.5× and keeps the same apex on hold gravity", () => {
+    expect(JUMP_ASCENT_MUL).toBeCloseTo(1.5);
     const H = 100;
     const T = 2;
     const v = jumpTakeoffSpeed(H, T);
     const g = jumpHoldGravity(H, T);
-    expect(v).toBeCloseTo(((4 * H) / T) * 1.05);
+    expect(v).toBeCloseTo(((4 * H) / T) * 1.5);
     const apex = v * (v / g) - 0.5 * g * (v / g) ** 2;
     expect(apex).toBeCloseTo(H);
   });

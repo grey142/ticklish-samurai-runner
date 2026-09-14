@@ -59,6 +59,7 @@ export interface CanonicalTechnique {
   blurb?: string;
   baseCapacity?: number;
   rechargeSeconds?: number;
+  reloadSeconds?: number;
   baseRechargeSeconds?: number;
 }
 
@@ -121,7 +122,7 @@ export function compileShop(raw: CanonicalShop): ShopCatalog {
       cost: t.unlockCostCoins ?? t.cost ?? 0,
       sprite: t.sprite ? (t.sprite.startsWith("./") ? t.sprite : `./assets/${t.sprite}`) : null,
       blurb: t.blurb ?? t.description ?? "",
-      recharge: t.rechargeSeconds ?? t.baseRechargeSeconds ?? 0,
+      recharge: t.reloadSeconds ?? t.rechargeSeconds ?? t.baseRechargeSeconds ?? 0,
       baseCapacity: t.baseCapacity,
     }));
   const upgrades: UpgradeDef[] = [...(raw.upgrades ?? [])].map((u) => ({

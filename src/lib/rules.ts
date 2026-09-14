@@ -13,6 +13,9 @@ export function emptySave(starterCoins: number): SaveData {
     unlockedTechniques: [],
     kunaiUpgrades: 0,
     bowUpgrades: 0,
+    flyingBoostUpgrades: 0,
+    etherealUpgrades: 0,
+    shadowStrikeUpgrades: 0,
     techniquePower: 0,
     bestDistance: 0,
   };
@@ -32,7 +35,29 @@ export function kunaiCapacity(base: number, upgrades: number): number {
 }
 
 export function bowRecharge(base: number, upgrades: number, step: number): number {
-  return Math.max(0.25, base - Math.max(0, upgrades) * step);
+  return Math.max(90, base - Math.max(0, upgrades) * step);
+}
+
+export function rangeMeters(base: number, upgrades: number, step: number): number {
+  return base + Math.max(0, upgrades) * step;
+}
+
+export interface WorldTuning {
+  zombieCountMultiplier: number;
+  speedIncreasePerLevelPercent: number;
+  jumpUpMultiplier: number;
+  gravityFallMultiplier: number;
+}
+
+export const DEFAULT_WORLD_TUNING: WorldTuning = {
+  zombieCountMultiplier: 1.5,
+  speedIncreasePerLevelPercent: 2.0,
+  jumpUpMultiplier: 1.5,
+  gravityFallMultiplier: 2.0,
+};
+
+export function levelSpeedMul(jsonMul: number, level: number, extraPercentPerLevel: number): number {
+  return jsonMul * (1 + Math.max(0, level - 1) * (extraPercentPerLevel / 100));
 }
 
 export function speedLevelFor(distance: number, cfg: GameConfig): { level: number; speedMul: number } {
@@ -171,15 +196,15 @@ export function applyOneShot(hp: number): number {
 export const GAMEOVER_HOLD_SEC = 5;
 export const GAMEOVER_LINE = "you were tickled to death";
 
-/** Faster rise, same apex: takeoff ×1.05 and hold-gravity ×1.05². */
-export const JUMP_ASCENT_MUL = 1.05;
+/** Rise 1.5×: takeoff ×1.5 and hold-gravity ×1.5² so apex stays similar. */
+export const JUMP_ASCENT_MUL = 1.5;
 
-export function jumpTakeoffSpeed(maxHeight: number, airSeconds: number): number {
-  return ((4 * maxHeight) / airSeconds) * JUMP_ASCENT_MUL;
+export function jumpTakeoffSpeed(maxHeight: number, airSeconds: number, upMul = JUMP_ASCENT_MUL): number {
+  return ((4 * maxHeight) / airSeconds) * upMul;
 }
 
-export function jumpHoldGravity(maxHeight: number, airSeconds: number): number {
-  return ((8 * maxHeight) / (airSeconds * airSeconds)) * JUMP_ASCENT_MUL * JUMP_ASCENT_MUL;
+export function jumpHoldGravity(maxHeight: number, airSeconds: number, upMul = JUMP_ASCENT_MUL): number {
+  return ((8 * maxHeight) / (airSeconds * airSeconds)) * upMul * upMul;
 }
 
 /** Was 0.35; playtest is 2× that flight rate. */

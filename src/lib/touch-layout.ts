@@ -143,30 +143,19 @@ export function layoutShop(
   });
   const bodyY = tabY + btnH + 10;
   const rowH = Math.max(48, Math.min(56, Math.round(h * 0.11)));
-  if (tab === "upgrades") {
-    rowIds.forEach((id, i) => {
-      rects.push({
-        id: prefix + id,
-        x: pad,
-        y: bodyY + 28 + i * (rowH + 8),
-        w: Math.min(420, w - pad * 2),
-        h: rowH,
-      });
+  const colW = Math.min(360, (w - pad * 2 - 12) / 2);
+  const extra = tab === "upgrades" ? 28 : 0;
+  rowIds.forEach((id, i) => {
+    const col = i % 2;
+    const rowI = Math.floor(i / 2);
+    rects.push({
+      id: prefix + id,
+      x: pad + col * (colW + 12),
+      y: bodyY + extra + rowI * (rowH + 8),
+      w: colW,
+      h: rowH,
     });
-  } else {
-    const colW = Math.min(360, (w - pad * 2 - 12) / 2);
-    rowIds.forEach((id, i) => {
-      const col = i % 2;
-      const rowI = Math.floor(i / 2);
-      rects.push({
-        id: prefix + id,
-        x: pad + col * (colW + 12),
-        y: bodyY + rowI * (rowH + 8),
-        w: colW,
-        h: rowH,
-      });
-    });
-  }
+  });
   return rects;
 }
 

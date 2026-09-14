@@ -15,6 +15,9 @@ export function loadSave(starterCoins: number): SaveData {
       unlockedTechniques: unique(parsed.unlockedTechniques ?? []),
       kunaiUpgrades: Math.max(0, parsed.kunaiUpgrades ?? 0),
       bowUpgrades: Math.max(0, parsed.bowUpgrades ?? 0),
+      flyingBoostUpgrades: Math.max(0, parsed.flyingBoostUpgrades ?? 0),
+      etherealUpgrades: Math.max(0, parsed.etherealUpgrades ?? 0),
+      shadowStrikeUpgrades: Math.max(0, parsed.shadowStrikeUpgrades ?? 0),
       techniquePower: Math.max(0, parsed.techniquePower ?? 0),
     };
   } catch {

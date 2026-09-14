@@ -4,6 +4,7 @@ import {
   drawSheetFrame,
   enemySpritePath,
   playerPosePath,
+  playerShotPath,
   playerTechPath,
   projectilePath,
 } from "../lib/assets";
@@ -153,9 +154,19 @@ function drawPlayer(g: Game): void {
   const boxH = g.playerH;
   const dx = g.playerX;
   const dy = g.playerY;
+  if (g.boosting()) {
+    const wrap = g.images.get(playerShotPath("fireball-boost"));
+    if (wrap) {
+      ctx.save();
+      ctx.globalAlpha = 0.92;
+      drawContained(ctx, wrap, dx - boxW * 0.55, dy - boxH * 0.35, boxW * 2.1, boxH * 1.7, "center");
+      ctx.restore();
+    }
+  }
   ctx.save();
-  if (g.invuln > 0 && !g.shadeActive() && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.45;
-  if (img && g.shadeActive()) {
+  if (g.invuln > 0 && !g.artInvuln() && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.45;
+  const ghost = !!g.shadowHunt;
+  if (img && (g.shadeActive() || ghost)) {
     if (!g.tintScratch) g.tintScratch = document.createElement("canvas");
     const scratch = g.tintScratch;
     scratch.width = Math.max(8, Math.ceil(boxW));
@@ -165,7 +176,7 @@ function drawPlayer(g: Game): void {
       sctx.clearRect(0, 0, scratch.width, scratch.height);
       drawSprite(sctx, img, 0, 0, scratch.width, scratch.height);
       sctx.globalCompositeOperation = "source-atop";
-      sctx.fillStyle = "rgba(155, 77, 255, 0.72)";
+      sctx.fillStyle = ghost ? "rgba(18, 10, 28, 0.82)" : "rgba(155, 77, 255, 0.72)";
       sctx.fillRect(0, 0, scratch.width, scratch.height);
       sctx.globalCompositeOperation = "source-over";
     }
@@ -199,7 +210,13 @@ function drawActors(g: Game): void {
   for (const a of g.actors) {
     if (a.kind === "enemy") drawEnemy(g, a.defId, a.x, a.y, a.w, a.h);
     else if (a.ownerId === "player") {
-      const img = g.images.get(a.defId === "bow" ? playerTechPath("bow") : playerTechPath("kunai"));
+      const path =
+        a.defId === "arrow-shot"
+          ? playerShotPath("flaming-arrow")
+          : a.defId === "kunai-shot"
+            ? playerShotPath("kunai-projectile")
+            : playerTechPath("kunai");
+      const img = g.images.get(path);
       if (img) drawSprite(g.ctx, img, a.x, a.y, a.w, a.h);
       else {
         g.ctx.fillStyle = "#f4e7d8";
@@ -381,10 +398,31 @@ function drawHud(g: Game): void {
     ctx.fillStyle = "#f4e7d8";
     ctx.font = `700 ${Math.max(10, Math.round(p.h * 0.18))}px Trebuchet MS, sans-serif`;
     ctx.textAlign = "center";
-    const label = p.id === "kunai" ? `kunai ${g.kunaiAmmo}` : p.id.replace(/-/g, " ");
+    let label = p.id.replace(/-/g, " ");
+    if (p.id === "kunai") label = `kunai ${g.kunaiAmmo}`;
+    if (p.id === "bow" && g.bowAiming) label = "aim";
     ctx.fillText(label, p.x + p.w / 2, img ? p.y + p.h * 0.82 : p.y + p.h * 0.45);
-    if (cd > 0) ctx.fillText(cd.toFixed(1), p.x + p.w / 2, p.y + p.h * 0.96);
+    if (cd > 0) ctx.fillText(g.fmtCd(cd), p.x + p.w / 2, p.y + p.h * 0.96);
     ctx.textAlign = "left";
+  }
+
+  if (g.bowAiming) {
+    ctx.strokeStyle = "#ff2a2a";
+    ctx.lineWidth = 2;
+    for (const a of g.bowTargets) {
+      const hx = a.x + a.w * 0.5;
+      const hy = a.y + a.h * 0.1;
+      const arm = 12;
+      ctx.beginPath();
+      ctx.moveTo(hx - arm, hy);
+      ctx.lineTo(hx + arm, hy);
+      ctx.moveTo(hx, hy - arm);
+      ctx.lineTo(hx, hy + arm);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(hx, hy, 7, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
 
   ctx.fillStyle = "rgba(244,231,216,0.7)";
@@ -489,7 +527,7 @@ function drawHowto(g: Game): void {
     "Grab / web / bolo / slime / hand = struggle cinematic. Mash anywhere. HP and mash bars sit together in the corner.",
     "Pink flash + laugh every second. Cinematic every 4s. Roof-jump kills pay double.",
     "1 point / 6 m. 1 coin / 6 points. Revive once per run for 300 coins.",
-    "Desktop: Space/W jump, S slam, C climb, J slash, 1–8 shop techniques / blade arts.",
+    "Desktop: Space/W jump, S slam, C climb, J slash, 1–8 techniques (hold bow to aim).",
   ];
   lines.forEach((line, i) => ctx.fillText(line, 64, 150 + i * 28));
   button(ctx, g, "back", "Back");
@@ -546,56 +584,25 @@ function drawUpgradePanel(g: Game): void {
   const firstUp = g.input.uiRects.find((r) => r.id.startsWith("buy-up-"));
   const infoY = firstUp ? firstUp.y - 8 : 92;
   ctx.fillStyle = "#f4e7d8";
-  ctx.font = "15px Trebuchet MS, sans-serif";
+  ctx.font = "14px Trebuchet MS, sans-serif";
   ctx.fillText(
-    `Slash ${g.recharge().toFixed(2)}s${hayate ? " haste" : ""}  ·  Kunai ${g.kunaiMax()}  ·  Bow ${g.bowCd().toFixed(2)}s  ·  Arts −${(g.save.techniquePower ?? 0) * 10}% CD`,
+    `Slash ${g.recharge().toFixed(2)}s${hayate ? " haste" : ""}  ·  Boost ${g.flyingBoostMeters()}m  ·  Shade ${g.etherealMeters()}m  ·  Shadow ${g.shadowRangeMeters()}m  ·  Kunai ${g.kunaiMax()}  ·  Bow ${g.fmtCd(g.bowCd())}`,
     16,
     infoY,
   );
 
-  const rows: { id: string; label: string; locked?: boolean }[] = [];
-  const slashCost = g.slashUpgradeCost();
-  rows.push({
-    id: "buy-up-slash-speed",
-    label:
-      slashCost == null
-        ? "Slash Speed  ·  maxed"
-        : `Slash Speed  ${g.save.slashUpgrades}/5  ·  ${slashCost === 0 ? "FREE" : slashCost + "c"}`,
-  });
-  const kunaiUp = g.shop.upgrades.find((u) => u.id === "kunai-capacity");
-  const kunaiCost = kunaiUp ? nextTierCost(kunaiUp.costs, g.save.kunaiUpgrades ?? 0) : null;
-  const kunaiPrice = kunaiCost == null ? null : g.shopPrice(kunaiCost);
-  rows.push({
-    id: "buy-up-kunai-capacity",
-    locked: !g.techOwned("kunai"),
-    label: !g.techOwned("kunai")
-      ? "Kunai Capacity  ·  unlock Kunai first"
-      : kunaiPrice == null
-        ? "Kunai Capacity  ·  maxed"
-        : `Kunai Capacity  ${g.save.kunaiUpgrades}/5  ·  ${kunaiPrice === 0 ? "FREE" : kunaiPrice + "c"}`,
-  });
-  const bowUp = g.shop.upgrades.find((u) => u.id === "bow-recharge");
-  const bowCost = bowUp ? nextTierCost(bowUp.costs, g.save.bowUpgrades ?? 0) : null;
-  const bowPrice = bowCost == null ? null : g.shopPrice(bowCost);
-  rows.push({
-    id: "buy-up-bow-recharge",
-    locked: !g.techOwned("bow"),
-    label: !g.techOwned("bow")
-      ? "Bow Recharge  ·  unlock Bow first"
-      : bowPrice == null
-        ? "Bow Recharge  ·  maxed"
-        : `Bow Recharge  ${g.save.bowUpgrades}/5  ·  ${bowPrice === 0 ? "FREE" : bowPrice + "c"}`,
-  });
-  const pow = g.shop.upgrades.find((u) => u.id === "technique-level");
-  const powCost = pow ? nextTierCost(pow.costs, g.save.techniquePower ?? 0) : null;
-  const powPrice = powCost == null ? null : g.shopPrice(powCost);
-  rows.push({
-    id: "buy-up-technique-level",
-    label:
-      powPrice == null
-        ? "Technique Power  ·  maxed"
-        : `Technique Power  ${g.save.techniquePower}/3  ·  ${powPrice === 0 ? "FREE" : powPrice + "c"}`,
-  });
+  const rows: { id: string; label: string }[] = [];
+  for (const up of g.shop.upgrades) {
+    const locked = !!(up.requires && !g.techOwned(up.requires));
+    const level = g.upgradeLevel(up.id);
+    const cost = locked ? null : nextTierCost(up.costs, level);
+    const price = cost == null ? null : g.shopPrice(cost);
+    let label = up.name;
+    if (locked) label = `${up.name}  ·  unlock first`;
+    else if (price == null) label = `${up.name}  ·  maxed`;
+    else label = `${up.name}  ${level}/${up.maxLevel}  ·  ${price === 0 ? "FREE" : price + "c"}`;
+    rows.push({ id: "buy-up-" + up.id, label });
+  }
   for (const row of rows) button(ctx, g, row.id, row.label);
 }
 
