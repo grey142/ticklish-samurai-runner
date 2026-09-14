@@ -1,4 +1,4 @@
-import { catalogPaths, enemySpritePath, ImageBank, measureFootFrac, playerPosePath, projectilePath, vfxPath } from "../lib/assets";
+import { catalogPaths, enemySpritePath, ImageBank, measureFootFrac, playerPosePath, playerTechPath, projectilePath, vfxPath } from "../lib/assets";
 import {
   allLedges,
   climbLedge,
@@ -28,6 +28,7 @@ import {
   layoutPauseOverlay,
   layoutPlayControls,
   layoutShop,
+  type ShopTab,
 } from "../lib/touch-layout";
 import {
   coinsFromPoints,
@@ -37,6 +38,10 @@ import {
   jumpTakeoffSpeed,
   killPoints,
   nextSlashUpgradeCost,
+  nextTierCost,
+  bowRecharge,
+  kunaiCapacity,
+  techniqueRechargeMul,
   pickWeighted,
   pointsFromDistance,
   slashRecharge,
@@ -86,7 +91,8 @@ export class Game {
   input: Input;
   sfx = new Sfx();
   screen: Screen = "menu";
-  shopTab: "blades" | "armor" | "slash" = "blades";
+  shopTab: ShopTab = "blades";
+  kunaiAmmo = 3;
   shopScroll = 0;
   spawnRules: SpawnRules = DEFAULT_SPAWN_RULES;
   cheats = new CheatState();
@@ -228,6 +234,7 @@ export class Game {
     if (!this.cheats.active("all_shop_free")) return;
     this.save.unlockedKatanas = [...new Set([...this.save.unlockedKatanas, ...this.shop.katanas.map((k) => k.id)])];
     this.save.unlockedArmors = [...new Set([...this.save.unlockedArmors, ...this.shop.armors.map((a) => a.id)])];
+    this.save.unlockedTechniques = [...new Set([...this.save.unlockedTechniques, ...this.shop.techniques.map((t) => t.id)])];
   }
 
   toggleCheat(id: string): void {
@@ -273,8 +280,13 @@ export class Game {
   sanitizeLoadout(): void {
     const blades = new Set(this.shop.katanas.map((k) => k.id));
     const suits = new Set(this.shop.armors.map((a) => a.id));
+    const arts = new Set(this.shop.techniques.map((t) => t.id));
     this.save.unlockedKatanas = this.save.unlockedKatanas.filter((id) => blades.has(id));
     this.save.unlockedArmors = this.save.unlockedArmors.filter((id) => suits.has(id));
+    this.save.unlockedTechniques = (this.save.unlockedTechniques ?? []).filter((id) => arts.has(id));
+    this.save.kunaiUpgrades = Math.min(5, Math.max(0, this.save.kunaiUpgrades ?? 0));
+    this.save.bowUpgrades = Math.min(5, Math.max(0, this.save.bowUpgrades ?? 0));
+    this.save.techniquePower = Math.min(3, Math.max(0, this.save.techniquePower ?? 0));
     if (!this.save.unlockedKatanas.includes("ikielas-katana")) this.save.unlockedKatanas.unshift("ikielas-katana");
     if (!this.save.unlockedArmors.includes("ikielas-robes")) this.save.unlockedArmors.unshift("ikielas-robes");
     if (!blades.has(this.save.equippedKatana)) this.save.equippedKatana = "ikielas-katana";
@@ -285,14 +297,41 @@ export class Game {
     return this.shadeUntil >= 0 && this.distance < this.shadeUntil;
   }
 
-  manualPerks(): string[] {
+  techOwned(id: string): boolean {
+    return (this.save.unlockedTechniques ?? []).includes(id);
+  }
+
+  hudButtons(): string[] {
     const ids: string[] = [];
+    if (this.techOwned("kunai")) ids.push("kunai");
+    if (this.techOwned("bow")) ids.push("bow");
+    if (this.techOwned("flying-boost")) ids.push("flying-boost");
+    if (this.techOwned("shadow-strike") || this.katana().perk === "shadow-strike") ids.push("shadow-strike");
+    if (this.techOwned("ethereal") || this.armor().perk === "kitsune-shade") ids.push("ethereal");
     for (const id of [this.katana().perk, this.armor().perk]) {
-      if (!id) continue;
+      if (!id || ids.includes(id) || id === "kitsune-shade") continue;
       const def = this.shop.perks.find((p) => p.id === id);
       if (def?.manual) ids.push(id);
     }
     return ids;
+  }
+
+  manualPerks(): string[] {
+    return this.hudButtons();
+  }
+
+  techRecharge(base: number): number {
+    return base * techniqueRechargeMul(this.save.techniquePower ?? 0);
+  }
+
+  kunaiMax(): number {
+    const tech = this.shop.techniques.find((t) => t.id === "kunai");
+    return kunaiCapacity(tech?.baseCapacity ?? 3, this.save.kunaiUpgrades ?? 0);
+  }
+
+  bowCd(): number {
+    const tech = this.shop.techniques.find((t) => t.id === "bow");
+    return bowRecharge(tech?.recharge || 2.5, this.save.bowUpgrades ?? 0, 0.25);
   }
 
   playVfx(
@@ -421,6 +460,7 @@ export class Game {
     this.slashCd = 0;
     this.slashFlash = 0;
     this.perkCd = {};
+    this.kunaiAmmo = this.kunaiMax();
     this.vfx = [];
     this.shadeUntil = -1;
     this.pinkFlash = 0;
@@ -478,10 +518,15 @@ export class Game {
       if (id === "back") this.screen = "menu";
       if (id === "tab-blades") this.shopTab = "blades";
       if (id === "tab-armor") this.shopTab = "armor";
-      if (id === "tab-slash") this.shopTab = "slash";
+      if (id === "tab-techniques") this.shopTab = "techniques";
+      if (id === "tab-upgrades") this.shopTab = "upgrades";
       if (id?.startsWith("buy-katana-")) this.buyKatana(id.slice(11));
       if (id?.startsWith("buy-armor-")) this.buyArmor(id.slice(10));
-      if (id === "buy-slash") this.buySlash();
+      if (id?.startsWith("buy-tech-")) this.buyTechnique(id.slice(9));
+      if (id === "buy-up-slash-speed") this.buySlash();
+      if (id === "buy-up-kunai-capacity") this.buyKunaiCap();
+      if (id === "buy-up-bow-recharge") this.buyBowCd();
+      if (id === "buy-up-technique-level") this.buyTechPower();
     } else if (this.screen === "cheats") {
       this.applyListScroll("cheat", input);
       if (id === "back") this.leaveCheats();
@@ -568,6 +613,47 @@ export class Game {
     this.sfx.coin();
   }
 
+  buyTechnique(id: string): void {
+    const item = this.shop.techniques.find((t) => t.id === id);
+    if (!item || this.techOwned(id)) return;
+    const cost = this.shopPrice(item.cost);
+    if (this.save.coins < cost) return;
+    this.save.coins -= cost;
+    this.save.unlockedTechniques = [...(this.save.unlockedTechniques ?? []), id];
+    this.persist();
+    this.sfx.coin();
+  }
+
+  private buyUpgradeLevel(key: "kunaiUpgrades" | "bowUpgrades" | "techniquePower", costs: number[], max: number): void {
+    const level = this.save[key] ?? 0;
+    if (level >= max) return;
+    const raw = nextTierCost(costs, level);
+    if (raw == null) return;
+    const cost = this.shopPrice(raw);
+    if (this.save.coins < cost) return;
+    this.save.coins -= cost;
+    this.save[key] = level + 1;
+    this.persist();
+    this.sfx.coin();
+  }
+
+  buyKunaiCap(): void {
+    if (!this.techOwned("kunai")) return;
+    const up = this.shop.upgrades.find((u) => u.id === "kunai-capacity");
+    this.buyUpgradeLevel("kunaiUpgrades", up?.costs ?? [100, 200, 400, 800, 1600], up?.maxLevel ?? 5);
+  }
+
+  buyBowCd(): void {
+    if (!this.techOwned("bow")) return;
+    const up = this.shop.upgrades.find((u) => u.id === "bow-recharge");
+    this.buyUpgradeLevel("bowUpgrades", up?.costs ?? [120, 240, 480, 960, 1920], up?.maxLevel ?? 5);
+  }
+
+  buyTechPower(): void {
+    const up = this.shop.upgrades.find((u) => u.id === "technique-level");
+    this.buyUpgradeLevel("techniquePower", up?.costs ?? [300, 600, 1200], up?.maxLevel ?? 3);
+  }
+
   tryRevive(): void {
     if (this.usedRevive || this.save.coins < this.cfg.economy.reviveCost) return;
     this.save.coins -= this.cfg.economy.reviveCost;
@@ -620,9 +706,11 @@ export class Game {
     this.maybeSpawn(level);
     this.updateActors(dt, run, level);
     if (input.slash) this.trySlash();
-    if (input.perk) this.tryPerk(input.perk);
+    if (input.perk) this.tryTechnique(input.perk);
     this.tickJumpOver();
+    this.resolvePlayerShots();
     this.resolveCombat();
+    this.tickKunaiRegen(dt);
     this.slashCd = Math.max(0, this.slashCd - dt);
     this.slashFlash = Math.max(0, this.slashFlash - dt);
     this.invuln = Math.max(0, this.invuln - dt);
@@ -863,12 +951,14 @@ export class Game {
             a.fireCd = def.fireEvery ?? 2.4;
           }
         }
+      } else if (a.ownerId === "player") {
+        a.x += (a.vx || 520) * dt;
       } else {
         const p = this.projDef(a.defId);
         a.x -= projectileAdvance(p.speed, dt);
       }
     }
-    this.actors = this.actors.filter((a) => a.x > -180 && a.hp > 0);
+    this.actors = this.actors.filter((a) => a.x > -180 && a.x < this.w + 240 && a.hp > 0);
   }
 
   private fireProjectile(id: string, from: Actor): void {
@@ -907,6 +997,7 @@ export class Game {
     if (this.invuln > 0 || this.shadeActive() || this.struggle) return;
     const pb = this.playerBox();
     for (const a of this.actors) {
+      if (a.ownerId === "player") continue;
       if (!this.overlaps(pb, a)) continue;
       if (this.slashFlash > 0 && a.x < this.playerX + this.slashReach() + 20) {
         this.hurtActor(a, 10, this.onRoof || this.slam);
@@ -945,22 +1036,66 @@ export class Game {
     }
   }
 
-  private tryPerk(id: string): void {
-    if (!this.manualPerks().includes(id)) return;
-    if ((this.perkCd[id] ?? 0) > 0 || this.struggle) return;
-    const def = this.shop.perks.find((p) => p.id === id);
-    if (!def || !def.manual) return;
-    this.perkCd[id] = def.cooldown;
-    this.sfx.perk();
+  private tryTechnique(raw: string): void {
+    const id = raw.startsWith("slot-") ? this.hudButtons()[Number(raw.slice(5)) - 1] : raw;
+    if (!id || !this.hudButtons().includes(id) || this.struggle) return;
+    if (id === "kunai") {
+      this.throwKunai();
+      return;
+    }
+    if (id === "bow") {
+      this.fireBow();
+      return;
+    }
+    if ((this.perkCd[id] ?? 0) > 0) return;
     const fxW = this.w * 0.55;
     const fxH = this.h * 0.55;
+    if (id === "flying-boost") {
+      this.perkCd[id] = this.techRecharge(12);
+      this.sfx.perk();
+      this.invuln = 0.45;
+      this.vfx.push({
+        sheet: playerTechPath("fireball"),
+        x: this.playerX + this.playerW * 0.2,
+        y: this.playerY - this.playerH * 0.15,
+        w: fxW * 0.7,
+        h: this.playerH * 1.2,
+        t: 0,
+        duration: 0.35,
+        frames: 1,
+        startFrame: 0,
+        playFrames: 1,
+      });
+      const box = { x: this.playerX, y: this.playerY - 16, w: this.w * 0.62, h: this.playerH * 1.35 };
+      for (const a of this.actors) {
+        if (a.ownerId === "player") continue;
+        if (this.overlaps(box, a)) this.hurtActor(a, 20, this.onRoof);
+      }
+      return;
+    }
     if (id === "shadow-strike") {
+      this.perkCd[id] = this.techRecharge(15);
+      this.sfx.perk();
       this.invuln = 0.45;
       this.playVfx("shadow-strike.png", this.playerX - 20, this.playerY - this.playerH * 0.3, fxW * 0.7, fxH * 0.7);
       for (const a of this.actors) {
+        if (a.ownerId === "player") continue;
         if (a.x > this.playerX - 30 && a.x < this.playerX + 260) this.hurtActor(a, 16, this.onRoof);
       }
-    } else if (id === "call-lightning") {
+      return;
+    }
+    if (id === "ethereal" || id === "kitsune-shade") {
+      this.perkCd.ethereal = this.techRecharge(20);
+      this.perkCd["kitsune-shade"] = this.perkCd.ethereal;
+      this.sfx.perk();
+      this.shadeUntil = this.distance + 30;
+      return;
+    }
+    const def = this.shop.perks.find((p) => p.id === id);
+    if (!def || !def.manual) return;
+    this.perkCd[id] = this.techRecharge(def.cooldown);
+    this.sfx.perk();
+    if (id === "call-lightning") {
       this.playVfx("call-lightning.png", this.playerX + 40, this.playerY - this.playerH * 1.6, fxW, this.playerH * 2.8);
       for (const a of this.actors) {
         if (a.kind === "enemy" && a.x < this.w) {
@@ -976,8 +1111,66 @@ export class Game {
         if (a.x < this.playerX || a.x > this.playerX + reach) continue;
         this.hurtActor(a, 18, false, { soulHeal: 15 });
       }
-    } else if (id === "kitsune-shade") {
-      this.shadeUntil = this.distance + 30;
+    }
+  }
+
+  private throwKunai(): void {
+    if (this.kunaiAmmo <= 0 || (this.perkCd.kunai ?? 0) > 0) return;
+    this.kunaiAmmo -= 1;
+    this.perkCd.kunai = 0.8;
+    this.sfx.slash();
+    this.spawnPlayerShot("kunai", 560);
+  }
+
+  private fireBow(): void {
+    if ((this.perkCd.bow ?? 0) > 0) return;
+    this.perkCd.bow = this.bowCd();
+    this.sfx.slash();
+    this.spawnPlayerShot("bow", 680);
+  }
+
+  private spawnPlayerShot(id: "kunai" | "bow", speed: number): void {
+    const path = playerTechPath(id);
+    const box = this.spriteBox(path, this.playerH * 0.38);
+    this.actors.push({
+      kind: "projectile",
+      id: `s${nextActor++}`,
+      defId: id,
+      ownerId: "player",
+      x: this.playerX + this.playerW * 0.65,
+      y: this.playerY + this.playerH * 0.28,
+      w: box.w,
+      h: box.h,
+      hp: 1,
+      maxHp: 1,
+      vx: speed,
+      fireCd: 0,
+      lane: this.onRoof ? "roof" : "ground",
+    });
+  }
+
+  private resolvePlayerShots(): void {
+    for (const shot of this.actors) {
+      if (shot.ownerId !== "player" || shot.hp <= 0) continue;
+      for (const a of this.actors) {
+        if (a === shot || a.ownerId === "player" || a.hp <= 0) continue;
+        if (!this.overlaps(shot, a)) continue;
+        this.hurtActor(a, 12, this.onRoof);
+        shot.hp = 0;
+        break;
+      }
+    }
+  }
+
+  private tickKunaiRegen(dt: number): void {
+    if (!this.techOwned("kunai") || this.kunaiAmmo >= this.kunaiMax()) {
+      this.perkCd["kunai-regen"] = 0;
+      return;
+    }
+    this.perkCd["kunai-regen"] = (this.perkCd["kunai-regen"] || 0.8) - dt;
+    if (this.perkCd["kunai-regen"] <= 0) {
+      this.kunaiAmmo += 1;
+      this.perkCd["kunai-regen"] = 0.8;
     }
   }
 
@@ -1132,7 +1325,7 @@ export class Game {
   resizeButtons(): void {
     const w = this.w;
     const h = this.h;
-    const play = layoutPlayControls(w, h, this.screen === "playing" ? this.manualPerks() : []);
+    const play = layoutPlayControls(w, h, this.screen === "playing" ? this.hudButtons() : []);
     this.input.slashRect = this.screen === "playing" && !this.struggle && !this.paused ? play.slash : { x: 0, y: 0, w: 0, h: 0 };
     this.input.perkRects = this.screen === "playing" && !this.struggle && !this.paused ? play.perks : [];
     this.input.uiRects = [];
@@ -1143,9 +1336,23 @@ export class Game {
     if (this.screen === "menu") this.input.uiRects = layoutMenu(w, h);
     else if (this.screen === "howto") this.input.uiRects = layoutHowto(w, h);
     else if (this.screen === "shop") {
-      const blades = this.shopTab === "blades";
-      const rows = blades ? this.shop.katanas : this.shopTab === "armor" ? this.shop.armors : [];
-      this.input.uiRects = layoutShop(w, h, this.shopTab, rows.map((r) => r.id), blades ? "buy-katana-" : "buy-armor-");
+      const prefix =
+        this.shopTab === "blades"
+          ? "buy-katana-"
+          : this.shopTab === "armor"
+            ? "buy-armor-"
+            : this.shopTab === "techniques"
+              ? "buy-tech-"
+              : "buy-up-";
+      const rows =
+        this.shopTab === "blades"
+          ? this.shop.katanas.map((r) => r.id)
+          : this.shopTab === "armor"
+            ? this.shop.armors.map((r) => r.id)
+            : this.shopTab === "techniques"
+              ? this.shop.techniques.map((r) => r.id)
+              : this.shop.upgrades.map((r) => r.id);
+      this.input.uiRects = layoutShop(w, h, this.shopTab, rows, prefix);
     } else if (this.screen === "cheats") {
       const chrome = layoutBackChrome(w, h);
       const { rows, bodyY, bodyH } = layoutCheatRows(w, h, this.cheats.book.cheats.map((c) => c.id), this.cheatScroll);

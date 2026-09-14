@@ -1,0 +1,113 @@
+{
+  "tab": "Techniques",
+  "notes": "Shop Techniques tab + related upgrades. Sprites from ikiela-sprites.",
+  "techniques": [
+    {
+      "id": "kunai",
+      "name": "Kunai Pouch",
+      "order": 1,
+      "unlockCostCoins": 200,
+      "sprite": "player/kunai.png",
+      "activation": "manual_button",
+      "description": "Throw a kunai that kills on hit. Capacity upgrades in Upgrades.",
+      "baseCapacity": 3,
+      "rechargeSeconds": 0.8
+    },
+    {
+      "id": "bow",
+      "name": "Horse Bow",
+      "order": 2,
+      "unlockCostCoins": 350,
+      "sprite": "player/bow.png",
+      "activation": "manual_button",
+      "description": "Draw and fire an arrow that kills on hit. Bow recharge upgrades in Upgrades.",
+      "baseRechargeSeconds": 2.5
+    },
+    {
+      "id": "flying_boost",
+      "name": "Flying Boost",
+      "order": 3,
+      "unlockCostCoins": 500,
+      "sprite": "player/fireball.png",
+      "activation": "manual_button",
+      "description": "Fireball boost dash forward \u2014 clears foes in the path. Recharges after use.",
+      "rechargeSeconds": 12,
+      "vfx": "fireball"
+    },
+    {
+      "id": "shadow_strike",
+      "name": "Shadow Strike",
+      "order": 4,
+      "unlockCostCoins": 750,
+      "sprite": "player/shadow.png",
+      "activation": "manual_button",
+      "description": "Turn into a shadow, teleport to the enemy in front, and cut them down. Recharges in 15 seconds. (Also granted by Kagekiri.)",
+      "rechargeSeconds": 15,
+      "vfx": "shadow-strike"
+    },
+    {
+      "id": "ethereal",
+      "name": "Ethereal",
+      "order": 5,
+      "unlockCostCoins": 900,
+      "sprite": null,
+      "activation": "manual_button",
+      "description": "Turn the player sprite purple and become unhittable for 30 meters. Recharges in 20 seconds. (Also granted by Kitsune's Mirage.)",
+      "durationMeters": 30,
+      "rechargeSeconds": 20,
+      "visual": "purple_tint"
+    }
+  ],
+  "upgrades": [
+    {
+      "id": "slash_speed",
+      "name": "Slash Speed",
+      "tab": "Upgrades",
+      "source": "slash-recharge.json",
+      "description": "Reduce slash recharge. Base 1.5s, -0.2s per level x5. Costs 100,200,400,800,1600."
+    },
+    {
+      "id": "kunai_capacity",
+      "name": "Kunai Capacity",
+      "tab": "Upgrades",
+      "maxLevel": 5,
+      "perLevel": "+1 kunai",
+      "costsCoins": [
+        100,
+        200,
+        400,
+        800,
+        1600
+      ],
+      "requires": "kunai"
+    },
+    {
+      "id": "bow_recharge",
+      "name": "Bow Recharge",
+      "tab": "Upgrades",
+      "maxLevel": 5,
+      "secondsReducedPerLevel": 0.25,
+      "baseRechargeSeconds": 2.5,
+      "costsCoins": [
+        120,
+        240,
+        480,
+        960,
+        1920
+      ],
+      "requires": "bow"
+    },
+    {
+      "id": "technique_level",
+      "name": "Technique Power",
+      "tab": "Upgrades",
+      "maxLevel": 3,
+      "description": "Shortens Flying Boost / Shadow Strike / Ethereal recharges by 10% per level.",
+      "costsCoins": [
+        300,
+        600,
+        1200
+      ]
+    }
+  ]
+}

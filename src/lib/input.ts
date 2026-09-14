@@ -119,10 +119,7 @@ export class Input {
       if ((e.code === "KeyC" || e.code === "KeyE") && !e.repeat) this.swipe = "up";
       if ((e.code === "KeyS" || e.code === "ArrowDown") && !e.repeat) this.swipe = "down";
       if (e.code === "KeyJ" || e.code === "KeyK") this.slashQueued = true;
-      if (e.code === "Digit1") this.perkQueued = "shadow-strike";
-      if (e.code === "Digit2") this.perkQueued = "call-lightning";
-      if (e.code === "Digit3") this.perkQueued = "blade-of-souls";
-      if (e.code === "Digit4") this.perkQueued = "kitsune-shade";
+      if (/^Digit[1-8]$/.test(e.code) && !e.repeat) this.perkQueued = `slot-${e.code.slice(5)}`;
       if (e.code === "Enter") this.tapQueued = true;
       if (e.code === "Escape" && !e.repeat) this.pauseQueued = true;
       if (e.code === "KeyP" && !e.repeat) this.pauseQueued = true;

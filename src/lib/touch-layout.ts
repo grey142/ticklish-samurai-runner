@@ -13,15 +13,22 @@ export function layoutPlayControls(
   const phone = h < 520 || w < 960;
   const slashS = phone ? Math.max(72, thumbHit(w, h)) : 124;
   const slash: Rect = { x: w - pad - slashS, y: h - pad - slashS, w: slashS, h: slashS };
-  const perkW = Math.max(56, Math.min(slashS, 136));
-  const perkH = Math.max(48, Math.round(slashS * 0.52));
-  const perks = perkIds.map((id, i) => ({
-    id,
-    x: w - pad - perkW,
-    y: h - pad - slashS - 10 - (i + 1) * (perkH + 8),
-    w: perkW,
-    h: perkH,
-  }));
+  const cols = perkIds.length > 4 ? 2 : 1;
+  const perkW = Math.max(56, Math.min(slashS, 120));
+  const room = Math.max(48, slash.y - pad - 8);
+  const rows = Math.max(1, Math.ceil(perkIds.length / cols));
+  const perkH = Math.max(48, Math.min(56, Math.floor((room - (rows - 1) * 6) / rows)));
+  const perks = perkIds.map((id, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    return {
+      id,
+      x: w - pad - (col + 1) * perkW - col * 6,
+      y: slash.y - 8 - (row + 1) * (perkH + 6),
+      w: perkW,
+      h: perkH,
+    };
+  });
   return { slash, perks };
 }
 
@@ -114,26 +121,38 @@ export function layoutHowto(w: number, h: number): (Rect & { id: string })[] {
   return [{ id: "back", x: 12, y: 10, w: Math.max(120, Math.min(180, w * 0.22)), h: btnH }];
 }
 
+export type ShopTab = "blades" | "armor" | "techniques" | "upgrades";
+
 export function layoutShop(
   w: number,
   h: number,
-  tab: "blades" | "armor" | "slash",
+  tab: ShopTab,
   rowIds: string[],
   prefix: string,
 ): (Rect & { id: string })[] {
-  const btnH = Math.max(56, Math.min(64, Math.round(h * 0.12)));
-  const pad = 12;
-  const tabW = Math.max(88, Math.min(140, Math.round((w - pad * 2 - 8 * 3) / 4)));
-  const rects: (Rect & { id: string })[] = [
-    { id: "back", x: pad, y: pad, w: tabW, h: btnH },
-    { id: "tab-blades", x: pad + tabW + 8, y: pad, w: tabW, h: btnH },
-    { id: "tab-armor", x: pad + (tabW + 8) * 2, y: pad, w: tabW, h: btnH },
-    { id: "tab-slash", x: pad + (tabW + 8) * 3, y: pad, w: tabW + 16, h: btnH },
-  ];
-  const bodyY = pad + btnH + 12;
-  const rowH = Math.max(52, Math.min(60, Math.round(h * 0.12)));
-  if (tab === "slash") {
-    rects.push({ id: "buy-slash", x: pad, y: bodyY + 120, w: Math.min(360, w - pad * 2), h: rowH });
+  const btnH = Math.max(48, Math.min(56, Math.round(h * 0.11)));
+  const pad = 10;
+  const gap = 6;
+  const backW = Math.max(72, Math.min(120, Math.round(w * 0.16)));
+  const rects: (Rect & { id: string })[] = [{ id: "back", x: pad, y: pad, w: backW, h: btnH }];
+  const tabs = ["tab-blades", "tab-armor", "tab-techniques", "tab-upgrades"];
+  const tabY = pad + btnH + gap;
+  const tabW = Math.max(64, Math.floor((w - pad * 2 - gap * (tabs.length - 1)) / tabs.length));
+  tabs.forEach((id, i) => {
+    rects.push({ id, x: pad + i * (tabW + gap), y: tabY, w: tabW, h: btnH });
+  });
+  const bodyY = tabY + btnH + 10;
+  const rowH = Math.max(48, Math.min(56, Math.round(h * 0.11)));
+  if (tab === "upgrades") {
+    rowIds.forEach((id, i) => {
+      rects.push({
+        id: prefix + id,
+        x: pad,
+        y: bodyY + 28 + i * (rowH + 8),
+        w: Math.min(420, w - pad * 2),
+        h: rowH,
+      });
+    });
   } else {
     const colW = Math.min(360, (w - pad * 2 - 12) / 2);
     rowIds.forEach((id, i) => {

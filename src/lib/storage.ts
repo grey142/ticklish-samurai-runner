@@ -12,6 +12,10 @@ export function loadSave(starterCoins: number): SaveData {
       ...parsed,
       unlockedKatanas: unique(["ikielas-katana", ...(parsed.unlockedKatanas ?? [])]),
       unlockedArmors: unique(["ikielas-robes", ...(parsed.unlockedArmors ?? [])]),
+      unlockedTechniques: unique(parsed.unlockedTechniques ?? []),
+      kunaiUpgrades: Math.max(0, parsed.kunaiUpgrades ?? 0),
+      bowUpgrades: Math.max(0, parsed.bowUpgrades ?? 0),
+      techniquePower: Math.max(0, parsed.techniquePower ?? 0),
     };
   } catch {
     return emptySave(starterCoins);

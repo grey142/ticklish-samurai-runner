@@ -1,4 +1,4 @@
-import type { ArmorDef, KatanaDef, PerkDef, ShopCatalog } from "../types";
+import type { ArmorDef, KatanaDef, PerkDef, ShopCatalog, TechniqueDef, UpgradeDef } from "../types";
 
 const PERK_ALIAS: Record<string, string> = {
   slash_recharge_half: "hayate",
@@ -48,10 +48,36 @@ export interface CanonicalArmor {
   blurb?: string;
 }
 
+export interface CanonicalTechnique {
+  id: string;
+  name: string;
+  order?: number;
+  unlockCostCoins?: number;
+  cost?: number;
+  sprite?: string | null;
+  description?: string;
+  blurb?: string;
+  baseCapacity?: number;
+  rechargeSeconds?: number;
+  baseRechargeSeconds?: number;
+}
+
+export interface CanonicalUpgrade {
+  id: string;
+  name: string;
+  maxLevel?: number;
+  costsCoins?: number[];
+  requires?: string;
+  description?: string;
+  source?: string;
+}
+
 export interface CanonicalShop {
   baseHealth?: number;
   katanas: CanonicalKatana[];
   armors: CanonicalArmor[];
+  techniques?: CanonicalTechnique[];
+  upgrades?: CanonicalUpgrade[];
 }
 
 export const SHOP_PERKS: PerkDef[] = [
@@ -87,7 +113,34 @@ export function compileShop(raw: CanonicalShop): ShopCatalog {
       perk: perkIdFromRaw(a.perk),
       blurb: a.blurb ?? a.flavor ?? "",
     }));
-  return { katanas, armors, perks: SHOP_PERKS };
+  const techniques: TechniqueDef[] = [...(raw.techniques ?? [])]
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map((t) => ({
+      id: normalizePerkId(t.id) ?? t.id,
+      name: t.name,
+      cost: t.unlockCostCoins ?? t.cost ?? 0,
+      sprite: t.sprite ? (t.sprite.startsWith("./") ? t.sprite : `./assets/${t.sprite}`) : null,
+      blurb: t.blurb ?? t.description ?? "",
+      recharge: t.rechargeSeconds ?? t.baseRechargeSeconds ?? 0,
+      baseCapacity: t.baseCapacity,
+    }));
+  const upgrades: UpgradeDef[] = [...(raw.upgrades ?? [])].map((u) => ({
+    id: normalizePerkId(u.id) ?? u.id,
+    name: u.name,
+    maxLevel: u.maxLevel ?? (u.id === "slash_speed" || u.id === "slash-speed" ? 5 : 0),
+    costs: u.costsCoins ?? (u.id === "slash_speed" || u.id === "slash-speed" ? [100, 200, 400, 800, 1600] : []),
+    requires: u.requires ? normalizePerkId(u.requires) ?? u.requires : undefined,
+    blurb: u.description ?? "",
+  }));
+  return { katanas, armors, perks: SHOP_PERKS, techniques, upgrades };
+}
+
+export function techniqueSprite(id: string): string | null {
+  if (id === "kunai") return "./assets/player/kunai.png";
+  if (id === "bow") return "./assets/player/bow.png";
+  if (id === "flying-boost") return "./assets/player/fireball.png";
+  if (id === "shadow-strike") return "./assets/player/shadow.png";
+  return null;
 }
 
 export const HASTE_PERKS = new Set(["hayate", "gale-dancer", "shadow-tread"]);

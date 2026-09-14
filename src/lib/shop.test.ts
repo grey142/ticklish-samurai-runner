@@ -59,4 +59,26 @@ describe("canonical shop", () => {
     expect(shop.perks.find((p) => p.id === "call-lightning")?.cooldown).toBe(25);
     expect(shop.perks.find((p) => p.id === "blade-of-souls")?.cooldown).toBe(45);
   });
+
+  it("lists five shop techniques and four upgrade tracks", () => {
+    expect(shop.techniques.map((t) => t.id)).toEqual([
+      "kunai",
+      "bow",
+      "flying-boost",
+      "shadow-strike",
+      "ethereal",
+    ]);
+    expect(shop.techniques[0].cost).toBe(200);
+    expect(shop.techniques[0].baseCapacity).toBe(3);
+    expect(shop.techniques[2].recharge).toBe(12);
+    expect(shop.upgrades.map((u) => u.id)).toEqual([
+      "slash-speed",
+      "kunai-capacity",
+      "bow-recharge",
+      "technique-level",
+    ]);
+    expect(shop.upgrades.find((u) => u.id === "kunai-capacity")?.requires).toBe("kunai");
+    expect(shop.upgrades.find((u) => u.id === "bow-recharge")?.costs).toEqual([120, 240, 480, 960, 1920]);
+    expect(shop.upgrades.find((u) => u.id === "technique-level")?.maxLevel).toBe(3);
+  });
 });
