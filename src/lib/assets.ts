@@ -71,6 +71,10 @@ export function playerPosePath(pose: "run" | "jump" | "slash" | "climb"): string
   return `./assets/player/${pose}.png`;
 }
 
+export function playerTechPath(file: "kunai" | "bow" | "shadow" | "fireball"): string {
+  return `./assets/player/${file}.png`;
+}
+
 export function enemySpritePath(id: string, pose: "idle" | "grab" | "headless"): string {
   return `./assets/enemies/${id}/${pose}.png`;
 }
@@ -93,6 +97,10 @@ export function catalogPaths(enemyIds: string[], projectileIds: string[]): { pat
     { path: playerPosePath("jump"), knockout: true },
     { path: playerPosePath("slash"), knockout: true },
     { path: playerPosePath("climb"), knockout: true },
+    { path: playerTechPath("kunai"), knockout: true },
+    { path: playerTechPath("bow"), knockout: true },
+    { path: playerTechPath("shadow"), knockout: true },
+    { path: playerTechPath("fireball"), knockout: true },
     { path: vfxPath("shadow-strike.png"), knockout: false },
     { path: vfxPath("call-lightning.png"), knockout: false },
     { path: vfxPath("blade-of-souls.png"), knockout: false },

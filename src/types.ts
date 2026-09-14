@@ -112,10 +112,31 @@ export interface PerkDef {
   blurb: string;
 }
 
+export interface TechniqueDef {
+  id: string;
+  name: string;
+  cost: number;
+  sprite: string | null;
+  blurb: string;
+  recharge: number;
+  baseCapacity?: number;
+}
+
+export interface UpgradeDef {
+  id: string;
+  name: string;
+  maxLevel: number;
+  costs: number[];
+  requires?: string;
+  blurb: string;
+}
+
 export interface ShopCatalog {
   katanas: KatanaDef[];
   armors: ArmorDef[];
   perks: PerkDef[];
+  techniques: TechniqueDef[];
+  upgrades: UpgradeDef[];
 }
 
 export interface CinematicPack {
@@ -137,6 +158,10 @@ export interface SaveData {
   equippedKatana: string;
   equippedArmor: string;
   slashUpgrades: number;
+  unlockedTechniques: string[];
+  kunaiUpgrades: number;
+  bowUpgrades: number;
+  techniquePower: number;
   bestDistance: number;
 }
 

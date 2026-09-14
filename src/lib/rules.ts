@@ -10,8 +10,29 @@ export function emptySave(starterCoins: number): SaveData {
     equippedKatana: "ikielas-katana",
     equippedArmor: "ikielas-robes",
     slashUpgrades: 0,
+    unlockedTechniques: [],
+    kunaiUpgrades: 0,
+    bowUpgrades: 0,
+    techniquePower: 0,
     bestDistance: 0,
   };
+}
+
+export function nextTierCost(costs: number[], level: number): number | null {
+  if (level < 0 || level >= costs.length) return null;
+  return costs[level] ?? null;
+}
+
+export function techniqueRechargeMul(powerLevel: number): number {
+  return 0.9 ** Math.max(0, powerLevel);
+}
+
+export function kunaiCapacity(base: number, upgrades: number): number {
+  return base + Math.max(0, upgrades);
+}
+
+export function bowRecharge(base: number, upgrades: number, step: number): number {
+  return Math.max(0.25, base - Math.max(0, upgrades) * step);
 }
 
 export function speedLevelFor(distance: number, cfg: GameConfig): { level: number; speedMul: number } {

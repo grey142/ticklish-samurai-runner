@@ -4,8 +4,11 @@ import {
   drawSheetFrame,
   enemySpritePath,
   playerPosePath,
+  playerTechPath,
   projectilePath,
 } from "../lib/assets";
+import { techniqueSprite } from "../lib/shop";
+import { nextTierCost } from "../lib/rules";
 import { mapPropPath } from "../lib/map-props";
 import { GAMEOVER_LINE, speedLevelFor } from "../lib/rules";
 import { layoutCheatRows } from "../lib/touch-layout";
@@ -195,7 +198,14 @@ function drawVfx(g: Game): void {
 function drawActors(g: Game): void {
   for (const a of g.actors) {
     if (a.kind === "enemy") drawEnemy(g, a.defId, a.x, a.y, a.w, a.h);
-    else drawProjectile(g, a.defId, a.x, a.y, a.w, a.h);
+    else if (a.ownerId === "player") {
+      const img = g.images.get(a.defId === "bow" ? playerTechPath("bow") : playerTechPath("kunai"));
+      if (img) drawSprite(g.ctx, img, a.x, a.y, a.w, a.h);
+      else {
+        g.ctx.fillStyle = "#f4e7d8";
+        g.ctx.fillRect(a.x, a.y, a.w, a.h);
+      }
+    } else drawProjectile(g, a.defId, a.x, a.y, a.w, a.h);
   }
 }
 
@@ -365,11 +375,15 @@ function drawHud(g: Game): void {
     ctx.fillStyle = cd > 0 ? "rgba(20,16,28,0.75)" : "rgba(90,70,160,0.85)";
     round(ctx, p.x, p.y, p.w, p.h, 12);
     ctx.fill();
+    const sprite = techniqueSprite(p.id);
+    const img = sprite ? g.images.get(sprite) : null;
+    if (img) drawContained(ctx, img, p.x + 6, p.y + 4, p.w - 12, p.h * 0.58, "center");
     ctx.fillStyle = "#f4e7d8";
-    ctx.font = "11px Trebuchet MS, sans-serif";
+    ctx.font = `700 ${Math.max(10, Math.round(p.h * 0.18))}px Trebuchet MS, sans-serif`;
     ctx.textAlign = "center";
-    ctx.fillText(p.id.replace(/-/g, " "), p.x + p.w / 2, p.y + p.h * 0.45);
-    if (cd > 0) ctx.fillText(cd.toFixed(1), p.x + p.w / 2, p.y + p.h * 0.72);
+    const label = p.id === "kunai" ? `kunai ${g.kunaiAmmo}` : p.id.replace(/-/g, " ");
+    ctx.fillText(label, p.x + p.w / 2, img ? p.y + p.h * 0.82 : p.y + p.h * 0.45);
+    if (cd > 0) ctx.fillText(cd.toFixed(1), p.x + p.w / 2, p.y + p.h * 0.96);
     ctx.textAlign = "left";
   }
 
@@ -475,7 +489,7 @@ function drawHowto(g: Game): void {
     "Grab / web / bolo / slime / hand = struggle cinematic. Mash anywhere. HP and mash bars sit together in the corner.",
     "Pink flash + laugh every second. Cinematic every 4s. Roof-jump kills pay double.",
     "1 point / 6 m. 1 coin / 6 points. Revive once per run for 300 coins.",
-    "Desktop: Space/W jump, S slam, C climb, J slash, 1–4 abilities (shade = 4).",
+    "Desktop: Space/W jump, S slam, C climb, J slash, 1–8 shop techniques / blade arts.",
   ];
   lines.forEach((line, i) => ctx.fillText(line, 64, 150 + i * 28));
   button(ctx, g, "back", "Back");
@@ -493,20 +507,20 @@ function drawShop(g: Game): void {
   ctx.fillText(`${g.save.coins} coins`, w - 16, headerY);
   ctx.textAlign = "left";
   button(ctx, g, "back", "Back");
-  button(ctx, g, "tab-blades", g.shopTab === "blades" ? "• Blades" : "Blades");
-  button(ctx, g, "tab-armor", g.shopTab === "armor" ? "• Armor" : "Armor");
-  button(ctx, g, "tab-slash", g.shopTab === "slash" ? "• Slash CD" : "Slash CD");
+  button(ctx, g, "tab-blades", g.shopTab === "blades" ? "• Katanas" : "Katanas");
+  button(ctx, g, "tab-armor", g.shopTab === "armor" ? "• Armors" : "Armors");
+  button(ctx, g, "tab-techniques", g.shopTab === "techniques" ? "• Techs" : "Techs");
+  button(ctx, g, "tab-upgrades", g.shopTab === "upgrades" ? "• Upgrades" : "Upgrades");
 
-  if (g.shopTab === "slash") {
-    const cost = g.slashUpgradeCost();
-    const hayate = g.hayate();
-    panel(ctx, 16, 96, 420, 120, "rgba(20,10,16,0.88)");
-    ctx.fillStyle = "#f4e7d8";
-    ctx.font = "18px Trebuchet MS, sans-serif";
-    ctx.fillText(`Upgrades ${g.save.slashUpgrades}/5`, 28, 128);
-    ctx.fillText(`Recharge now: ${g.recharge().toFixed(2)}s${hayate ? " (haste ×0.5)" : ""}`, 28, 156);
-    ctx.fillText(cost == null ? "Maxed." : `Next: ${cost === 0 ? "FREE" : cost + " coins"} (−0.2s)`, 28, 184);
-    button(ctx, g, "buy-slash", cost == null ? "Maxed" : `Buy upgrade  ${cost === 0 ? "FREE" : cost}`);
+  if (g.shopTab === "upgrades") {
+    drawUpgradePanel(g);
+  } else if (g.shopTab === "techniques") {
+    g.shop.techniques.forEach((t) => {
+      const owned = g.techOwned(t.id);
+      const price = g.shopPrice(t.cost);
+      const label = `${owned ? "★ " : ""}${t.name}${owned ? "" : "  ·  " + (price === 0 ? "FREE" : price + "c")}`;
+      button(ctx, g, "buy-tech-" + t.id, label);
+    });
   } else if (g.shopTab === "blades") {
     g.shop.katanas.forEach((k) => {
       const owned = g.save.unlockedKatanas.includes(k.id);
@@ -526,6 +540,59 @@ function drawShop(g: Game): void {
   }
 }
 
+function drawUpgradePanel(g: Game): void {
+  const { ctx } = g;
+  const hayate = g.hayate();
+  ctx.fillStyle = "#f4e7d8";
+  ctx.font = "15px Trebuchet MS, sans-serif";
+  ctx.fillText(`Slash ${g.recharge().toFixed(2)}s${hayate ? " haste" : ""}  ·  Kunai ${g.kunaiMax()}  ·  Bow ${g.bowCd().toFixed(2)}s  ·  Arts −${(g.save.techniquePower ?? 0) * 10}% CD`, 16, 92);
+
+  const rows: { id: string; label: string; locked?: boolean }[] = [];
+  const slashCost = g.slashUpgradeCost();
+  rows.push({
+    id: "buy-up-slash-speed",
+    label:
+      slashCost == null
+        ? "Slash Speed  ·  maxed"
+        : `Slash Speed  ${g.save.slashUpgrades}/5  ·  ${slashCost === 0 ? "FREE" : slashCost + "c"}`,
+  });
+  const kunaiUp = g.shop.upgrades.find((u) => u.id === "kunai-capacity");
+  const kunaiCost = kunaiUp ? nextTierCost(kunaiUp.costs, g.save.kunaiUpgrades ?? 0) : null;
+  const kunaiPrice = kunaiCost == null ? null : g.shopPrice(kunaiCost);
+  rows.push({
+    id: "buy-up-kunai-capacity",
+    locked: !g.techOwned("kunai"),
+    label: !g.techOwned("kunai")
+      ? "Kunai Capacity  ·  unlock Kunai first"
+      : kunaiPrice == null
+        ? "Kunai Capacity  ·  maxed"
+        : `Kunai Capacity  ${g.save.kunaiUpgrades}/5  ·  ${kunaiPrice === 0 ? "FREE" : kunaiPrice + "c"}`,
+  });
+  const bowUp = g.shop.upgrades.find((u) => u.id === "bow-recharge");
+  const bowCost = bowUp ? nextTierCost(bowUp.costs, g.save.bowUpgrades ?? 0) : null;
+  const bowPrice = bowCost == null ? null : g.shopPrice(bowCost);
+  rows.push({
+    id: "buy-up-bow-recharge",
+    locked: !g.techOwned("bow"),
+    label: !g.techOwned("bow")
+      ? "Bow Recharge  ·  unlock Bow first"
+      : bowPrice == null
+        ? "Bow Recharge  ·  maxed"
+        : `Bow Recharge  ${g.save.bowUpgrades}/5  ·  ${bowPrice === 0 ? "FREE" : bowPrice + "c"}`,
+  });
+  const pow = g.shop.upgrades.find((u) => u.id === "technique-level");
+  const powCost = pow ? nextTierCost(pow.costs, g.save.techniquePower ?? 0) : null;
+  const powPrice = powCost == null ? null : g.shopPrice(powCost);
+  rows.push({
+    id: "buy-up-technique-level",
+    label:
+      powPrice == null
+        ? "Technique Power  ·  maxed"
+        : `Technique Power  ${g.save.techniquePower}/3  ·  ${powPrice === 0 ? "FREE" : powPrice + "c"}`,
+  });
+  for (const row of rows) button(ctx, g, row.id, row.label);
+}
+
 function drawCheats(g: Game): void {
   const { ctx, w, h } = g;
   ctx.fillStyle = "rgba(10,6,14,0.82)";
@@ -539,7 +606,7 @@ function drawCheats(g: Game): void {
   ctx.fillText("Cheats", back ? back.x + back.w + 14 : 16, back ? back.y + back.h * 0.68 : 36);
   ctx.font = "13px Trebuchet MS, sans-serif";
   ctx.fillStyle = "#d9b88c";
-  ctx.fillText("Toggles persist. Stack. Free shop unlocks every blade and armor.", back ? back.x + back.w + 14 : 16, (back ? back.y + back.h : 40) + 18);
+  ctx.fillText("Toggles persist. Stack. Free shop unlocks blades, armor, and techniques.", back ? back.x + back.w + 14 : 16, (back ? back.y + back.h : 40) + 18);
 
   const { bodyY, bodyH } = layoutCheatRows(w, h, g.cheats.book.cheats.map((c) => c.id), g.cheatScroll);
   ctx.save();

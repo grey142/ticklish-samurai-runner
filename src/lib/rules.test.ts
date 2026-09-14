@@ -23,6 +23,10 @@ import {
   packSize,
   simulateWindowSpawns,
   windowSpawnCap,
+  bowRecharge,
+  kunaiCapacity,
+  nextTierCost,
+  techniqueRechargeMul,
 } from "./rules";
 
 const cfg = {
@@ -132,6 +136,18 @@ describe("projectiles", () => {
 
   it("moves projectiles twice as fast as the original 0.35 flight rate", () => {
     expect(projectileAdvance(100, 1)).toBeCloseTo(70);
+  });
+});
+
+describe("technique upgrades", () => {
+  it("adds kunai capacity and shortens bow / art recharge", () => {
+    expect(kunaiCapacity(3, 2)).toBe(5);
+    expect(bowRecharge(2.5, 5, 0.25)).toBeCloseTo(1.25);
+    expect(techniqueRechargeMul(0)).toBe(1);
+    expect(techniqueRechargeMul(1)).toBeCloseTo(0.9);
+    expect(techniqueRechargeMul(3)).toBeCloseTo(0.729);
+    expect(nextTierCost([300, 600, 1200], 2)).toBe(1200);
+    expect(nextTierCost([300, 600, 1200], 3)).toBeNull();
   });
 });
 
