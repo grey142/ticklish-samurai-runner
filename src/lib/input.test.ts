@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hitRect, pointerToView } from "./input";
-import { isTruePortrait, layoutMenu, layoutPlayControls, thumbHit } from "./touch-layout";
+import { isTruePortrait, layoutMenu, layoutPlayControls, layoutShop, thumbHit } from "./touch-layout";
 import { standTop } from "./map-props";
 
 describe("pointerToView uses draw/view space, not the DPR buffer", () => {
@@ -45,6 +45,30 @@ describe("pointerToView uses draw/view space, not the DPR buffer", () => {
     expect(perks[0].h).toBeGreaterThanOrEqual(48);
     expect(slash.x + slash.w).toBeLessThanOrEqual(844);
     expect(slash.y + slash.h).toBeLessThanOrEqual(390);
+  });
+
+  it("lays out Katanas / Armors / Techniques / Upgrades as thumb-sized shop tabs", () => {
+    const shop = layoutShop(844, 390, "techniques", ["kunai", "bow", "flying-boost", "shadow-strike", "ethereal"], "buy-tech-");
+    expect(shop.map((r) => r.id).filter((id) => !id.startsWith("buy-"))).toEqual([
+      "back",
+      "tab-blades",
+      "tab-armor",
+      "tab-techniques",
+      "tab-upgrades",
+    ]);
+    const tabs = shop.filter((r) => r.id.startsWith("tab-"));
+    expect(tabs).toHaveLength(4);
+    for (const r of tabs) {
+      expect(r.h).toBeGreaterThanOrEqual(48);
+      expect(r.w).toBeGreaterThanOrEqual(64);
+    }
+    const tech = tabs.find((r) => r.id === "tab-techniques")!;
+    const up = tabs.find((r) => r.id === "tab-upgrades")!;
+    expect(tech.y).toBe(up.y);
+    expect(tech.x + tech.w).toBeLessThanOrEqual(up.x);
+    const perks = layoutPlayControls(844, 390, ["kunai", "bow", "flying-boost", "shadow-strike", "ethereal"]);
+    expect(perks.perks).toHaveLength(5);
+    for (const p of perks.perks) expect(p.h).toBeGreaterThanOrEqual(48);
   });
 
   it("only treats real portrait as the rotate case", () => {

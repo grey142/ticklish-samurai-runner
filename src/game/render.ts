@@ -509,7 +509,7 @@ function drawShop(g: Game): void {
   button(ctx, g, "back", "Back");
   button(ctx, g, "tab-blades", g.shopTab === "blades" ? "• Katanas" : "Katanas");
   button(ctx, g, "tab-armor", g.shopTab === "armor" ? "• Armors" : "Armors");
-  button(ctx, g, "tab-techniques", g.shopTab === "techniques" ? "• Techs" : "Techs");
+  button(ctx, g, "tab-techniques", g.shopTab === "techniques" ? "• Techniques" : "Techniques");
   button(ctx, g, "tab-upgrades", g.shopTab === "upgrades" ? "• Upgrades" : "Upgrades");
 
   if (g.shopTab === "upgrades") {
@@ -543,9 +543,15 @@ function drawShop(g: Game): void {
 function drawUpgradePanel(g: Game): void {
   const { ctx } = g;
   const hayate = g.hayate();
+  const firstUp = g.input.uiRects.find((r) => r.id.startsWith("buy-up-"));
+  const infoY = firstUp ? firstUp.y - 8 : 92;
   ctx.fillStyle = "#f4e7d8";
   ctx.font = "15px Trebuchet MS, sans-serif";
-  ctx.fillText(`Slash ${g.recharge().toFixed(2)}s${hayate ? " haste" : ""}  ·  Kunai ${g.kunaiMax()}  ·  Bow ${g.bowCd().toFixed(2)}s  ·  Arts −${(g.save.techniquePower ?? 0) * 10}% CD`, 16, 92);
+  ctx.fillText(
+    `Slash ${g.recharge().toFixed(2)}s${hayate ? " haste" : ""}  ·  Kunai ${g.kunaiMax()}  ·  Bow ${g.bowCd().toFixed(2)}s  ·  Arts −${(g.save.techniquePower ?? 0) * 10}% CD`,
+    16,
+    infoY,
+  );
 
   const rows: { id: string; label: string; locked?: boolean }[] = [];
   const slashCost = g.slashUpgradeCost();
@@ -705,7 +711,7 @@ function button(ctx: CanvasRenderingContext2D, g: Game, id: string, label: strin
   round(ctx, box.x, box.y, box.w, box.h, 10);
   ctx.stroke();
   ctx.fillStyle = "#f4e7d8";
-  ctx.font = `${Math.max(15, Math.min(22, Math.round(box.h * 0.38)))}px Trebuchet MS, sans-serif`;
+  ctx.font = `${Math.max(13, Math.min(20, Math.round(box.h * (label.length > 10 ? 0.28 : 0.38))))}px Trebuchet MS, sans-serif`;
   ctx.textAlign = "center";
   ctx.fillText(label, box.x + box.w / 2, box.y + box.h / 2 + box.h * 0.08);
   ctx.textAlign = "left";

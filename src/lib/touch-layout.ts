@@ -133,16 +133,15 @@ export function layoutShop(
   const btnH = Math.max(48, Math.min(56, Math.round(h * 0.11)));
   const pad = 10;
   const gap = 6;
-  const tabs = ["back", "tab-blades", "tab-armor", "tab-techniques", "tab-upgrades"];
-  const tabW = Math.max(64, Math.min(132, Math.round((w - pad * 2 - gap * 4) / 5)));
-  const rects: (Rect & { id: string })[] = tabs.map((id, i) => ({
-    id,
-    x: pad + i * (tabW + gap),
-    y: pad,
-    w: id === "back" ? Math.max(tabW, 72) : tabW,
-    h: btnH,
-  }));
-  const bodyY = pad + btnH + 10;
+  const backW = Math.max(72, Math.min(120, Math.round(w * 0.16)));
+  const rects: (Rect & { id: string })[] = [{ id: "back", x: pad, y: pad, w: backW, h: btnH }];
+  const tabs = ["tab-blades", "tab-armor", "tab-techniques", "tab-upgrades"];
+  const tabY = pad + btnH + gap;
+  const tabW = Math.max(64, Math.floor((w - pad * 2 - gap * (tabs.length - 1)) / tabs.length));
+  tabs.forEach((id, i) => {
+    rects.push({ id, x: pad + i * (tabW + gap), y: tabY, w: tabW, h: btnH });
+  });
+  const bodyY = tabY + btnH + 10;
   const rowH = Math.max(48, Math.min(56, Math.round(h * 0.11)));
   if (tab === "upgrades") {
     rowIds.forEach((id, i) => {
